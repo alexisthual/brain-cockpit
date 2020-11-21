@@ -49,6 +49,7 @@ class Scene extends Component {
     this.width = this.container.clientWidth;
     this.height = this.container.clientHeight;
 
+
     const renderer = new THREE.WebGLRenderer({antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
@@ -57,7 +58,7 @@ class Scene extends Component {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     let scene = new THREE.Scene();
-    scene.background = new THREE.Color('black');
+    scene.background = new THREE.Color('#F5F8FA');
 
     let camera = new THREE.PerspectiveCamera(60, this.width/this.height, 0.25, 1000);
     scene.add(camera);
