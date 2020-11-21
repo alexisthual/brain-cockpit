@@ -1,12 +1,5 @@
 import eel, os, random
 
-eel.init("web")
+eel.init("src", [".tsx", ".ts", ".jsx", ".js", ".html"])
 
-@eel.expose
-def pick_file(folder):
-    if os.path.isdir(folder):
-        return random.choice(os.listdir(folder))
-    else:
-        return "Not valid folder"
-
-eel.start("main.html", size=(320, 120))
+eel.start({"port": 3000}, size=(320, 120))
