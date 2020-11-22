@@ -3,7 +3,13 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three-orbitcontrols-ts';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-class Scene extends Component {
+interface ISceneProps {
+  clickedVoxelCallback?: any
+  width: number
+  height: number
+}
+
+class Scene extends Component<ISceneProps, {}> {
   width: number;
   height: number;
   container?: any;
@@ -16,7 +22,7 @@ class Scene extends Component {
   frameId?: any;
   selectedVertexIndex?: number;
 
-  constructor(props: any){
+  constructor(props: ISceneProps){
     super(props);
     this.state={}
     this.width = 1;
@@ -152,8 +158,8 @@ class Scene extends Component {
   onMouseClick(event: MouseEvent) {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+    mouse.x = (event.clientX / this.props.width) * 2 - 1;
+    mouse.y = - (event.clientY / this.props.height) * 2 + 1;
     raycaster.setFromCamera(mouse, this.camera);
 
     const intersects = raycaster.intersectObject(this.object);
@@ -189,6 +195,8 @@ class Scene extends Component {
 
       // Update selectedFaceIndex
       this.selectedVertexIndex = selectedVertexIndex;
+      // Callback
+      this.props.clickedVoxelCallback(selectedVertexIndex)
     }
 
   }
@@ -216,9 +224,11 @@ class Scene extends Component {
   }
 
   handleWindowResize(){
-    let width = window.innerWidth;
-    let height = window.innerHeight;
-    this.camera.aspect = width/height;
+    // let width = window.innerWidth;
+    // let height = window.innerHeight;
+    let width = this.props.width;
+    let height = this.props.height;
+    this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
   }
 
@@ -236,12 +246,15 @@ class Scene extends Component {
   }
 
   render(){
-    const width = '100%';
-    const height = '100%';
     return(
       <div
         ref={(container) => {this.container = container}}
-        style={{width: width, height: height, position: 'absolute', overflow: 'hidden'}}
+        style={{
+          width: this.props.width,
+          height: this.props.height,
+          position: 'absolute',
+          overflow: 'hidden'
+        }}
       >
       </div>
     )
