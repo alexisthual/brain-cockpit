@@ -14,11 +14,11 @@ class Scene extends Component {
   spotLight?: any;
   controls?: any;
   frameId?: any;
+  selectedFaceIndex?: number;
 
   constructor(props: any){
     super(props);
-    this.state={
-    }
+    this.state={}
     this.width = 1;
     this.height = 1;
     this.start = this.start.bind(this);
@@ -29,6 +29,7 @@ class Scene extends Component {
     this.setupScene = this.setupScene.bind(this);
     this.destroyContext = this.destroyContext.bind(this);
     this.handleWindowResize = this.handleWindowResize.bind(this);
+    this.onMouseClick = this.onMouseClick.bind(this);
   }
 
   componentWillMount(){
@@ -148,7 +149,30 @@ class Scene extends Component {
     this.start();
   }
 
-  start(){
+  onMouseClick(event: MouseEvent) {
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, this.camera);
+
+    // Change face's vertices color
+    const intersects = raycaster.intersectObject(this.object);
+    if(intersects.length > 0) {
+      const color = new THREE.Color("#D13913");
+      this.object.geometry.attributes.color.setXYZ((intersects[0].face as any).a, color.r, color.g, color.b);
+      this.object.geometry.attributes.color.setXYZ((intersects[0].face as any).b, color.r, color.g, color.b);
+      this.object.geometry.attributes.color.setXYZ((intersects[0].face as any).c, color.r, color.g, color.b);
+      this.object.geometry.attributes.color.needsUpdate = true;
+    }
+
+    // Update selectedFaceIndex
+    this.selectedFaceIndex = intersects.length > 0 ? intersects[0].faceIndex : undefined;
+  }
+
+  start() {
+    window.addEventListener('click', this.onMouseClick, false);
+
     if (!this.frameId) {
       this.frameId = requestAnimationFrame(this.animate)
     }
