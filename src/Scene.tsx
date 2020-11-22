@@ -52,7 +52,7 @@ class Scene extends Component<ISceneProps, {}> {
       const count = object.geometry.attributes.position.count
       const positions = object.geometry.attributes.position
       const radius = 200
-      object.geometry.addAttribute("color", new THREE.BufferAttribute(new Float32Array(count * 3), 3))
+      object.geometry.addAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3))
 
       const color = new THREE.Color();
       let colors = object.geometry.attributes.color;
