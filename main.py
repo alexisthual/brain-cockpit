@@ -1,4 +1,3 @@
-import eel, os, random
 import eel
 import nibabel as nib
 import numpy as np
@@ -130,3 +129,5 @@ def get_contrast_labels():
 @eel.expose
 def server_log(message):
     print(message)
+
+eel.start({"port": 3000}, app=None, host="localhost", port=8080, size=(1280, 800))
