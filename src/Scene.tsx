@@ -14,7 +14,7 @@ class Scene extends Component {
   spotLight?: any;
   controls?: any;
   frameId?: any;
-  selectedFaceIndex?: number;
+  selectedVertexIndex?: number;
 
   constructor(props: any){
     super(props);
@@ -156,18 +156,41 @@ class Scene extends Component {
     mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, this.camera);
 
-    // Change face's vertices color
     const intersects = raycaster.intersectObject(this.object);
+    let selectedVertexIndex = undefined;
     if(intersects.length > 0) {
+      // Select face's vertex closest to click
+      let minDistance = null;
+      const face = intersects[0].face as any
+      const vertices = [
+        face.a,
+        face.b,
+        face.c
+      ]
+
+      for(let i = 0; i < vertices.length; i++) {
+        const vertex = new THREE.Vector3();
+        vertex.fromBufferAttribute(this.object.geometry.getAttribute('position'), vertices[i]);
+        this.object.localToWorld(vertex);
+
+        let distance = vertex.distanceTo(intersects[0].point);
+
+        if(minDistance == null || distance < minDistance) {
+          minDistance = distance;
+          selectedVertexIndex = vertices[i];
+        }
+      }
+
+      // Update color for selected voxel
       const color = new THREE.Color("#D13913");
-      this.object.geometry.attributes.color.setXYZ((intersects[0].face as any).a, color.r, color.g, color.b);
-      this.object.geometry.attributes.color.setXYZ((intersects[0].face as any).b, color.r, color.g, color.b);
-      this.object.geometry.attributes.color.setXYZ((intersects[0].face as any).c, color.r, color.g, color.b);
+      this.object.geometry.attributes.color.setXYZ(selectedVertexIndex, color.r, color.g, color.b);
+      this.object.geometry.attributes.color.setXYZ(this.selectedVertexIndex, 0.5 + 0.2 * Math.random(), 0.5 + 0.2 * Math.random(), 0.5 + 0.2 * Math.random());
       this.object.geometry.attributes.color.needsUpdate = true;
+
+      // Update selectedFaceIndex
+      this.selectedVertexIndex = selectedVertexIndex;
     }
 
-    // Update selectedFaceIndex
-    this.selectedFaceIndex = intersects.length > 0 ? intersects[0].faceIndex : undefined;
   }
 
   start() {
