@@ -39,7 +39,30 @@ class Scene extends Component {
     const loader = new GLTFLoader();
 
     loader.load('/assets/fsaverage_pial_left.gltf', (gltf: any) => {
-      this.setupScene(gltf.scene);
+      let object = gltf.scene.children[0] as any
+
+      const count = object.geometry.attributes.position.count
+      const positions = object.geometry.attributes.position
+      const radius = 200
+      object.geometry.addAttribute("color", new THREE.BufferAttribute(new Float32Array(count * 3), 3))
+
+      const color = new THREE.Color();
+      let colors = object.geometry.attributes.color;
+      for(let i = 0; i < count; i ++) {
+        color.setRGB(0.5 + 0.2 * Math.random(), 0.5 + 0.2 * Math.random(), 0.5 + 0.2 * Math.random())
+        colors.setXYZ(i, color.r, color.g, color.b);
+      }
+
+      const material = new THREE.MeshPhongMaterial({
+        color: 0xdddddd,
+        flatShading: true,
+        vertexColors: true,
+        shininess: 0
+      });
+
+      object = new THREE.Mesh(object.geometry, material)
+
+      this.setupScene(object);
     }, undefined, (error) => {
     	console.error(error);
     });
@@ -48,7 +71,6 @@ class Scene extends Component {
   setupScene(object: THREE.Object3D){
     this.width = this.container.clientWidth;
     this.height = this.container.clientHeight;
-
 
     const renderer = new THREE.WebGLRenderer({antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
