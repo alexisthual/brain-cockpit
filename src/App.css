@@ -13,6 +13,7 @@
   align-content: stretch;
 
   background-color: #CED9E0;
+  overflow: hidden;
 }
 
 #webgl {
