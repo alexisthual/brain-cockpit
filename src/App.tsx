@@ -1,5 +1,8 @@
 import React, { Component } from 'react';
 import Scene from './Scene';
+import ParentSize from '@visx/responsive/lib/components/ParentSize';
+
+import HorizontalBar from './components/horizontalBar'
 export const eel = window.eel
 eel.set_host('ws://localhost:8080')
 eel.server_log('In da cockpit')
@@ -33,8 +36,30 @@ class App extends Component {
 
   render() {
     return (
-      <div>
-        <Scene />
+      <div id="main-container">
+        <div id="webgl">
+          <ParentSize className="scene-container" debounceTime={10}>
+            {({ width: sceneWidth, height: sceneHeight }) => (
+              <Scene
+                clickedVoxelCallback={this.updateContrasts}
+                width={sceneWidth}
+                height={sceneHeight}
+              />
+            )}
+          </ParentSize>
+        </div>
+        <div id="metrics">
+          <ParentSize className="metrics-container" debounceTime={10}>
+            {({ width: visWidth, height: visHeight }) => (
+              <HorizontalBar
+                labels={this.state.labels}
+                values={this.state.contrasts}
+                width={visWidth}
+                height={visHeight}
+              />
+            )}
+          </ParentSize>
+        </div>
       </div>
     );
   }
