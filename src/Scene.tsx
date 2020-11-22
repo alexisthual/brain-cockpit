@@ -41,6 +41,7 @@ class Scene extends Component {
 
     loader.load('/assets/fsaverage_pial_left.gltf', (gltf: any) => {
       let object = gltf.scene.children[0] as any
+      console.log(object)
 
       const count = object.geometry.attributes.position.count
       const positions = object.geometry.attributes.position
@@ -98,7 +99,6 @@ class Scene extends Component {
     camera.add(spotLight);
     this.spotLight = spotLight;
 
-    // let ambLight = new THREE.AmbientLight(0x333333);
     let ambLight = new THREE.AmbientLight(0xffffff, 1);
     ambLight.position.set(5, 3, 5);
     this.camera.add(ambLight);
@@ -136,9 +136,9 @@ class Scene extends Component {
     controls.enableKeys = false;
     // controls.screenSpacePanning = false;
     controls.enableRotate = true;
-    controls.autoRotate = true;
+    // controls.autoRotate = true;
     controls.dampingFactor = 1;
-    controls.autoRotateSpeed = 1.2;
+    // controls.autoRotateSpeed = 1.2;
     controls.enablePan = false;
     controls.target.set(center.x, center.y, center.z);
     controls.update();
@@ -182,7 +182,7 @@ class Scene extends Component {
       }
 
       // Update color for selected voxel
-      const color = new THREE.Color("#D13913");
+      const color = new THREE.Color("#9E2B0E");
       this.object.geometry.attributes.color.setXYZ(selectedVertexIndex, color.r, color.g, color.b);
       this.object.geometry.attributes.color.setXYZ(this.selectedVertexIndex, 0.5 + 0.2 * Math.random(), 0.5 + 0.2 * Math.random(), 0.5 + 0.2 * Math.random());
       this.object.geometry.attributes.color.needsUpdate = true;
@@ -201,7 +201,7 @@ class Scene extends Component {
     }
   }
 
-  renderScene(){
+  renderScene() {
     this.renderer.render(this.scene, this.camera)
   }
 
