@@ -115,3 +115,18 @@ n_subjects, n_contrasts = len(subjects), len(contrasts)
 
 ## Load functional data for all subjects
 X = load_fmri(df, subjects, contrasts)
+
+# Util function for exploring voxel's contrasts
+@eel.expose
+def explore_voxel(voxel_index):
+    print(f"Explore voxel {voxel_index}")
+    print(X[voxel_index, :].shape)
+    return X[voxel_index, :].tolist()
+
+@eel.expose
+def get_contrast_labels():
+    return contrasts.tolist()
+
+@eel.expose
+def server_log(message):
+    print(message)
