@@ -4,8 +4,6 @@ import numpy as np
 import os
 import pandas as pd
 
-eel.init("src", [".tsx", ".ts", ".jsx", ".js", ".html"])
-
 # Load contrasts
 DATA_PATH = "/home/alexis/singbrain/data/ibc_surface_conditions_db"
 AVAILABLE_CONTRASTS_PATH = os.path.join(DATA_PATH, "result_db.csv")
@@ -115,6 +113,7 @@ subjects, contrasts = select_subjects_and_contrasts(
 n_subjects, n_contrasts = len(subjects), len(contrasts)
 
 ## Load functional data for all subjects
+print("Loading contrasts...")
 X = load_fmri(df, subjects, contrasts)
 
 # Util function for exploring voxel's contrasts
@@ -135,6 +134,8 @@ def server_log(message):
     print(message)
 
 
+print("Serving...")
+eel.init("src", [".tsx", ".ts", ".jsx", ".js", ".html"])
 eel.start(
     {"port": 3000}, app=None, host="localhost", port=8080, size=(1280, 800)
 )
