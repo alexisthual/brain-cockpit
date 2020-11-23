@@ -15,8 +15,8 @@
     "@visx/scale": "^1.1.0",
     "@visx/shape": "^1.1.0",
     "@visx/text": "^1.1.0",
-    "react": "^16.7.0",
-    "react-dom": "^16.7.0",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
     "react-scripts": "4.0.1",
     "three": "^0.122.0",
     "typescript": "^4.1.2"
