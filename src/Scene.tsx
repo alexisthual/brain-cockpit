@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
+import {Colors} from 'colors'
+
 interface ISceneProps {
   clickedVoxelCallback?: any
   width: number
@@ -50,9 +52,8 @@ class Scene extends Component<ISceneProps, {}> {
       console.log(`Loaded glTF object:`)
       console.log(object)
 
+      // Set each vertex a color
       const count = object.geometry.attributes.position.count
-      const positions = object.geometry.attributes.position
-      const radius = 200
       object.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3))
 
       const color = new THREE.Color();
@@ -63,13 +64,17 @@ class Scene extends Component<ISceneProps, {}> {
       }
 
       const material = new THREE.MeshPhongMaterial({
-        color: 0xdddddd,
+        color: Colors.LIGHT_GRAY1,
         flatShading: true,
         vertexColors: true,
         shininess: 0
       });
 
+      // Merge geometry and material into a mesh
       object = new THREE.Mesh(object.geometry, material)
+      // Rotate mesh (in gaming, the y-axis typically goes from
+      // bottom to top, whereas engineers usually use the z-axis
+      // to describe this dimension).
       object.rotateX(-Math.PI / 2)
       object.rotateZ(Math.PI / 2)
 
@@ -83,51 +88,56 @@ class Scene extends Component<ISceneProps, {}> {
     this.width = this.container.clientWidth;
     this.height = this.container.clientHeight;
 
+    // Initialise renderer
     const renderer = new THREE.WebGLRenderer({antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
-    // renderer.gammaOutput = true;
     renderer.gammaFactor = 2.2
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+    // Initialise scene
     let scene = new THREE.Scene();
-    scene.background = new THREE.Color('#F5F8FA');
+    scene.background = new THREE.Color(Colors.LIGHT_GRAY5);
 
+    // Intialiase camera
     let camera = new THREE.PerspectiveCamera(60, this.width/this.height, 0.25, 1000);
     scene.add(camera);
 
+    // Add lights to scene
+    let spotLight = new THREE.SpotLight(Colors.WHITE, 0.85)
+    spotLight.position.set(45, 50, 15);
+    camera.add(spotLight);
+
+    let ambLight = new THREE.AmbientLight(Colors.WHITE, 1);
+    ambLight.position.set(5, 3, 5);
+    camera.add(ambLight);
+
+    // Add loaded object to scene
     scene.add(object);
 
+    // Update class instance attributes
     this.renderer = renderer;
     this.scene = scene;
     this.camera = camera;
     this.object = object;
-
-    let spotLight = new THREE.SpotLight(0xffffff, 0.85)
-    spotLight.position.set(45, 50, 15);
-    camera.add(spotLight);
     this.spotLight = spotLight;
-
-    let ambLight = new THREE.AmbientLight(0xffffff, 1);
-    ambLight.position.set(5, 3, 5);
-    this.camera.add(ambLight);
 
     this.computeBoundingBox();
   }
 
   computeBoundingBox(){
-    // BoundingBox
+    // Compute BoundingBox
     const boundingBox = new THREE.Box3().setFromObject(this.object);
     const center = boundingBox.getCenter(new THREE.Vector3());
     const size = boundingBox.getSize(new THREE.Vector3());
+
     // Centering object
     this.object.position.x += (this.object.position.x - center.x);
     this.object.position.y += (this.object.position.y - center.y);
     this.object.position.z += (this.object.position.z - center.z);
 
-    const gray5 = '#BFCCD6'
-    const lightGray1 = '#CED9E0'
-    const gridHelper = new THREE.GridHelper(500, 20, gray5, lightGray1);
+    // Add grid helper
+    const gridHelper = new THREE.GridHelper(500, 20, Colors.GRAY5, Colors.LIGHT_GRAY1);
     gridHelper.translateY(-70);
     this.scene.add(gridHelper);
 
@@ -169,6 +179,8 @@ class Scene extends Component<ISceneProps, {}> {
     mouse.y = - (event.clientY / this.props.height) * 2 + 1;
     raycaster.setFromCamera(mouse, this.camera);
 
+    // Intersect raycast with object
+    // and select closest voxel in intersected face
     const intersects = raycaster.intersectObject(this.object);
     let selectedVertexIndex = undefined;
     if(intersects.length > 0) {
@@ -195,7 +207,7 @@ class Scene extends Component<ISceneProps, {}> {
       }
 
       // Update color for selected voxel
-      const color = new THREE.Color("#9E2B0E");
+      const color = new THREE.Color(Colors.RED4);
       this.object.geometry.attributes.color.setXYZ(selectedVertexIndex, color.r, color.g, color.b);
       this.object.geometry.attributes.color.setXYZ(this.selectedVertexIndex, 0.5 + 0.2 * Math.random(), 0.5 + 0.2 * Math.random(), 0.5 + 0.2 * Math.random());
       this.object.geometry.attributes.color.needsUpdate = true;
@@ -205,7 +217,6 @@ class Scene extends Component<ISceneProps, {}> {
       // Callback
       this.props.clickedVoxelCallback(selectedVertexIndex)
     }
-
   }
 
   start() {

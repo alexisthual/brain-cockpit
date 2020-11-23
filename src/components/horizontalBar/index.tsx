@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { AxisTop } from '@visx/axis';
 import { Group } from '@visx/group';
-import { GradientTealBlue } from '@visx/gradient';
 import { scaleBand, scaleLinear } from '@visx/scale';
 import { Bar } from '@visx/shape';
 import { Text } from '@visx/text';
+
+import {Colors} from 'colors'
 
 interface Props {
   labels: string[]
@@ -33,10 +34,7 @@ const HorizontalBar = ({labels, values, width, height}: Props) => {
     padding: 0.2,
   })
 
-  const darkGray5 = '#394B59';
-  const gray1 = '#5C7080';
-  const gray3 = '#8A9BA8';
-  const axisColor = gray3;
+  const axisColor = Colors.GRAY3;
 
   return (
     <svg width={width} height={height}>
