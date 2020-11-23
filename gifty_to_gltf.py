@@ -5,8 +5,23 @@ import operator
 import struct
 
 from gltflib import (
-    GLTF, GLTFModel, Asset, Scene, Node, Mesh, Primitive, Attributes, Buffer, BufferView, Accessor, AccessorType,
-    BufferTarget, ComponentType, GLBResource, FileResource)
+    GLTF,
+    GLTFModel,
+    Asset,
+    Scene,
+    Node,
+    Mesh,
+    Primitive,
+    Attributes,
+    Buffer,
+    BufferView,
+    Accessor,
+    AccessorType,
+    BufferTarget,
+    ComponentType,
+    GLBResource,
+    FileResource,
+)
 from nilearn import datasets
 from nilearn import image
 from nilearn import surface
@@ -27,6 +42,7 @@ def read_gii(gii_file):
 
     return list(arrays)
 
+
 # %%
 fsaverage = datasets.fetch_surf_fsaverage()
 for dataset in ["infl_left", "infl_right", "pial_left", "pial_right"]:
@@ -39,8 +55,14 @@ for dataset in ["infl_left", "infl_right", "pial_left", "pial_right"]:
         for value in vertex:
             vertex_bytearray.extend(struct.pack("f", value))
 
-    mins = [min([operator.itemgetter(i)(vertex) for vertex in vertices]) for i in range(3)]
-    maxs = [max([operator.itemgetter(i)(vertex) for vertex in vertices]) for i in range(3)]
+    mins = [
+        min([operator.itemgetter(i)(vertex) for vertex in vertices])
+        for i in range(3)
+    ]
+    maxs = [
+        max([operator.itemgetter(i)(vertex) for vertex in vertices])
+        for i in range(3)
+    ]
 
     triangles_bytearray = bytearray()
     for triangle in triangles:
@@ -54,23 +76,17 @@ for dataset in ["infl_left", "infl_right", "pial_left", "pial_right"]:
         meshes=[
             Mesh(
                 primitives=[
-                    Primitive(
-                        attributes=Attributes(
-                            POSITION=0
-                        ),
-                        indices=1
-                    )
+                    Primitive(attributes=Attributes(POSITION=0), indices=1)
                 ]
             )
         ],
         buffers=[
             Buffer(
-                byteLength=len(vertex_bytearray),
-                uri=f"vertices_{dataset}.bin"
+                byteLength=len(vertex_bytearray), uri=f"vertices_{dataset}.bin"
             ),
             Buffer(
                 byteLength=len(triangles_bytearray),
-                uri=f"triangles_{dataset}.bin"
+                uri=f"triangles_{dataset}.bin",
             ),
         ],
         bufferViews=[
@@ -78,13 +94,13 @@ for dataset in ["infl_left", "infl_right", "pial_left", "pial_right"]:
                 buffer=0,
                 byteOffset=0,
                 byteLength=len(vertex_bytearray),
-                target=BufferTarget.ARRAY_BUFFER.value
+                target=BufferTarget.ARRAY_BUFFER.value,
             ),
             BufferView(
                 buffer=1,
                 byteOffset=0,
                 byteLength=len(triangles_bytearray),
-                target=BufferTarget.ELEMENT_ARRAY_BUFFER.value
+                target=BufferTarget.ELEMENT_ARRAY_BUFFER.value,
             ),
         ],
         accessors=[
@@ -95,19 +111,23 @@ for dataset in ["infl_left", "infl_right", "pial_left", "pial_right"]:
                 count=len(vertices),
                 type=AccessorType.VEC3.value,
                 min=mins,
-                max=maxs
+                max=maxs,
             ),
             Accessor(
                 bufferView=1,
                 byteOffset=0,
                 componentType=ComponentType.UNSIGNED_SHORT.value,
-                count=3*len(triangles),
+                count=3 * len(triangles),
                 type=AccessorType.SCALAR.value,
-            )
-        ]
+            ),
+        ],
     )
 
-    vertices_resource = FileResource(f"vertices_{dataset}.bin", data=vertex_bytearray)
-    triangles_resource = FileResource(f"triangles_{dataset}.bin", data=triangles_bytearray)
+    vertices_resource = FileResource(
+        f"vertices_{dataset}.bin", data=vertex_bytearray
+    )
+    triangles_resource = FileResource(
+        f"triangles_{dataset}.bin", data=triangles_bytearray
+    )
     gltf = GLTF(model=model, resources=[vertices_resource, triangles_resource])
     gltf.export(f"public/assets/fsaverage_{dataset}.gltf")

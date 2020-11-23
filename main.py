@@ -10,6 +10,7 @@ eel.init("src", [".tsx", ".ts", ".jsx", ".js", ".html"])
 DATA_PATH = "/home/alexis/singbrain/data/ibc_surface_conditions_db"
 AVAILABLE_CONTRASTS_PATH = os.path.join(DATA_PATH, "result_db.csv")
 
+
 def select_subjects_and_contrasts(
     df, available_contrasts_path=AVAILABLE_CONTRASTS_PATH
 ):
@@ -105,6 +106,7 @@ def load_fmri(df, subjects, unique_contrasts):
 
     return X
 
+
 ## Load selected subjects and contrasts
 df = pd.read_csv(AVAILABLE_CONTRASTS_PATH)
 subjects, contrasts = select_subjects_and_contrasts(
@@ -122,12 +124,17 @@ def explore_voxel(voxel_index):
     print(X[voxel_index, :].shape)
     return X[voxel_index, :].tolist()
 
+
 @eel.expose
 def get_contrast_labels():
     return contrasts.tolist()
+
 
 @eel.expose
 def server_log(message):
     print(message)
 
-eel.start({"port": 3000}, app=None, host="localhost", port=8080, size=(1280, 800))
+
+eel.start(
+    {"port": 3000}, app=None, host="localhost", port=8080, size=(1280, 800)
+)
