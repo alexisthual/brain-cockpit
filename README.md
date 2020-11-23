@@ -6,6 +6,7 @@
 
 ```
 yarn install
+pip install -r requirements.txt
 ```
 
 There are a few Python dependencies as well, which will be documented later.
