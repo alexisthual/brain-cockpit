@@ -3,7 +3,6 @@ import nibabel as nib
 import numpy as np
 import operator
 import struct
-import vtk
 
 from gltflib import (
     GLTF, GLTFModel, Asset, Scene, Node, Mesh, Primitive, Attributes, Buffer, BufferView, Accessor, AccessorType,
