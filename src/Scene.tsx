@@ -38,11 +38,11 @@ class Scene extends Component<ISceneProps, {}> {
     this.onMouseClick = this.onMouseClick.bind(this);
   }
 
-  componentWillMount(){
-    window.addEventListener('resize', this.handleWindowResize)
-  }
-
   componentDidMount(){
+    // Listen to events
+    window.addEventListener('resize', this.handleWindowResize)
+
+    // Load exteral meshes
     const loader = new GLTFLoader();
 
     loader.load('/assets/fsaverage_pial_left.gltf', (gltf: any) => {
@@ -53,7 +53,7 @@ class Scene extends Component<ISceneProps, {}> {
       const count = object.geometry.attributes.position.count
       const positions = object.geometry.attributes.position
       const radius = 200
-      object.geometry.addAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3))
+      object.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3))
 
       const color = new THREE.Color();
       let colors = object.geometry.attributes.color;
