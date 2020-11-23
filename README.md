@@ -22,9 +22,11 @@ python3 gifty_to_gltf.py
 ### Dev mode
 
 Run in separate prompts:
+
 ```
 yarn start
 ```
+
 ```
 python3 main.py
 ```

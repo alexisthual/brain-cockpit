@@ -12,16 +12,16 @@
   justify-content: stretch;
   align-content: stretch;
 
-  background-color: #CED9E0;
+  background-color: #ced9e0;
   overflow: hidden;
 }
 
 #webgl {
   min-height: 0px;
-  background-color: #F5F8FA;
+  background-color: #f5f8fa;
 }
 
 #metrics {
   min-height: 0px;
-  background-color: #EBF1F5;
+  background-color: #ebf1f5;
 }
