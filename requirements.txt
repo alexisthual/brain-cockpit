@@ -1,4 +1,0 @@
-nibabel
-gltflib
-nilearn
-eel
