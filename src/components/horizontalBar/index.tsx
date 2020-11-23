@@ -66,7 +66,7 @@ const HorizontalBar = ({ labels, values, width, height }: Props) => {
                 y={barY}
                 width={barWidth}
                 height={barHeight}
-                fill="rgba(23, 233, 217, .5)"
+                fill={Colors.GRAY4}
                 onClick={() => {
                   alert(`clicked: ${label}`);
                 }}
@@ -78,6 +78,7 @@ const HorizontalBar = ({ labels, values, width, height }: Props) => {
           {labels.map((label, index) => {
             return (
               <Text
+                fill={Colors.DARK_GRAY3}
                 fontSize={8}
                 key={`label-${label}`}
                 textAnchor="end"
