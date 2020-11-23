@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import * as THREE from 'three';
-import { OrbitControls } from 'three-orbitcontrols-ts';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 interface ISceneProps {
   clickedVoxelCallback?: any
@@ -47,6 +47,7 @@ class Scene extends Component<ISceneProps, {}> {
 
     loader.load('/assets/fsaverage_pial_left.gltf', (gltf: any) => {
       let object = gltf.scene.children[0] as any
+      console.log(`Loaded glTF object:`)
       console.log(object)
 
       const count = object.geometry.attributes.position.count
@@ -69,6 +70,8 @@ class Scene extends Component<ISceneProps, {}> {
       });
 
       object = new THREE.Mesh(object.geometry, material)
+      object.rotateX(-Math.PI / 2)
+      object.rotateZ(Math.PI / 2)
 
       this.setupScene(object);
     }, undefined, (error) => {
@@ -113,39 +116,43 @@ class Scene extends Component<ISceneProps, {}> {
   }
 
   computeBoundingBox(){
-    let offset = 1.60;
-
+    // BoundingBox
     const boundingBox = new THREE.Box3().setFromObject(this.object);
     const center = boundingBox.getCenter(new THREE.Vector3());
     const size = boundingBox.getSize(new THREE.Vector3());
+    // Centering object
     this.object.position.x += (this.object.position.x - center.x);
     this.object.position.y += (this.object.position.y - center.y);
     this.object.position.z += (this.object.position.z - center.z);
 
-    const maxDim = Math.max( size.x, size.y, size.z );
-    const fov = this.camera.fov * ( Math.PI / 180 );
-    let cameraZ = maxDim / 2 / Math.tan( fov / 2 );
-    cameraZ *= offset;
+    const gray5 = '#BFCCD6'
+    const lightGray1 = '#CED9E0'
+    const gridHelper = new THREE.GridHelper(500, 20, gray5, lightGray1);
+    gridHelper.translateY(-70);
+    this.scene.add(gridHelper);
+
+    // Camera setup
+    let offset = 1.50;
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const fov = this.camera.fov * (Math.PI / 180);
+    let cameraZ = maxDim / 2 / Math.tan(fov / 2) * offset;
     this.camera.position.z = center.z + cameraZ;
     const minZ = boundingBox.min.z;
-    const cameraToFarEdge = ( minZ < 0 ) ? -minZ + cameraZ : cameraZ - minZ;
-
+    const cameraToFarEdge = cameraZ - minZ
     this.camera.far = cameraToFarEdge * 3;
     this.camera.lookAt(center);
     this.camera.updateProjectionMatrix();
 
+    // Orbit controls setup
     let controls = new OrbitControls(this.camera, this.renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.25;
+    controls.dampingFactor = 0.2;
     controls.enableZoom = true;
-    controls.zoomSpeed = 0.1;
-    controls.enableKeys = false;
-    // controls.screenSpacePanning = false;
+    controls.zoomSpeed = 0.3;
+    controls.enableKeys = true;
     controls.enableRotate = true;
-    // controls.autoRotate = true;
-    controls.dampingFactor = 1;
-    // controls.autoRotateSpeed = 1.2;
-    controls.enablePan = false;
+    controls.enablePan = true;
+    controls.screenSpacePanning = true;
     controls.target.set(center.x, center.y, center.z);
     controls.update();
 
@@ -224,8 +231,6 @@ class Scene extends Component<ISceneProps, {}> {
   }
 
   handleWindowResize(){
-    // let width = window.innerWidth;
-    // let height = window.innerHeight;
     let width = this.props.width;
     let height = this.props.height;
     this.camera.aspect = width / height;
