@@ -7,6 +7,7 @@ import { Colors } from "colors";
 
 interface ISceneProps {
   clickedVoxelCallback?: any;
+  surfaceMap?: number[];
   width: number;
   height: number;
 }
@@ -51,8 +52,6 @@ class Scene extends Component<ISceneProps, {}> {
       "/assets/fsaverage_pial_left.gltf",
       (gltf: any) => {
         let object = gltf.scene.children[0] as any;
-        console.log(`Loaded glTF object:`);
-        console.log(object);
 
         // Set each vertex a color
         const count = object.geometry.attributes.position.count;
@@ -94,6 +93,36 @@ class Scene extends Component<ISceneProps, {}> {
         console.error(error);
       }
     );
+  }
+
+  componentDidUpdate(prevProps: ISceneProps) {
+    // Update object color
+    if (
+      this.props.surfaceMap !== prevProps.surfaceMap &&
+      this.props.surfaceMap
+    ) {
+      if (
+        this.props.surfaceMap.length ===
+        this.object.geometry.attributes.position.count
+      ) {
+        const color = new THREE.Color();
+        const count = this.object.geometry.attributes.position.count;
+        const colors = this.object.geometry.attributes.color;
+        const min = Math.min(...this.props.surfaceMap);
+        const max = Math.max(...this.props.surfaceMap);
+        const light = 0.2;
+        for (let i = 0; i < count; i++) {
+          const a = (this.props.surfaceMap[i] - min) / (max - min);
+          color.setRGB(
+            light + (1 - light) * Math.exp(-0.5 * ((a - 0.75) / 0.15) ** 2),
+            light + (1 - light) * Math.exp(-0.5 * ((a - 0.5) / 0.15) ** 2),
+            light + (1 - light) * Math.exp(-0.5 * ((a - 0.25) / 0.15) ** 2)
+          );
+          colors.setXYZ(i, color.r, color.g, color.b);
+        }
+        this.object.geometry.attributes.color.needsUpdate = true;
+      }
+    }
   }
 
   setupScene(object: THREE.Object3D) {

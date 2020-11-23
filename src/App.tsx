@@ -7,23 +7,30 @@ import "./App.css";
 
 export const eel = window.eel;
 eel.set_host("ws://localhost:8080");
-eel.server_log("In da cockpit");
 
 interface IAppState {
   labels: string[];
   contrasts: number[];
+  surfaceMap?: number[];
 }
 
 class App extends Component {
   public state: IAppState = {
     labels: [],
     contrasts: [],
+    surfaceMap: undefined,
   };
 
   componentDidMount() {
     eel.get_contrast_labels()((labels: string[]) => {
       this.setState({
         labels,
+      });
+    });
+
+    eel.get_left_contrast(0)((contrastMap: number[]) => {
+      this.setState({
+        surfaceMap: contrastMap,
       });
     });
   }
@@ -44,6 +51,7 @@ class App extends Component {
             {({ width: sceneWidth, height: sceneHeight }) => (
               <Scene
                 clickedVoxelCallback={this.updateContrasts}
+                surfaceMap={this.state.surfaceMap}
                 width={sceneWidth}
                 height={sceneHeight}
               />
