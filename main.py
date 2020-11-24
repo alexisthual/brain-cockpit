@@ -25,16 +25,22 @@ def select_subjects_and_contrasts(
         grouped_by_subject > 100
     ].index.values
 
-    grouped_by_contrast = df.groupby(["contrast"])["subject"].unique()
+    grouped_by_contrast = df.groupby(["contrast", "task"])["subject"].unique()
+    grouped_by_contrast = grouped_by_contrast.sort_index(
+        level=["task", "contrast"]
+    )
+    grouped_by_contrast = grouped_by_contrast.reset_index()
+
     mask = [
         np.array_equal(
             np.intersect1d(subjects, selected_subjects), selected_subjects
         )
-        for subjects in grouped_by_contrast
+        for subjects in grouped_by_contrast.subject
     ]
-    selected_contrasts = grouped_by_contrast[mask].index.values
+    selected_contrasts = grouped_by_contrast[mask]
+    selected_contrasts = selected_contrasts.reset_index()
 
-    return selected_subjects, selected_contrasts
+    return selected_subjects, selected_contrasts.contrast.values
 
 
 # Load FMRI data
@@ -143,5 +149,10 @@ def server_log(message):
 print("Serving...")
 eel.init("src", [".tsx", ".ts", ".jsx", ".js", ".html"])
 eel.start(
-    {"port": 3000}, app=None, host="localhost", port=8080, size=(1280, 800)
+    {"port": 3000},
+    app=None,
+    host="localhost",
+    port=8080,
+    size=(1280, 800),
+    close_callback=print("Closing."),
 )
