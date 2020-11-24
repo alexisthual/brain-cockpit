@@ -35,6 +35,14 @@ class App extends Component {
     });
   }
 
+  public updateContrast = (contrastIndex: number) => {
+    eel.get_left_contrast(contrastIndex)((contrastMap: number[]) => {
+      this.setState({
+        surfaceMap: contrastMap,
+      });
+    });
+  };
+
   public updateContrasts = (voxelIndex: number) => {
     eel.explore_voxel(voxelIndex)((contrasts: number[]) => {
       this.setState({
@@ -62,6 +70,9 @@ class App extends Component {
           <ParentSize className="metrics-container" debounceTime={10}>
             {({ width: visWidth, height: visHeight }) => (
               <HorizontalBar
+                clickedLabelCallback={(contrastIndex: number) => {
+                  this.updateContrast(contrastIndex);
+                }}
                 labels={this.state.labels}
                 values={this.state.contrasts}
                 width={visWidth}

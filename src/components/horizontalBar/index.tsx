@@ -12,9 +12,16 @@ interface Props {
   values: number[];
   width: number;
   height: number;
+  clickedLabelCallback?: (labelIndex: number, label?: string) => void;
 }
 
-const HorizontalBar = ({ labels, values, width, height }: Props) => {
+const HorizontalBar = ({
+  labels,
+  values,
+  width,
+  height,
+  clickedLabelCallback,
+}: Props) => {
   const marginLeft = 150;
   const paddingTop = 30;
   const marginRight = 30;
@@ -67,9 +74,6 @@ const HorizontalBar = ({ labels, values, width, height }: Props) => {
                 width={barWidth}
                 height={barHeight}
                 fill={Colors.GRAY4}
-                onClick={() => {
-                  alert(`clicked: ${label}`);
-                }}
               />
             );
           })}
@@ -81,6 +85,11 @@ const HorizontalBar = ({ labels, values, width, height }: Props) => {
                 fill={Colors.DARK_GRAY3}
                 fontSize={8}
                 key={`label-${label}`}
+                onClick={() => {
+                  if (clickedLabelCallback) {
+                    clickedLabelCallback(index, label);
+                  }
+                }}
                 textAnchor="end"
                 verticalAnchor="middle"
                 y={yScale(label)}
