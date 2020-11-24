@@ -5,7 +5,7 @@ import { scaleBand, scaleLinear } from "@visx/scale";
 import { Bar } from "@visx/shape";
 import { Text } from "@visx/text";
 
-import { Colors } from "colors";
+import { Colors } from "constants/colors";
 
 interface Props {
   labels: string[];
