@@ -1,89 +1,91 @@
-import React, { Component } from "react";
+import React, { useEffect, useState } from "react";
 import Scene from "./Scene";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 
 import HorizontalBar from "./components/horizontalBar";
+import HeaderItem from "./components/headerItem";
 import "./App.scss";
 
 export const eel = window.eel;
 eel.set_host("ws://localhost:8080");
 
-interface IAppState {
-  labels: string[];
-  contrasts: number[];
-  surfaceMap?: number[];
-}
+const App = () => {
+  const [subject] = useState("sub-01");
+  const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
+  const [contrast, setContrast] = useState<string | undefined>();
+  const [contrastIndex, setContrastIndex] = useState<number | undefined>();
+  const [contrastLabels, setContrastLabels] = useState<string[]>([]);
+  const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
+  const [contrastMap, setContrastMap] = useState<number[] | undefined>();
 
-class App extends Component {
-  public state: IAppState = {
-    labels: [],
-    contrasts: [],
-    surfaceMap: undefined,
-  };
-
-  componentDidMount() {
-    eel.get_contrast_labels()((labels: string[]) => {
-      this.setState({
-        labels,
+  useEffect(() => {
+    eel.get_contrast_labels()((contrastLabels: string[]) => {
+      setContrastLabels(contrastLabels);
+      eel.get_left_contrast(0)((contrastMap: number[]) => {
+        setContrastIndex(0);
+        setContrast(contrastLabels[0]);
+        setContrastMap(contrastMap);
       });
     });
+  }, []);
 
-    eel.get_left_contrast(0)((contrastMap: number[]) => {
-      this.setState({
-        surfaceMap: contrastMap,
-      });
-    });
-  }
-
-  public updateContrast = (contrastIndex: number) => {
+  const updateContrast = (contrastIndex: number, contrast: string) => {
+    setContrast(contrast);
+    setContrastIndex(contrastIndex);
     eel.get_left_contrast(contrastIndex)((contrastMap: number[]) => {
-      this.setState({
-        surfaceMap: contrastMap,
-      });
+      setContrastMap(contrastMap);
     });
   };
 
-  public updateContrasts = (voxelIndex: number) => {
-    eel.explore_voxel(voxelIndex)((contrasts: number[]) => {
-      this.setState({
-        contrasts,
-      });
+  const updateContrasts = (voxelIndex: number) => {
+    setVoxelIndex(voxelIndex);
+    eel.explore_voxel(voxelIndex)((contrastFingerprint: number[]) => {
+      setContrastFingerprint(contrastFingerprint);
     });
   };
 
-  render() {
-    return (
-      <div id="main-container">
-        <div id="webgl">
-          <ParentSize className="scene-container" debounceTime={10}>
-            {({ width: sceneWidth, height: sceneHeight }) => (
-              <Scene
-                clickedVoxelCallback={this.updateContrasts}
-                surfaceMap={this.state.surfaceMap}
-                width={sceneWidth}
-                height={sceneHeight}
-              />
-            )}
-          </ParentSize>
-        </div>
-        <div id="metrics">
-          <ParentSize className="metrics-container" debounceTime={10}>
-            {({ width: visWidth, height: visHeight }) => (
-              <HorizontalBar
-                clickedLabelCallback={(contrastIndex: number) => {
-                  this.updateContrast(contrastIndex);
-                }}
-                labels={this.state.labels}
-                values={this.state.contrasts}
-                width={visWidth}
-                height={visHeight}
-              />
-            )}
-          </ParentSize>
-        </div>
+  return (
+    <div id="main-container">
+      <div id="header">
+        <HeaderItem label={"Subject"} value={subject} />
+        <HeaderItem
+          label={"Contrast"}
+          value={`${contrast} (${contrastIndex})`}
+        />
+        <HeaderItem label={"Voxel"} value={voxelIndex} />
       </div>
-    );
-  }
-}
+      <div id="webgl">
+        <ParentSize className="scene-container" debounceTime={10}>
+          {({ width: sceneWidth, height: sceneHeight }) => (
+            <Scene
+              clickedVoxelCallback={updateContrasts}
+              surfaceMap={contrastMap}
+              width={sceneWidth}
+              height={sceneHeight}
+            />
+          )}
+        </ParentSize>
+      </div>
+      <div id="metrics">
+        <ParentSize className="metrics-container" debounceTime={10}>
+          {({ width: visWidth, height: visHeight }) => (
+            <HorizontalBar
+              clickedLabelCallback={(
+                contrastIndex: number,
+                contrast: string
+              ) => {
+                updateContrast(contrastIndex, contrast);
+              }}
+              labels={contrastLabels}
+              values={contrastFingerprint}
+              width={visWidth}
+              height={visHeight}
+            />
+          )}
+        </ParentSize>
+      </div>
+    </div>
+  );
+};
 
 export default App;

@@ -12,7 +12,7 @@ interface Props {
   values: number[];
   width: number;
   height: number;
-  clickedLabelCallback?: (labelIndex: number, label?: string) => void;
+  clickedLabelCallback?: (labelIndex: number, label: string) => void;
 }
 
 const HorizontalBar = ({
