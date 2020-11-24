@@ -2,3 +2,4 @@ node_modules
 .eslintcache
 yarn-error.log
 public/assets/*
+.env

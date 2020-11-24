@@ -1,3 +1,4 @@
+import dotenv
 import eel
 import nibabel as nib
 import numpy as np
@@ -5,8 +6,9 @@ import os
 import pandas as pd
 
 # Load contrasts
-DATA_PATH = "/home/alexis/singbrain/data/ibc_surface_conditions_db"
-AVAILABLE_CONTRASTS_PATH = os.path.join(DATA_PATH, "result_db.csv")
+dotenv.load_dotenv()
+DATA_PATH = os.getenv("DATA_PATH")
+AVAILABLE_CONTRASTS_PATH = os.getenv("AVAILABLE_CONTRASTS_PATH")
 
 
 def select_subjects_and_contrasts(
@@ -136,13 +138,13 @@ def get_contrast_labels():
 
 @eel.expose
 def get_voxel_fingerprint(subject_index, voxel_index):
-    print(f"get_voxel_fingerprint {voxel_index}")
+    print(f"get_voxel_fingerprint {voxel_index} for subject {subject_index}")
     return X[n_voxels * subject_index + voxel_index, :].tolist()
 
 
 @eel.expose
 def get_left_contrast(subject_index, contrast_index):
-    print(f"get_left_contrast {contrast_index}")
+    print(f"get_left_contrast {contrast_index} for subject {subject_index}")
     start_index = n_voxels * subject_index
     return X[
         start_index : start_index + n_voxels // 2, contrast_index
