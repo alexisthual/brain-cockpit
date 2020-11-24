@@ -197,6 +197,8 @@ class Scene extends Component<ISceneProps, {}> {
     const maxDim = Math.max(size.x, size.y, size.z);
     const fov = this.camera.fov * (Math.PI / 180);
     let cameraZ = (maxDim / 2 / Math.tan(fov / 2)) * offset;
+    this.camera.position.x = center.x;
+    this.camera.position.y = center.y;
     this.camera.position.z = center.z + cameraZ;
     const minZ = boundingBox.min.z;
     const cameraToFarEdge = cameraZ - minZ;
