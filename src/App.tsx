@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import Scene from "./Scene";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 
 import ContrastFingerprint from "./components/contrastFingerprint";
 import Header from "./components/header";
+import Scene from "./components/scene";
 import { Orientation } from "constants/index";
 import "./App.scss";
 
