@@ -16,6 +16,20 @@
   overflow: hidden;
 }
 
+#header {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 50;
+
+  min-width: 200px;
+
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto;
+  align-content: center;
+}
+
 #webgl {
   min-height: 0px;
   background-color: #f5f8fa;

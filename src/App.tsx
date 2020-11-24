@@ -3,7 +3,7 @@ import Scene from "./Scene";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 
 import HorizontalBar from "./components/horizontalBar";
-import "./App.css";
+import "./App.scss";
 
 export const eel = window.eel;
 eel.set_host("ws://localhost:8080");
