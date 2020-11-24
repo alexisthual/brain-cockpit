@@ -123,11 +123,10 @@ print("Loading contrasts...")
 X = load_fmri(df, subjects, contrasts)
 n_voxels = X.shape[0] // n_subjects
 
-# Util function for exploring voxel's contrasts
+# Util function for exploring contrasts
 @eel.expose
-def explore_voxel(voxel_index):
-    print(f"explore_voxel {voxel_index}")
-    return X[voxel_index, :].tolist()
+def get_subjects():
+    return subjects.tolist()
 
 
 @eel.expose
@@ -136,9 +135,18 @@ def get_contrast_labels():
 
 
 @eel.expose
-def get_left_contrast(contrast_index):
+def get_voxel_fingerprint(subject_index, voxel_index):
+    print(f"get_voxel_fingerprint {voxel_index}")
+    return X[n_voxels * subject_index + voxel_index, :].tolist()
+
+
+@eel.expose
+def get_left_contrast(subject_index, contrast_index):
     print(f"get_left_contrast {contrast_index}")
-    return X[: n_voxels // 2, contrast_index].tolist()
+    start_index = n_voxels * subject_index
+    return X[
+        start_index : start_index + n_voxels // 2, contrast_index
+    ].tolist()
 
 
 @eel.expose
@@ -149,10 +157,5 @@ def server_log(message):
 print("Serving...")
 eel.init("src", [".tsx", ".ts", ".jsx", ".js", ".html"])
 eel.start(
-    {"port": 3000},
-    app=None,
-    host="localhost",
-    port=8080,
-    size=(1280, 800),
-    close_callback=print("Closing."),
+    {"port": 3000}, app=None, host="localhost", port=8080, size=(1280, 800)
 )
