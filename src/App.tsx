@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Scene from "./Scene";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 
-import HorizontalBar from "./components/horizontalBar";
+import ContrastFingerprint from "./components/contrastFingerprint";
 import HeaderItem from "./components/headerItem";
 import "./App.scss";
 
@@ -69,7 +69,7 @@ const App = () => {
       <div id="metrics">
         <ParentSize className="metrics-container" debounceTime={10}>
           {({ width: visWidth, height: visHeight }) => (
-            <HorizontalBar
+            <ContrastFingerprint
               clickedLabelCallback={(
                 contrastIndex: number,
                 contrast: string

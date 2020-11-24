@@ -1,0 +1,13 @@
+@import "constants/colors";
+
+.contrast-fingerprint .label {
+  fill: $dark-gray4;
+  font-size: 8px;
+  font-weight: 400;
+
+  &:hover {
+    font-weight: 600;
+    fill: $dark-gray2;
+    cursor: pointer;
+  }
+}
