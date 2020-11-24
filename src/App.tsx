@@ -4,6 +4,7 @@ import ParentSize from "@visx/responsive/lib/components/ParentSize";
 
 import ContrastFingerprint from "./components/contrastFingerprint";
 import HeaderItem from "./components/headerItem";
+import { Orientation } from "constants/index";
 import "./App.scss";
 
 export const eel = window.eel;
@@ -17,6 +18,7 @@ const App = () => {
   const [contrastLabels, setContrastLabels] = useState<string[]>([]);
   const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
   const [contrastMap, setContrastMap] = useState<number[] | undefined>();
+  const [orientation] = useState(Orientation.VERTICAL);
 
   useEffect(() => {
     eel.get_contrast_labels()((contrastLabels: string[]) => {
@@ -45,7 +47,7 @@ const App = () => {
   };
 
   return (
-    <div id="main-container">
+    <div id="main-container" className={`${orientation}-orientation`}>
       <div id="header">
         <HeaderItem label={"Subject"} value={subject} />
         <HeaderItem
@@ -54,7 +56,7 @@ const App = () => {
         />
         <HeaderItem label={"Voxel"} value={voxelIndex} />
       </div>
-      <div id="webgl">
+      <div id="scene">
         <ParentSize className="scene-container" debounceTime={10}>
           {({ width: sceneWidth, height: sceneHeight }) => (
             <Scene
@@ -66,9 +68,9 @@ const App = () => {
           )}
         </ParentSize>
       </div>
-      <div id="metrics">
-        <ParentSize className="metrics-container" debounceTime={10}>
-          {({ width: visWidth, height: visHeight }) => (
+      <div id="fingerprint">
+        <ParentSize className="fingerprint-container" debounceTime={10}>
+          {({ width: fingerprintWidth, height: fingerprintHeight }) => (
             <ContrastFingerprint
               clickedLabelCallback={(
                 contrastIndex: number,
@@ -76,10 +78,15 @@ const App = () => {
               ) => {
                 updateContrast(contrastIndex, contrast);
               }}
+              orientation={
+                orientation === Orientation.VERTICAL
+                  ? Orientation.HORIZONTAL
+                  : Orientation.VERTICAL
+              }
               labels={contrastLabels}
-              values={contrastFingerprint}
-              width={visWidth}
-              height={visHeight}
+              fingerprint={contrastFingerprint}
+              width={fingerprintWidth}
+              height={fingerprintHeight}
             />
           )}
         </ParentSize>

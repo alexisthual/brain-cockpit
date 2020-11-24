@@ -1,13 +1,49 @@
 @import "constants/colors";
 
-.contrast-fingerprint .label {
-  fill: $dark-gray4;
-  font-size: 8px;
-  font-weight: 400;
+.contrast-fingerprint {
+  box-sizing: border-box;
+
+  &.horizontal-orientation {
+    border-top: 1px solid $light-gray3;
+  }
+  &.vertical-orientation {
+    border-left: 1px solid $light-gray3;
+  }
+
+  .axis {
+    position: absolute;
+    .tick {
+      fill: $gray3;
+      font-size: 11px;
+    }
+  }
+}
+.contrast-bar {
+  .background-bar {
+    &.light {
+      fill: transparent;
+    }
+    &.dark {
+      fill: $light-gray4;
+    }
+  }
+
+  .label {
+    fill: $dark-gray4;
+    font-size: 10px;
+    font-weight: 400;
+  }
 
   &:hover {
-    font-weight: 600;
-    fill: $dark-gray2;
     cursor: pointer;
+
+    .background-bar {
+      fill: $light-gray1;
+    }
+
+    .label {
+      font-weight: 600;
+      fill: $dark-gray2;
+    }
   }
 }

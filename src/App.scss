@@ -1,3 +1,5 @@
+@import "constants/colors";
+
 * {
   padding: 0;
   margin: 0;
@@ -6,14 +8,21 @@
 #main-container {
   width: 100vw;
   height: 100vh;
+  background-color: $light-gray5;
+  overflow: hidden;
+
   display: grid;
-  gris-template-rows: auto;
-  grid-template-columns: 66% auto;
   justify-content: stretch;
   align-content: stretch;
 
-  background-color: #ced9e0;
-  overflow: hidden;
+  &.horizontal-orientation {
+    grid-template-rows: auto;
+    grid-template-columns: 66% auto;
+  }
+  &.vertical-orientation {
+    grid-template-columns: auto;
+    grid-template-rows: 66% auto;
+  }
 }
 
 #header {
@@ -30,12 +39,12 @@
   align-content: center;
 }
 
-#webgl {
+#scene {
   min-height: 0px;
-  background-color: #f5f8fa;
+  background-color: $light-gray5;
 }
 
-#metrics {
+#fingerprint {
   min-height: 0px;
-  background-color: #ebf1f5;
+  background-color: $light-gray5;
 }
