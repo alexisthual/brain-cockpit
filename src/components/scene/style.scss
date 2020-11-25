@@ -1,0 +1,33 @@
+@import "constants/colors";
+
+$hotspot-size: 15px;
+
+#hotspot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  margin-left: $hotspot-size / 2;
+  margin-top: $hotspot-size / 2;
+  padding: 1em;
+  color: $light-gray5;
+  background: rgba($dark-gray5, 0.85);
+  border-radius: 0.5em;
+  font-size: 12px;
+  line-height: 1.2;
+  transition: opacity 0.2s;
+
+  &::before {
+    content: " ";
+    position: absolute;
+    top: -$hotspot-size;
+    left: -$hotspot-size;
+    width: $hotspot-size;
+    height: $hotspot-size;
+    line-height: $hotspot-size;
+    border-radius: 50%;
+    font-size: 16px;
+    text-align: center;
+    background: rgba($dark-gray5, 0.85);
+  }
+}

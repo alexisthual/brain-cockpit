@@ -4,6 +4,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 import { Colors } from "constants/colors";
+import "./style.scss";
 
 interface ISceneProps {
   clickedVoxelCallback?: any;
@@ -24,12 +25,15 @@ class Scene extends Component<ISceneProps, {}> {
   controls?: any;
   frameId?: any;
   selectedVertexIndex?: number;
+  selectedVertexPosition: THREE.Vector3;
+  hotspot: any;
 
   constructor(props: ISceneProps) {
     super(props);
     this.state = {};
     this.width = 1;
     this.height = 1;
+    this.selectedVertexPosition = new THREE.Vector3();
     this.start = this.start.bind(this);
     this.stop = this.stop.bind(this);
     this.animate = this.animate.bind(this);
@@ -39,6 +43,7 @@ class Scene extends Component<ISceneProps, {}> {
     this.destroyContext = this.destroyContext.bind(this);
     this.handleWindowResize = this.handleWindowResize.bind(this);
     this.onMouseClick = this.onMouseClick.bind(this);
+    this.updateHotspot = this.updateHotspot.bind(this);
   }
 
   componentDidMount() {
@@ -158,6 +163,9 @@ class Scene extends Component<ISceneProps, {}> {
     ambLight.position.set(5, 3, 5);
     camera.add(ambLight);
 
+    // Add hotspot to track selected vertex
+    this.hotspot = document.getElementById("hotspot");
+
     // Add loaded object to scene
     scene.add(object);
 
@@ -176,11 +184,6 @@ class Scene extends Component<ISceneProps, {}> {
     const boundingBox = new THREE.Box3().setFromObject(this.object);
     const center = boundingBox.getCenter(new THREE.Vector3());
     const size = boundingBox.getSize(new THREE.Vector3());
-
-    // Centering object
-    this.object.position.x += this.object.position.x - center.x;
-    this.object.position.y += this.object.position.y - center.y;
-    this.object.position.z += this.object.position.z - center.z;
 
     // Add grid helper
     const gridHelper = new THREE.GridHelper(
@@ -258,21 +261,14 @@ class Scene extends Component<ISceneProps, {}> {
         }
       }
 
-      // Update color for selected voxel
-      const color = new THREE.Color(Colors.RED4);
-      this.object.geometry.attributes.color.setXYZ(
-        selectedVertexIndex,
-        color.r,
-        color.g,
-        color.b
+      // Update selected vertex position
+      const vertex = new THREE.Vector3();
+      vertex.fromBufferAttribute(
+        this.object.geometry.getAttribute("position"),
+        selectedVertexIndex
       );
-      this.object.geometry.attributes.color.setXYZ(
-        this.selectedVertexIndex,
-        0.5 + 0.2 * Math.random(),
-        0.5 + 0.2 * Math.random(),
-        0.5 + 0.2 * Math.random()
-      );
-      this.object.geometry.attributes.color.needsUpdate = true;
+      this.object.localToWorld(vertex);
+      this.selectedVertexPosition.copy(vertex);
 
       // Update selectedFaceIndex
       this.selectedVertexIndex = selectedVertexIndex;
@@ -291,6 +287,35 @@ class Scene extends Component<ISceneProps, {}> {
 
   renderScene() {
     this.renderer.render(this.scene, this.camera);
+    this.updateHotspot();
+  }
+
+  updateHotspot() {
+    // Update opacity
+    if (this.selectedVertexIndex !== undefined) {
+      const meshDistance = this.camera.position.distanceTo(
+        this.object.position
+      );
+      const spriteDistance = this.camera.position.distanceTo(
+        this.selectedVertexPosition
+      );
+      this.hotspot.style.opacity = spriteDistance > meshDistance ? 0.25 : 1;
+    } else {
+      this.hotspot.style.opacity = 0;
+    }
+
+    // Update position
+    const vector = this.selectedVertexPosition.clone();
+    const canvas = this.renderer.domElement;
+    vector.project(this.camera);
+    vector.x = Math.round(
+      (0.5 + vector.x / 2) * (canvas.width / window.devicePixelRatio)
+    );
+    vector.y = Math.round(
+      (0.5 - vector.y / 2) * (canvas.height / window.devicePixelRatio)
+    );
+    this.hotspot.style.top = `${vector.y}px`;
+    this.hotspot.style.left = `${vector.x}px`;
   }
 
   animate() {
@@ -335,7 +360,18 @@ class Scene extends Component<ISceneProps, {}> {
           position: "absolute",
           overflow: "hidden",
         }}
-      ></div>
+      >
+        <div id="hotspot">
+          <p>
+            <strong>Voxel {this.selectedVertexIndex}</strong>
+          </p>
+          <p>
+            ({this.selectedVertexPosition.x.toFixed(1)},{" "}
+            {this.selectedVertexPosition.y.toFixed(1)},{" "}
+            {this.selectedVertexPosition.z.toFixed(1)})
+          </p>
+        </div>
+      </div>
     );
   }
 }
