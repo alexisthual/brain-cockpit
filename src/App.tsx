@@ -65,22 +65,27 @@ const App = () => {
   };
   const [contrast, setContrast] = useReducer(contrastReducer, {} as Contrast);
 
-  // Initialise contrast map
+  // Initialise all app state variables
   useEffect(() => {
-    eel.get_subjects()((subjectLabels: string[]) => {
-      setSubjectLabels(subjectLabels);
-      setSubject({ payload: 0 });
-      eel.get_contrast_labels()((contrastLabels: string[]) => {
-        setContrastLabels(contrastLabels);
-        eel.get_left_contrast(
-          0,
-          0
-        )((contrastMap: number[]) => {
+    const fetchAllData = async () => {
+      // Load static data
+      const subjectLabels = eel.get_subjects()();
+      const contrastLabels = eel.get_contrast_labels()();
+
+      // Wait for all data to be loaded before setting app state
+      Promise.all([subjectLabels, contrastLabels, tasks]).then((values) => {
+        setSubjectLabels(values[0]);
+        setContrastLabels(values[1]);
+        if (values[0].length > 0) {
+          setSubject({ payload: 0 });
+        }
+        if (values[1].length > 0) {
           setContrast({ payload: 0 });
-          setContrastMap(contrastMap);
-        });
+        }
       });
-    });
+    };
+
+    fetchAllData();
   }, []);
 
   // Update contrast map when subject or contrast change
