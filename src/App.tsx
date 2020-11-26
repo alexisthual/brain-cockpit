@@ -4,16 +4,11 @@ import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import ContrastFingerprint from "./components/contrastFingerprint";
 import Header from "./components/header";
 import Scene from "./components/scene";
-import { Orientation } from "constants/index";
+import { Contrast, Orientation, Subject } from "constants/index";
 import "./App.scss";
 
 export const eel = window.eel;
 eel.set_host("ws://localhost:8080");
-
-interface Label {
-  index?: number;
-  label?: string;
-}
 
 type ActionLabel = {
   type?: "increment" | "decrement";
@@ -28,7 +23,7 @@ const App = () => {
   const [contrastMap, setContrastMap] = useState<number[] | undefined>();
   const [orientation] = useState(Orientation.VERTICAL);
 
-  const subjectReducer = (state: Label, action: ActionLabel): Label => {
+  const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
     let n = subjectLabels.length;
     switch (action.type) {
@@ -47,9 +42,9 @@ const App = () => {
       label: subjectLabels[newIndex],
     };
   };
-  const [subject, setSubject] = useReducer(subjectReducer, {} as Label);
+  const [subject, setSubject] = useReducer(subjectReducer, {} as Subject);
 
-  const contrastReducer = (state: Label, action: ActionLabel): Label => {
+  const contrastReducer = (state: Contrast, action: ActionLabel): Contrast => {
     let newIndex = state.index;
     let n = subjectLabels.length;
     switch (action.type) {
@@ -68,7 +63,7 @@ const App = () => {
       label: contrastLabels[newIndex],
     };
   };
-  const [contrast, setContrast] = useReducer(contrastReducer, {} as Label);
+  const [contrast, setContrast] = useReducer(contrastReducer, {} as Contrast);
 
   // Initialise contrast map
   useEffect(() => {
