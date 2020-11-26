@@ -16,8 +16,6 @@ interface ISceneProps {
 }
 
 class Scene extends Component<ISceneProps, {}> {
-  width: number;
-  height: number;
   container?: any;
   renderer?: any;
   scene?: any;
@@ -33,8 +31,6 @@ class Scene extends Component<ISceneProps, {}> {
   constructor(props: ISceneProps) {
     super(props);
     this.state = {};
-    this.width = 1;
-    this.height = 1;
     this.selectedVertexPosition = new THREE.Vector3();
     this.start = this.start.bind(this);
     this.stop = this.stop.bind(this);
@@ -103,6 +99,14 @@ class Scene extends Component<ISceneProps, {}> {
   }
 
   componentDidUpdate(prevProps: ISceneProps) {
+    // Update height and width
+    if (
+      prevProps.width !== this.props.width ||
+      prevProps.height !== this.props.height
+    ) {
+      this.handleWindowResize();
+    }
+
     // Update object color
     if (
       this.props.surfaceMap !== prevProps.surfaceMap &&
@@ -133,9 +137,6 @@ class Scene extends Component<ISceneProps, {}> {
   }
 
   setupScene(object: THREE.Object3D) {
-    this.width = this.container.clientWidth;
-    this.height = this.container.clientHeight;
-
     // Initialise renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -150,7 +151,7 @@ class Scene extends Component<ISceneProps, {}> {
     // Intialiase camera
     let camera = new THREE.PerspectiveCamera(
       60,
-      this.width / this.height,
+      this.props.width / this.props.height,
       0.25,
       1000
     );
@@ -225,7 +226,7 @@ class Scene extends Component<ISceneProps, {}> {
     controls.update();
 
     this.controls = controls;
-    this.renderer.setSize(this.width, this.height);
+    this.renderer.setSize(this.props.width, this.props.height);
     this.container.appendChild(this.renderer.domElement);
     this.start();
   }
@@ -338,10 +339,13 @@ class Scene extends Component<ISceneProps, {}> {
   }
 
   handleWindowResize() {
-    let width = this.props.width;
-    let height = this.props.height;
-    this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
+    if (this.camera && this.renderer) {
+      this.camera.aspect = this.props.width / this.props.height;
+      this.camera.updateProjectionMatrix();
+
+      this.renderer.setSize(this.props.width, this.props.height);
+      this.renderer.render(this.scene, this.camera);
+    }
   }
 
   componentWillUnmount() {
