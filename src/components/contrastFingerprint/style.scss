@@ -34,7 +34,8 @@
     font-weight: 400;
   }
 
-  &:hover {
+  &:hover,
+  &.active {
     cursor: pointer;
 
     .background-bar {

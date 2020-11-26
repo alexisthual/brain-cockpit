@@ -6,7 +6,7 @@ import { Bar } from "@visx/shape";
 import { Text } from "@visx/text";
 
 import { Colors } from "constants/colors";
-import { Orientation } from "constants/index";
+import { Contrast, Orientation } from "constants/index";
 import "./style.scss";
 
 interface Props {
@@ -16,6 +16,7 @@ interface Props {
   height: number;
   clickedLabelCallback?: (labelIndex: number) => void;
   orientation: Orientation;
+  selectedContrast?: Contrast;
 }
 
 const ContrastFingerprint = ({
@@ -25,6 +26,7 @@ const ContrastFingerprint = ({
   height,
   clickedLabelCallback,
   orientation = Orientation.VERTICAL,
+  selectedContrast,
 }: Props) => {
   let padding = 30;
   let labelMargin = 15;
@@ -151,7 +153,13 @@ const ContrastFingerprint = ({
             return (
               <Group
                 key={`contarst-bar-${label}`}
-                className="contrast-bar"
+                className={`contrast-bar ${
+                  selectedContrast
+                    ? index === selectedContrast.index
+                      ? "active"
+                      : ""
+                    : ""
+                }`}
                 onClick={() => {
                   if (clickedLabelCallback) {
                     clickedLabelCallback(index);

@@ -163,6 +163,7 @@ const App = () => {
         <ParentSize className="fingerprint-container" debounceTime={10}>
           {({ width: fingerprintWidth, height: fingerprintHeight }) => (
             <ContrastFingerprint
+              selectedContrast={contrast}
               clickedLabelCallback={(contrastIndex: number) => {
                 setContrast({ payload: contrastIndex });
               }}
