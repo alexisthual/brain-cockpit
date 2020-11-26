@@ -46,7 +46,7 @@ const App = () => {
 
   const contrastReducer = (state: Contrast, action: ActionLabel): Contrast => {
     let newIndex = state.index;
-    let n = subjectLabels.length;
+    let n = contrastLabels.length;
     switch (action.type) {
       case "increment":
         newIndex = ((((state.index ?? 0) + 1) % n) + n) % n;
