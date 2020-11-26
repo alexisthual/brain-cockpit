@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useReducer, useState } from "react";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 
 import ContrastFingerprint from "./components/contrastFingerprint";
@@ -10,70 +10,118 @@ import "./App.scss";
 export const eel = window.eel;
 eel.set_host("ws://localhost:8080");
 
+interface Label {
+  index?: number;
+  label?: string;
+}
+
+type ActionLabel = {
+  type?: "increment" | "decrement";
+  payload?: number;
+};
+
 const App = () => {
-  const [subjects, setSubjects] = useState<string[]>([]);
-  const [subject, setSubject] = useState<string | undefined>();
-  const [subjectIndex, setSubjectIndex] = useState<number | undefined>();
-  const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
-  const [contrast, setContrast] = useState<string | undefined>();
-  const [contrastIndex, setContrastIndex] = useState<number | undefined>();
+  const [subjectLabels, setSubjectLabels] = useState<string[]>([]);
   const [contrastLabels, setContrastLabels] = useState<string[]>([]);
+  const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
   const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
   const [contrastMap, setContrastMap] = useState<number[] | undefined>();
   const [orientation] = useState(Orientation.VERTICAL);
 
+  const subjectReducer = (state: Label, action: ActionLabel): Label => {
+    let newIndex = state.index;
+    let n = subjectLabels.length;
+    switch (action.type) {
+      case "increment":
+        newIndex = ((((state.index ?? 0) + 1) % n) + n) % n;
+        break;
+      case "decrement":
+        newIndex = ((((state.index ?? 0) - 1) % n) + n) % n;
+        break;
+      default:
+        newIndex = ((action.payload ?? 0 % n) + n) % n;
+        break;
+    }
+    return {
+      index: newIndex,
+      label: subjectLabels[newIndex],
+    };
+  };
+  const [subject, setSubject] = useReducer(subjectReducer, {} as Label);
+
+  const contrastReducer = (state: Label, action: ActionLabel): Label => {
+    let newIndex = state.index;
+    let n = subjectLabels.length;
+    switch (action.type) {
+      case "increment":
+        newIndex = ((((state.index ?? 0) + 1) % n) + n) % n;
+        break;
+      case "decrement":
+        newIndex = ((((state.index ?? 0) - 1) % n) + n) % n;
+        break;
+      default:
+        newIndex = ((action.payload ?? 0 % n) + n) % n;
+        break;
+    }
+    return {
+      index: newIndex,
+      label: contrastLabels[newIndex],
+    };
+  };
+  const [contrast, setContrast] = useReducer(contrastReducer, {} as Label);
+
+  // Initialise contrast map
   useEffect(() => {
-    eel.get_subjects()((subjects: string[]) => {
-      setSubjects(subjects);
-      setSubject(subjects[0]);
-      setSubjectIndex(0);
+    eel.get_subjects()((subjectLabels: string[]) => {
+      setSubjectLabels(subjectLabels);
+      setSubject({ payload: 0 });
       eel.get_contrast_labels()((contrastLabels: string[]) => {
         setContrastLabels(contrastLabels);
         eel.get_left_contrast(
           0,
           0
         )((contrastMap: number[]) => {
-          setContrastIndex(0);
-          setContrast(contrastLabels[0]);
+          setContrast({ payload: 0 });
           setContrastMap(contrastMap);
         });
       });
     });
   }, []);
 
+  // Update contrast map when subject or contrast change
   useEffect(() => {
-    if (subjectIndex !== undefined && contrastIndex !== undefined) {
+    if (subject.index !== undefined && contrast.index !== undefined) {
       eel.get_left_contrast(
-        subjectIndex,
-        contrastIndex
+        subject.index,
+        contrast.index
       )((contrastMap: number[]) => {
         setContrastMap(contrastMap);
       });
     }
-  }, [subjectIndex, contrastIndex]);
+  }, [subject, contrast]);
 
+  // Update fingerprint when voxelIndex or subjectIndex change
   useEffect(() => {
     if (voxelIndex !== undefined) {
       eel.get_voxel_fingerprint(
-        subjectIndex,
+        subject.index,
         voxelIndex
       )((contrastFingerprint: number[]) => {
         setContrastFingerprint(contrastFingerprint);
       });
     }
-  }, [voxelIndex, subjectIndex]);
+  }, [voxelIndex, subject]);
 
   return (
     <div id="main-container" className={`${orientation}-orientation`}>
       <Header
-        subjects={subjects}
-        subject={subject}
-        contrast={contrast}
-        contrastIndex={contrastIndex}
+        subjectLabels={subjectLabels}
+        subject={subject.label}
+        contrast={contrast.label}
+        contrastIndex={contrast.index}
         voxelIndex={voxelIndex}
-        subjectChangeCallback={(subject: string) => {
-          setSubject(subject);
-          setSubjectIndex(subjects.indexOf(subject));
+        subjectChangeCallback={(subjectIndex: number) => {
+          setSubject({ payload: subjectIndex });
         }}
       />
       <div id="scene">
@@ -86,6 +134,32 @@ const App = () => {
               surfaceMap={contrastMap}
               width={sceneWidth}
               height={sceneHeight}
+              keyPressEvents={[
+                {
+                  keyCode: 76,
+                  callback: () => {
+                    setContrast({ type: "increment" });
+                  },
+                },
+                {
+                  keyCode: 74,
+                  callback: () => {
+                    setContrast({ type: "decrement" });
+                  },
+                },
+                {
+                  keyCode: 73,
+                  callback: () => {
+                    setSubject({ type: "decrement" });
+                  },
+                },
+                {
+                  keyCode: 75,
+                  callback: () => {
+                    setSubject({ type: "increment" });
+                  },
+                },
+              ]}
             />
           )}
         </ParentSize>
@@ -94,12 +168,8 @@ const App = () => {
         <ParentSize className="fingerprint-container" debounceTime={10}>
           {({ width: fingerprintWidth, height: fingerprintHeight }) => (
             <ContrastFingerprint
-              clickedLabelCallback={(
-                contrastIndex: number,
-                contrast: string
-              ) => {
-                setContrast(contrast);
-                setContrastIndex(contrastIndex);
+              clickedLabelCallback={(contrastIndex: number) => {
+                setContrast({ payload: contrastIndex });
               }}
               orientation={
                 orientation === Orientation.VERTICAL

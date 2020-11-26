@@ -14,7 +14,7 @@ interface Props {
   fingerprint: number[];
   width: number;
   height: number;
-  clickedLabelCallback?: (labelIndex: number, label: string) => void;
+  clickedLabelCallback?: (labelIndex: number) => void;
   orientation: Orientation;
 }
 
@@ -154,7 +154,7 @@ const ContrastFingerprint = ({
                 className="contrast-bar"
                 onClick={() => {
                   if (clickedLabelCallback) {
-                    clickedLabelCallback(index, label);
+                    clickedLabelCallback(index);
                   }
                 }}
               >

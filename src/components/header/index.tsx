@@ -2,16 +2,16 @@ import React from "react";
 import "./style.scss";
 
 interface IProps {
-  subjects: string[];
+  subjectLabels: string[];
   subject?: string;
   contrast?: string;
   contrastIndex?: number;
   voxelIndex?: number;
-  subjectChangeCallback: (subject: string) => void;
+  subjectChangeCallback: (subjectIndex: number) => void;
 }
 
 const Header = ({
-  subjects,
+  subjectLabels,
   subject,
   contrast,
   contrastIndex,
@@ -27,10 +27,10 @@ const Header = ({
             <select
               value={subject}
               onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
-                subjectChangeCallback(event.target.value)
+                subjectChangeCallback(subjectLabels.indexOf(event.target.value))
               }
             >
-              {subjects.map((s, index) => {
+              {subjectLabels.map((s, index) => {
                 return (
                   <option key={s} value={s}>
                     {s}

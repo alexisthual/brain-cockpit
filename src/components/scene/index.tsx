@@ -11,6 +11,7 @@ interface ISceneProps {
   surfaceMap?: number[];
   width: number;
   height: number;
+  keyPressEvents?: any;
 }
 
 class Scene extends Component<ISceneProps, {}> {
@@ -279,6 +280,13 @@ class Scene extends Component<ISceneProps, {}> {
 
   start() {
     window.addEventListener("click", this.onMouseClick, false);
+    this.props.keyPressEvents.forEach((keyPressEvent: any) => {
+      window.addEventListener("keydown", (event) => {
+        if (event.isComposing || event.keyCode === keyPressEvent.keyCode) {
+          keyPressEvent.callback();
+        }
+      });
+    });
 
     if (!this.frameId) {
       this.frameId = requestAnimationFrame(this.animate);
