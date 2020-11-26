@@ -138,13 +138,17 @@ def get_contrast_labels():
 
 @eel.expose
 def get_voxel_fingerprint(subject_index, voxel_index):
-    print(f"get_voxel_fingerprint {voxel_index} for subject {subject_index}")
+    print(
+        f"get_voxel_fingerprint {voxel_index} for {subjects[subject_index]} ({subject_index})"
+    )
     return X[n_voxels * subject_index + voxel_index, :].tolist()
 
 
 @eel.expose
 def get_left_contrast(subject_index, contrast_index):
-    print(f"get_left_contrast {contrast_index} for subject {subject_index}")
+    print(
+        f"get_left_contrast {contrasts[contrast_index]} ({contrast_index}) for {subjects[subject_index]} ({subject_index})"
+    )
     start_index = n_voxels * subject_index
     return X[
         start_index : start_index + n_voxels // 2, contrast_index
