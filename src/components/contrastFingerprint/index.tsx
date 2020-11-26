@@ -48,7 +48,7 @@ const ContrastFingerprint = ({
   const valueScale = scaleLinear<number>({
     range: [0, orientation === Orientation.VERTICAL ? xMax : yMax],
     round: true,
-    domain: [-10, 10],
+    domain: orientation === Orientation.VERTICAL ? [-10, 10] : [10, -10],
   });
 
   const labelScale = scaleBand<string>({
@@ -102,7 +102,10 @@ const ContrastFingerprint = ({
               barY: number | undefined,
               barWidth: number | undefined,
               barX: number | undefined;
-            const delta = valueScale(value) - valueScale(0);
+            const delta =
+              orientation === Orientation.VERTICAL
+                ? valueScale(value) - valueScale(0)
+                : valueScale(0) - valueScale(value);
             switch (orientation) {
               case Orientation.VERTICAL:
                 barHeight = labelScale.bandwidth();
@@ -114,7 +117,7 @@ const ContrastFingerprint = ({
                 barWidth = labelScale.bandwidth();
                 barX = labelScale(label);
                 barHeight = delta > 0 ? delta : -delta;
-                barY = delta > 0 ? valueScale(0) : valueScale(value);
+                barY = delta > 0 ? valueScale(value) : valueScale(0);
                 break;
             }
             const backgroundBar = (parity: boolean) => {
@@ -125,11 +128,11 @@ const ContrastFingerprint = ({
                       className={`background-bar ${parity ? "dark" : "light"}`}
                       key={`background-bar-${label}`}
                       x={valueScale(-10)}
+                      width={valueScale(10)}
                       y={
                         (barY ?? 0) -
                         (labelScale.step() * labelScale.padding()) / 2
                       }
-                      width={valueScale(10)}
                       height={labelScale.step()}
                     />
                   );
@@ -142,9 +145,9 @@ const ContrastFingerprint = ({
                         (barX ?? 0) -
                         (labelScale.step() * labelScale.padding()) / 2
                       }
-                      y={valueScale(-10)}
                       width={labelScale.step()}
-                      height={valueScale(10)}
+                      y={valueScale(10)}
+                      height={valueScale(-10)}
                     />
                   );
               }
@@ -172,8 +175,8 @@ const ContrastFingerprint = ({
                   key={`bar-${label}`}
                   fill={delta >= 0 ? Colors.RED5 : Colors.BLUE5}
                   x={barX}
-                  y={barY}
                   width={barWidth}
+                  y={barY}
                   height={barHeight}
                 />
                 <Text
@@ -182,15 +185,15 @@ const ContrastFingerprint = ({
                   key={`label-${label}`}
                   textAnchor="end"
                   verticalAnchor="middle"
-                  y={
-                    orientation === Orientation.VERTICAL
-                      ? (labelScale(label) ?? 0) + labelScale.step() / 2
-                      : valueScale(10) + labelMargin
-                  }
                   x={
                     orientation === Orientation.VERTICAL
                       ? -labelMargin
                       : (labelScale(label) ?? 0) + labelScale.step() / 2
+                  }
+                  y={
+                    orientation === Orientation.VERTICAL
+                      ? (labelScale(label) ?? 0) + labelScale.step() / 2
+                      : valueScale(-10) + labelMargin
                   }
                 >
                   {label}
