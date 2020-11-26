@@ -18,10 +18,12 @@ type ActionLabel = {
 const App = () => {
   const [subjectLabels, setSubjectLabels] = useState<string[]>([]);
   const [contrastLabels, setContrastLabels] = useState<string[]>([]);
+  const [taskLabels, setTaskLabels] = useState<string[]>([]);
+  const [taskCounts, setTaskCounts] = useState<number[]>([]);
   const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
   const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
   const [contrastMap, setContrastMap] = useState<number[] | undefined>();
-  const [orientation, setOrientation] = useState(Orientation.HORIZONTAL);
+  const [orientation, setOrientation] = useState(Orientation.VERTICAL);
 
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
@@ -71,11 +73,14 @@ const App = () => {
       // Load static data
       const subjectLabels = eel.get_subjects()();
       const contrastLabels = eel.get_contrast_labels()();
+      const tasks = eel.get_tasks()();
 
       // Wait for all data to be loaded before setting app state
       Promise.all([subjectLabels, contrastLabels, tasks]).then((values) => {
         setSubjectLabels(values[0]);
         setContrastLabels(values[1]);
+        setTaskLabels(values[2].map((x: any) => x[0]));
+        setTaskCounts(values[2].map((x: any) => x[1]));
         if (values[0].length > 0) {
           setSubject({ payload: 0 });
         }
@@ -197,7 +202,9 @@ const App = () => {
                     ? Orientation.HORIZONTAL
                     : Orientation.VERTICAL
                 }
-                labels={contrastLabels}
+                contrastLabels={contrastLabels}
+                taskLabels={taskLabels}
+                taskCounts={taskCounts}
                 fingerprint={contrastFingerprint}
                 width={fingerprintWidth}
                 height={fingerprintHeight}

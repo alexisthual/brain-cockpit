@@ -42,7 +42,17 @@ def select_subjects_and_contrasts(
     selected_contrasts = grouped_by_contrast[mask]
     selected_contrasts = selected_contrasts.reset_index()
 
-    return selected_subjects, selected_contrasts.contrast.values
+    selected_tasks = (
+        selected_contrasts.groupby(["task"])["contrast"]
+        .nunique()
+        .reset_index()
+    )
+
+    return (
+        selected_subjects,
+        selected_contrasts.contrast.values,
+        selected_tasks.values,
+    )
 
 
 # Load FMRI data
@@ -115,7 +125,7 @@ def load_fmri(df, subjects, unique_contrasts):
 
 ## Load selected subjects and contrasts
 df = pd.read_csv(AVAILABLE_CONTRASTS_PATH)
-subjects, contrasts = select_subjects_and_contrasts(
+subjects, contrasts, n_contrasts_by_task = select_subjects_and_contrasts(
     df, available_contrasts_path=AVAILABLE_CONTRASTS_PATH
 )
 n_subjects, n_contrasts = len(subjects), len(contrasts)
@@ -134,6 +144,11 @@ def get_subjects():
 @eel.expose
 def get_contrast_labels():
     return contrasts.tolist()
+
+
+@eel.expose
+def get_tasks():
+    return n_contrasts_by_task.tolist()
 
 
 @eel.expose
