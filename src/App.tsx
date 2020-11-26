@@ -21,7 +21,7 @@ const App = () => {
   const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
   const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
   const [contrastMap, setContrastMap] = useState<number[] | undefined>();
-  const [orientation] = useState(Orientation.VERTICAL);
+  const [orientation, setOrientation] = useState(Orientation.HORIZONTAL);
 
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
@@ -108,7 +108,12 @@ const App = () => {
   }, [voxelIndex, subject]);
 
   return (
-    <div id="main-container" className={`${orientation}-orientation`}>
+    <div
+      id="main-container"
+      className={`${
+        voxelIndex !== undefined ? `${orientation}-orientation` : ""
+      }`}
+    >
       <Header
         subjectLabels={subjectLabels}
         subject={subject.label}
@@ -159,27 +164,42 @@ const App = () => {
           )}
         </ParentSize>
       </div>
-      <div id="fingerprint">
-        <ParentSize className="fingerprint-container" debounceTime={10}>
-          {({ width: fingerprintWidth, height: fingerprintHeight }) => (
-            <ContrastFingerprint
-              selectedContrast={contrast}
-              clickedLabelCallback={(contrastIndex: number) => {
-                setContrast({ payload: contrastIndex });
-              }}
-              orientation={
-                orientation === Orientation.VERTICAL
-                  ? Orientation.HORIZONTAL
-                  : Orientation.VERTICAL
-              }
-              labels={contrastLabels}
-              fingerprint={contrastFingerprint}
-              width={fingerprintWidth}
-              height={fingerprintHeight}
-            />
-          )}
-        </ParentSize>
-      </div>
+      {voxelIndex !== undefined ? (
+        <div id="fingerprint">
+          <ParentSize className="fingerprint-container" debounceTime={10}>
+            {({ width: fingerprintWidth, height: fingerprintHeight }) => (
+              <ContrastFingerprint
+                changeOrientationCallback={() => {
+                  switch (orientation) {
+                    case Orientation.VERTICAL:
+                      setOrientation(Orientation.HORIZONTAL);
+                      break;
+                    case Orientation.HORIZONTAL:
+                      setOrientation(Orientation.VERTICAL);
+                      break;
+                  }
+                }}
+                closePanelCallback={() => {
+                  setVoxelIndex(undefined);
+                }}
+                clickedLabelCallback={(contrastIndex: number) => {
+                  setContrast({ payload: contrastIndex });
+                }}
+                selectedContrast={contrast}
+                orientation={
+                  orientation === Orientation.VERTICAL
+                    ? Orientation.HORIZONTAL
+                    : Orientation.VERTICAL
+                }
+                labels={contrastLabels}
+                fingerprint={contrastFingerprint}
+                width={fingerprintWidth}
+                height={fingerprintHeight}
+              />
+            )}
+          </ParentSize>
+        </div>
+      ) : null}
     </div>
   );
 };

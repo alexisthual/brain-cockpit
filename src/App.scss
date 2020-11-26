@@ -28,9 +28,12 @@
 #scene {
   min-height: 0px;
   background-color: $light-gray5;
+  overflow: hidden;
 }
 
 #fingerprint {
   min-height: 0px;
   background-color: $light-gray5;
+  overflow: hidden;
+  position: relative;
 }
