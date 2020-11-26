@@ -12,6 +12,7 @@ interface ISceneProps {
   width: number;
   height: number;
   keyPressEvents?: any;
+  selectedVoxel?: number;
 }
 
 class Scene extends Component<ISceneProps, {}> {
@@ -369,7 +370,13 @@ class Scene extends Component<ISceneProps, {}> {
           overflow: "hidden",
         }}
       >
-        <div id="hotspot">
+        <div
+          id="hotspot"
+          style={{
+            visibility:
+              this.props.selectedVoxel !== undefined ? "visible" : "hidden",
+          }}
+        >
           <p>
             <strong>Voxel {this.selectedVertexIndex}</strong>
           </p>

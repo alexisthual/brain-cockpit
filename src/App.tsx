@@ -131,6 +131,7 @@ const App = () => {
               clickedVoxelCallback={(voxelIndex: number) => {
                 setVoxelIndex(voxelIndex);
               }}
+              selectedVoxel={voxelIndex}
               surfaceMap={contrastMap}
               width={sceneWidth}
               height={sceneHeight}
