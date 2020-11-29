@@ -120,6 +120,18 @@ const App = () => {
           setSubject({ type: "increment" });
         },
       },
+      {
+        keyCode: 85, // U
+        callback: () => {
+          setMeanContrastMap((prevMeanContrastMap) => !prevMeanContrastMap);
+        },
+      },
+      {
+        keyCode: 79, // O
+        callback: () => {
+          setMeanFingerprint((prevMeanFingerprint) => !prevMeanFingerprint);
+        },
+      },
     ];
     keyPressEvents.forEach((keyPressEvent: any) => {
       window.addEventListener("keydown", (event) => {
