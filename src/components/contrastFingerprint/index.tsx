@@ -1,3 +1,4 @@
+import { Colors } from "@blueprintjs/core";
 import React from "react";
 import {
   AiOutlineClose,
@@ -10,7 +11,6 @@ import { scaleBand, scaleLinear } from "@visx/scale";
 import { Bar } from "@visx/shape";
 import { Text } from "@visx/text";
 
-import { Colors } from "constants/colors";
 import { Contrast, Orientation } from "constants/index";
 import "./style.scss";
 

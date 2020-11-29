@@ -1,9 +1,9 @@
+import { Colors } from "@blueprintjs/core";
 import React, { Component } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-import { Colors } from "constants/colors";
 import "./style.scss";
 
 interface ISceneProps {
