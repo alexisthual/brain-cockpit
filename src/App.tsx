@@ -23,6 +23,7 @@ const App = () => {
   const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
   const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
   const [contrastMap, setContrastMap] = useState<number[] | undefined>();
+  const [meanContrastMap, setMeanContrastMap] = useState(false);
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
 
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
@@ -117,6 +118,24 @@ const App = () => {
     }
   }, [voxelIndex, subject]);
 
+  // Update contrast with mean values
+  useEffect(() => {
+    if (contrast.index !== undefined) {
+      if (meanContrastMap) {
+        eel.get_left_contrast_mean(contrast.index)((contrastMap: number[]) => {
+          setContrastMap(contrastMap);
+        });
+      } else if (subject.index !== undefined) {
+        eel.get_left_contrast(
+          subject.index,
+          contrast.index
+        )((contrastMap: number[]) => {
+          setContrastMap(contrastMap);
+        });
+      }
+    }
+  }, [meanContrastMap]);
+
   return (
     <div
       id="main-container"
@@ -132,6 +151,10 @@ const App = () => {
         voxelIndex={voxelIndex}
         subjectChangeCallback={(subjectIndex: number) => {
           setSubject({ payload: subjectIndex });
+        }}
+        meanContrastMap={meanContrastMap}
+        meanChangeCallback={() => {
+          setMeanContrastMap(!meanContrastMap);
         }}
       />
       <div id="scene">

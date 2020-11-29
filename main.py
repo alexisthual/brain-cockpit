@@ -171,6 +171,28 @@ def get_left_contrast(subject_index, contrast_index):
 
 
 @eel.expose
+def get_left_contrast_mean(contrast_index):
+    print(
+        f"get_left_contrast_mean {contrasts[contrast_index]} ({contrast_index})"
+    )
+    mean = np.mean(
+        np.vstack(
+            [
+                X[
+                    n_voxels * subject_index : n_voxels * subject_index
+                    + n_voxels // 2,
+                    contrast_index,
+                ]
+                for subject_index in range(n_subjects)
+            ]
+        ),
+        axis=0,
+    )
+    print(mean.shape)
+    return mean.tolist()
+
+
+@eel.expose
 def server_log(message):
     print(message)
 
