@@ -16,6 +16,10 @@ $hotspot-size: 15px;
   font-size: 12px;
   transition: opacity 0.2s;
 
+  & > p {
+    margin-bottom: 0px;
+  }
+
   &::before {
     content: "";
     position: absolute;
