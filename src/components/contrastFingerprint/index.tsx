@@ -1,10 +1,5 @@
-import { Colors } from "@blueprintjs/core";
+import { Button, Colors } from "@blueprintjs/core";
 import React from "react";
-import {
-  AiOutlineClose,
-  AiOutlineRotateLeft,
-  AiOutlineRotateRight,
-} from "react-icons/ai";
 import { AxisLeft, AxisTop } from "@visx/axis";
 import { Group } from "@visx/group";
 import { scaleBand, scaleLinear } from "@visx/scale";
@@ -26,6 +21,8 @@ interface Props {
   changeOrientationCallback?: () => void;
   orientation: Orientation;
   selectedContrast?: Contrast;
+  meanFingerprint: boolean;
+  meanFingerprintCallback: () => void;
 }
 
 const ContrastFingerprint = ({
@@ -40,6 +37,8 @@ const ContrastFingerprint = ({
   selectedContrast,
   changeOrientationCallback,
   closePanelCallback,
+  meanFingerprint,
+  meanFingerprintCallback,
 }: Props) => {
   let padding = 40;
   let labelMargin = 15;
@@ -86,19 +85,25 @@ const ContrastFingerprint = ({
   return (
     <>
       <div className="contrast-fingerprint-buttons">
-        <div
+        <Button
+          active={meanFingerprint}
+          icon={meanFingerprint ? "ungroup-objects" : "group-objects"}
+          onClick={meanFingerprintCallback}
+          outlined
+          title={"Take subjects' mean"}
+        />
+        <Button
+          icon={"rotate-page"}
           onClick={changeOrientationCallback}
+          outlined
           title="Change panel orientation"
-        >
-          {orientation === Orientation.VERTICAL ? (
-            <AiOutlineRotateLeft />
-          ) : (
-            <AiOutlineRotateRight />
-          )}
-        </div>
-        <div onClick={closePanelCallback} title="Close panel">
-          <AiOutlineClose />
-        </div>
+        />
+        <Button
+          icon={"cross"}
+          onClick={closePanelCallback}
+          outlined
+          title="Close panel"
+        />
       </div>
       <svg
         width={width}

@@ -67,6 +67,7 @@ const Header = ({
             active={meanContrastMap}
             icon={meanContrastMap ? "ungroup-objects" : "group-objects"}
             onClick={meanChangeCallback}
+            outlined
             title={"Take subjects' mean"}
           />
         </ButtonGroup>

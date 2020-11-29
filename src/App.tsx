@@ -22,6 +22,7 @@ const App = () => {
   const [taskCounts, setTaskCounts] = useState<number[]>([]);
   const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
   const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
+  const [meanFingerprint, setMeanFingerprint] = useState(false);
   const [contrastMap, setContrastMap] = useState<number[] | undefined>();
   const [meanContrastMap, setMeanContrastMap] = useState(false);
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
@@ -96,30 +97,6 @@ const App = () => {
 
   // Update contrast map when subject or contrast change
   useEffect(() => {
-    if (subject.index !== undefined && contrast.index !== undefined) {
-      eel.get_left_contrast(
-        subject.index,
-        contrast.index
-      )((contrastMap: number[]) => {
-        setContrastMap(contrastMap);
-      });
-    }
-  }, [subject, contrast]);
-
-  // Update fingerprint when voxelIndex or subjectIndex change
-  useEffect(() => {
-    if (voxelIndex !== undefined) {
-      eel.get_voxel_fingerprint(
-        subject.index,
-        voxelIndex
-      )((contrastFingerprint: number[]) => {
-        setContrastFingerprint(contrastFingerprint);
-      });
-    }
-  }, [voxelIndex, subject]);
-
-  // Update contrast with mean values
-  useEffect(() => {
     if (contrast.index !== undefined) {
       if (meanContrastMap) {
         eel.get_left_contrast_mean(contrast.index)((contrastMap: number[]) => {
@@ -134,7 +111,25 @@ const App = () => {
         });
       }
     }
-  }, [meanContrastMap]);
+  }, [subject, contrast, meanContrastMap]);
+
+  // Update fingerprint when voxelIndex or subjectIndex change
+  useEffect(() => {
+    if (voxelIndex !== undefined) {
+      if (meanFingerprint) {
+        eel.get_voxel_fingerprint_mean(voxelIndex)((fingerprint: number[]) => {
+          setContrastFingerprint(fingerprint);
+        });
+      } else if (subject.index !== undefined) {
+        eel.get_voxel_fingerprint(
+          subject.index,
+          voxelIndex
+        )((contrastFingerprint: number[]) => {
+          setContrastFingerprint(contrastFingerprint);
+        });
+      }
+    }
+  }, [voxelIndex, subject, meanFingerprint]);
 
   return (
     <div
@@ -229,6 +224,10 @@ const App = () => {
                 taskLabels={taskLabels}
                 taskCounts={taskCounts}
                 fingerprint={contrastFingerprint}
+                meanFingerprint={meanFingerprint}
+                meanFingerprintCallback={() => {
+                  setMeanFingerprint(!meanFingerprint);
+                }}
                 width={fingerprintWidth}
                 height={fingerprintHeight}
               />

@@ -160,6 +160,22 @@ def get_voxel_fingerprint(subject_index, voxel_index):
 
 
 @eel.expose
+def get_voxel_fingerprint_mean(voxel_index):
+    print(f"get_voxel_mean_fingerprint {voxel_index}")
+    mean = np.mean(
+        X[
+            [
+                n_voxels * subject_index + voxel_index
+                for subject_index in range(n_subjects)
+            ],
+            :,
+        ],
+        axis=0,
+    )
+    return mean.tolist()
+
+
+@eel.expose
 def get_left_contrast(subject_index, contrast_index):
     print(
         f"get_left_contrast {contrasts[contrast_index]} ({contrast_index}) for {subjects[subject_index]} ({subject_index})"
@@ -188,7 +204,6 @@ def get_left_contrast_mean(contrast_index):
         ),
         axis=0,
     )
-    print(mean.shape)
     return mean.tolist()
 
 
