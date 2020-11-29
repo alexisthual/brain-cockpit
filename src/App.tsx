@@ -93,6 +93,51 @@ const App = () => {
     };
 
     fetchAllData();
+
+    // Set keybinding
+    const keyPressEvents = [
+      {
+        keyCode: 76, // L
+        callback: () => {
+          setContrast({ type: "increment" });
+        },
+      },
+      {
+        keyCode: 74, // J
+        callback: () => {
+          setContrast({ type: "decrement" });
+        },
+      },
+      {
+        keyCode: 73, // K
+        callback: () => {
+          setSubject({ type: "decrement" });
+        },
+      },
+      {
+        keyCode: 75, // I
+        callback: () => {
+          setSubject({ type: "increment" });
+        },
+      },
+    ];
+    keyPressEvents.forEach((keyPressEvent: any) => {
+      window.addEventListener("keydown", (event) => {
+        if (event.isComposing || event.keyCode === keyPressEvent.keyCode) {
+          keyPressEvent.callback();
+        }
+      });
+    });
+
+    return () => {
+      keyPressEvents.forEach((keyPressEvent: any) => {
+        window.removeEventListener("keydown", (event) => {
+          if (event.isComposing || event.keyCode === keyPressEvent.keyCode) {
+            keyPressEvent.callback();
+          }
+        });
+      });
+    };
   }, []);
 
   // Update contrast map when subject or contrast change
@@ -163,32 +208,6 @@ const App = () => {
               surfaceMap={contrastMap}
               width={sceneWidth}
               height={sceneHeight}
-              keyPressEvents={[
-                {
-                  keyCode: 76,
-                  callback: () => {
-                    setContrast({ type: "increment" });
-                  },
-                },
-                {
-                  keyCode: 74,
-                  callback: () => {
-                    setContrast({ type: "decrement" });
-                  },
-                },
-                {
-                  keyCode: 73,
-                  callback: () => {
-                    setSubject({ type: "decrement" });
-                  },
-                },
-                {
-                  keyCode: 75,
-                  callback: () => {
-                    setSubject({ type: "increment" });
-                  },
-                },
-              ]}
             />
           )}
         </ParentSize>
