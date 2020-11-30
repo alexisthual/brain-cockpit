@@ -26,6 +26,10 @@ const App = () => {
   const [contrastMap, setContrastMap] = useState<number[] | undefined>();
   const [meanContrastMap, setMeanContrastMap] = useState(false);
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
+  const [wireframe, setWireframe] = useState(true);
+  const [regressedCoordinates, setRegressedCoordinates] = useState<
+    number[] | undefined
+  >();
 
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
@@ -132,6 +136,12 @@ const App = () => {
           setMeanFingerprint((prevMeanFingerprint) => !prevMeanFingerprint);
         },
       },
+      {
+        keyCode: 87, // W
+        callback: () => {
+          setWireframe((prevWireframe) => !prevWireframe);
+        },
+      },
     ];
     keyPressEvents.forEach((keyPressEvent: any) => {
       window.addEventListener("keydown", (event) => {
@@ -188,6 +198,15 @@ const App = () => {
     }
   }, [voxelIndex, subject, meanFingerprint]);
 
+  // Get regressed coordinates on voxelIndex change
+  useEffect(() => {
+    if (voxelIndex !== undefined) {
+      eel.get_regressed_coordinates(voxelIndex)((coordinates: number[]) => {
+        setRegressedCoordinates(coordinates);
+      });
+    }
+  }, [voxelIndex]);
+
   return (
     <div
       id="main-container"
@@ -218,6 +237,8 @@ const App = () => {
               }}
               selectedVoxel={voxelIndex}
               surfaceMap={contrastMap}
+              wireframe={wireframe}
+              regressedCoordinates={regressedCoordinates}
               width={sceneWidth}
               height={sceneHeight}
             />

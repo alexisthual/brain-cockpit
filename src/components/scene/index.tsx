@@ -12,6 +12,8 @@ interface ISceneProps {
   width: number;
   height: number;
   selectedVoxel?: number;
+  wireframe?: boolean;
+  regressedCoordinates?: number[];
 }
 
 class Scene extends Component<ISceneProps, {}> {
@@ -26,6 +28,7 @@ class Scene extends Component<ISceneProps, {}> {
   selectedVertexIndex?: number;
   selectedVertexPosition: THREE.Vector3;
   hotspot: any;
+  regressedSphere?: THREE.Mesh;
 
   constructor(props: ISceneProps) {
     super(props);
@@ -74,10 +77,13 @@ class Scene extends Component<ISceneProps, {}> {
         }
 
         const material = new THREE.MeshPhongMaterial({
+          // const material = new THREE.MeshBasicMaterial({
           color: Colors.LIGHT_GRAY1,
           flatShading: true,
           vertexColors: true,
           shininess: 0,
+          wireframe: this.props.wireframe,
+          wireframeLinewidth: 0.3,
         });
 
         // Merge geometry and material into a mesh
@@ -133,6 +139,28 @@ class Scene extends Component<ISceneProps, {}> {
         this.object.geometry.attributes.color.needsUpdate = true;
       }
     }
+
+    // Update object wireframe
+    if (this.props.wireframe !== prevProps.wireframe) {
+      this.object.material.wireframe = this.props.wireframe;
+    }
+
+    // Update regressedSphere coordinates
+    if (this.props.regressedCoordinates !== prevProps.regressedCoordinates) {
+      if (
+        this.regressedSphere &&
+        this.props.regressedCoordinates &&
+        this.props.regressedCoordinates.length >= 3
+      ) {
+        const vertex = new THREE.Vector3(
+          this.props.regressedCoordinates[0],
+          this.props.regressedCoordinates[1],
+          this.props.regressedCoordinates[2]
+        );
+        this.object.localToWorld(vertex);
+        this.regressedSphere.position.copy(vertex);
+      }
+    }
   }
 
   setupScene(object: THREE.Object3D) {
@@ -168,6 +196,12 @@ class Scene extends Component<ISceneProps, {}> {
     // Add hotspot to track selected vertex
     this.hotspot = document.getElementById("hotspot");
 
+    // Add sphere with coordinates coming from a regression model
+    const geometry = new THREE.SphereGeometry(3);
+    const material = new THREE.MeshBasicMaterial({ color: Colors.VERMILION5 });
+    const sphere = new THREE.Mesh(geometry, material);
+    scene.add(sphere);
+
     // Add loaded object to scene
     scene.add(object);
 
@@ -177,6 +211,7 @@ class Scene extends Component<ISceneProps, {}> {
     this.camera = camera;
     this.object = object;
     this.spotLight = spotLight;
+    this.regressedSphere = sphere;
 
     this.computeBoundingBox();
   }
