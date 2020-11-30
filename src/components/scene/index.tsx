@@ -275,8 +275,11 @@ class Scene extends Component<ISceneProps, {}> {
   onMouseClick(event: MouseEvent) {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
-    mouse.x = (event.clientX / this.props.width) * 2 - 1;
-    mouse.y = -(event.clientY / this.props.height) * 2 + 1;
+    // Compute renderer offset on the page
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    // Deduce mouse coordinates
+    mouse.x = ((event.clientX - rect.left) / this.props.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / this.props.height) * 2 + 1;
     raycaster.setFromCamera(mouse, this.camera);
 
     // Intersect raycast with object
