@@ -4,14 +4,14 @@ import React from "react";
 import "./style.scss";
 
 interface IProps {
-  subjectLabels: string[];
+  subjectLabels?: string[];
   subject?: string;
   contrast?: string;
   contrastIndex?: number;
   voxelIndex?: number;
-  subjectChangeCallback: (subjectIndex: number) => void;
-  meanContrastMap: boolean;
-  meanChangeCallback: () => void;
+  subjectChangeCallback?: (subjectIndex: number) => void;
+  meanContrastMap?: boolean;
+  meanChangeCallback?: () => void;
 }
 
 const Header = ({
@@ -44,40 +44,52 @@ const Header = ({
 
   return (
     <div id="header">
-      <div className="header-item-label">Subject</div>
-      <div className="header-item-value">
-        <ButtonGroup>
-          <SelectSubject
-            disabled={meanContrastMap}
-            filterable={false}
-            items={subjectLabels}
-            itemRenderer={subjectRenderer}
-            onItemSelect={(item: string) => {
-              console.log(item);
-              subjectChangeCallback(subjectLabels.indexOf(item));
-            }}
-          >
-            <Button
-              disabled={meanContrastMap}
-              rightIcon="double-caret-vertical"
-              text={subject}
-            />
-          </SelectSubject>
-          <Button
-            active={meanContrastMap}
-            icon={meanContrastMap ? "ungroup-objects" : "group-objects"}
-            onClick={meanChangeCallback}
-            outlined
-            title={"Take subjects' mean"}
-          />
-        </ButtonGroup>
-      </div>
-      <div className="header-item-label">Contrast</div>
-      <div className="header-item-value">
-        {contrast} ({contrastIndex})
-      </div>
-      <div className="header-item-label">Voxel</div>
-      <div className="header-item-value">{voxelIndex}</div>
+      {subjectLabels ? (
+        <>
+          <div className="header-item-label">Subject</div>
+          <div className="header-item-value">
+            <ButtonGroup>
+              <SelectSubject
+                disabled={meanContrastMap}
+                filterable={false}
+                items={subjectLabels}
+                itemRenderer={subjectRenderer}
+                onItemSelect={(item: string) => {
+                  console.log(item);
+                  subjectChangeCallback(subjectLabels.indexOf(item));
+                }}
+              >
+                <Button
+                  disabled={meanContrastMap}
+                  rightIcon="double-caret-vertical"
+                  text={subject}
+                />
+              </SelectSubject>
+              <Button
+                active={meanContrastMap}
+                icon={meanContrastMap ? "ungroup-objects" : "group-objects"}
+                onClick={meanChangeCallback}
+                outlined
+                title={"Take subjects' mean"}
+              />
+            </ButtonGroup>
+          </div>
+        </>
+      ) : null}
+      {contrast ? (
+        <>
+          <div className="header-item-label">Contrast</div>
+          <div className="header-item-value">
+            {contrast} ({contrastIndex})
+          </div>
+        </>
+      ) : null}
+      {voxelIndex ? (
+        <>
+          <div className="header-item-label">Voxel</div>
+          <div className="header-item-value">{voxelIndex}</div>
+        </>
+      ) : null}
     </div>
   );
 };

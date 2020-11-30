@@ -157,7 +157,13 @@ class Scene extends Component<ISceneProps, {}> {
           this.props.regressedCoordinates[2]
         );
         this.object.localToWorld(vertex);
+        this.regressedSphere.visible = true;
         this.regressedSphere.position.copy(vertex);
+      } else if (
+        this.regressedSphere &&
+        this.props.regressedCoordinates === undefined
+      ) {
+        this.regressedSphere.visible = false;
       }
     }
   }
@@ -196,9 +202,10 @@ class Scene extends Component<ISceneProps, {}> {
     this.hotspot = document.getElementById("hotspot");
 
     // Add sphere with coordinates coming from a regression model
-    const geometry = new THREE.SphereGeometry(3);
+    const geometry = new THREE.SphereGeometry(2);
     const material = new THREE.MeshBasicMaterial({ color: Colors.VERMILION5 });
     const sphere = new THREE.Mesh(geometry, material);
+    sphere.visible = false;
     scene.add(sphere);
 
     // Add loaded object to scene
@@ -377,9 +384,7 @@ class Scene extends Component<ISceneProps, {}> {
 
     // Remove Three.js related objects
     cancelAnimationFrame(this.frameId);
-    console.log(this.renderer.info.programs.length);
     this.container.removeChild(this.renderer.domElement);
-    console.log(this.gridHelper);
     if (this.gridHelper) {
       this.gridHelper.geometry.dispose();
       if (this.gridHelper.material instanceof THREE.Material) {
@@ -406,7 +411,8 @@ class Scene extends Component<ISceneProps, {}> {
     this.renderer.dispose();
     this.renderer.forceContextLoss();
     this.renderer.info.reset();
-    console.log(this.renderer.info);
+    // Check remaining objects with
+    // console.log(this.renderer.info);
   }
 
   render() {
