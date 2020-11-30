@@ -29,18 +29,17 @@ class Scene extends Component<ISceneProps, {}> {
   selectedVertexPosition: THREE.Vector3;
   hotspot: any;
   regressedSphere?: THREE.Mesh;
+  gridHelper?: THREE.GridHelper;
 
   constructor(props: ISceneProps) {
     super(props);
     this.state = {};
     this.selectedVertexPosition = new THREE.Vector3();
     this.start = this.start.bind(this);
-    this.stop = this.stop.bind(this);
     this.animate = this.animate.bind(this);
     this.renderScene = this.renderScene.bind(this);
     this.computeBoundingBox = this.computeBoundingBox.bind(this);
     this.setupScene = this.setupScene.bind(this);
-    this.destroyContext = this.destroyContext.bind(this);
     this.handleWindowResize = this.handleWindowResize.bind(this);
     this.onMouseClick = this.onMouseClick.bind(this);
     this.updateHotspot = this.updateHotspot.bind(this);
@@ -231,6 +230,7 @@ class Scene extends Component<ISceneProps, {}> {
     );
     gridHelper.translateY(-70);
     this.scene.add(gridHelper);
+    this.gridHelper = gridHelper;
 
     // Camera setup
     let offset = 1.5;
@@ -361,10 +361,6 @@ class Scene extends Component<ISceneProps, {}> {
     this.renderScene();
   }
 
-  stop() {
-    cancelAnimationFrame(this.frameId);
-  }
-
   handleWindowResize() {
     if (this.camera && this.renderer) {
       this.camera.aspect = this.props.width / this.props.height;
@@ -376,16 +372,41 @@ class Scene extends Component<ISceneProps, {}> {
   }
 
   componentWillUnmount() {
-    this.stop();
-    this.destroyContext();
-  }
+    // Remove events
+    window.removeEventListener("resize", this.handleWindowResize);
 
-  destroyContext() {
+    // Remove Three.js related objects
+    cancelAnimationFrame(this.frameId);
+    console.log(this.renderer.info.programs.length);
     this.container.removeChild(this.renderer.domElement);
+    console.log(this.gridHelper);
+    if (this.gridHelper) {
+      this.gridHelper.geometry.dispose();
+      if (this.gridHelper.material instanceof THREE.Material) {
+        this.gridHelper.material.dispose();
+      } else {
+        this.gridHelper.material.forEach((element) => {
+          element.dispose();
+        });
+      }
+    }
+    this.object.geometry.dispose();
+    this.object.material.dispose();
+    if (this.regressedSphere) {
+      this.regressedSphere.geometry.dispose();
+      if (this.regressedSphere.material instanceof THREE.Material) {
+        this.regressedSphere.material.dispose();
+      } else {
+        this.regressedSphere.material.forEach((element) => {
+          element.dispose();
+        });
+      }
+    }
+    this.controls.dispose();
+    this.renderer.dispose();
     this.renderer.forceContextLoss();
-    this.renderer.context = null;
-    this.renderer.domElement = null;
-    this.renderer = null;
+    this.renderer.info.reset();
+    console.log(this.renderer.info);
   }
 
   render() {
