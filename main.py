@@ -231,6 +231,23 @@ def get_regressed_coordinates(voxel_index):
     return (regressed_coordinates[voxel_index, :]).tolist()
 
 
+## Load regressed coordinates error map
+print("Loading regression error map...")
+regressed_coordinates_error = None
+with open(
+    "/home/alexis/singbrain/outputs/008_position_regression_from_fmri.py/error_rbfsvr_epsilon_0.1_gamma_auto_C_1.0.npy",
+    "rb",
+) as f:
+    regressed_coordinates_error = np.load(f)
+
+
+@eel.expose
+def get_regressed_coordinates_error():
+    if DEBUG:
+        print(f"get_regressed_coordinates_error")
+    return regressed_coordinates_error.tolist()
+
+
 @eel.expose
 def server_log(message):
     print(message)
