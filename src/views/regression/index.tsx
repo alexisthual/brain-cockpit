@@ -1,13 +1,23 @@
 import React, { useEffect, useState } from "react";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 
+import ContrastFingerprint from "components/contrastFingerprint";
 import Header from "components/header";
 import Scene from "components/scene";
+import { Orientation, Subject } from "constants/index";
 import { eel } from "App";
 
 const RegressionExplorer = () => {
+  const initalSubject: Subject = { index: 10, label: "sub-15" };
+  const [subject] = useState(initalSubject);
+  const [contrastLabels, setContrastLabels] = useState<string[]>([]);
+  const [taskLabels, setTaskLabels] = useState<string[]>([]);
+  const [taskCounts, setTaskCounts] = useState<number[]>([]);
   const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
+  const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
+  const [meanFingerprint, setMeanFingerprint] = useState(false);
   const [errorMap, setErrorMap] = useState<number[] | undefined>();
+  const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [wireframe, setWireframe] = useState(true);
   const [regressedCoordinates, setRegressedCoordinates] = useState<
     number[] | undefined
@@ -17,12 +27,17 @@ const RegressionExplorer = () => {
   useEffect(() => {
     const fetchAllData = async () => {
       // Load static data
+      const contrastLabels = eel.get_contrast_labels()();
+      const tasks = eel.get_tasks()();
       const errorMap = eel.get_regressed_coordinates_error()();
 
       // Wait for all data to be loaded before setting app state
-      Promise.all([errorMap]).then((values) => {
+      Promise.all([contrastLabels, tasks, errorMap]).then((values) => {
         setVoxelIndex(0);
-        setErrorMap(values[0]);
+        setContrastLabels(values[0]);
+        setTaskLabels(values[1].map((x: any) => x[0]));
+        setTaskCounts(values[1].map((x: any) => x[1]));
+        setErrorMap(values[2]);
       });
     };
 
@@ -30,6 +45,12 @@ const RegressionExplorer = () => {
 
     // Set keybinding
     const keyPressEvents = [
+      {
+        keyCode: 79, // O
+        callback: () => {
+          setMeanFingerprint((prevMeanFingerprint) => !prevMeanFingerprint);
+        },
+      },
       {
         keyCode: 87, // W
         callback: () => {
@@ -56,18 +77,38 @@ const RegressionExplorer = () => {
     };
   }, []);
 
-  // Get regressed coordinates on voxelIndex change
+  // Update on voxelIndex change
   useEffect(() => {
+    // Get regressed coordinates on voxelIndex change
     if (voxelIndex !== undefined) {
       eel.get_regressed_coordinates(voxelIndex)((coordinates: number[]) => {
         setRegressedCoordinates(coordinates);
       });
     }
-  }, [voxelIndex]);
+
+    // Get activation fingerprint for this voxel
+    if (meanFingerprint) {
+      eel.get_voxel_fingerprint_mean(voxelIndex)((fingerprint: number[]) => {
+        setContrastFingerprint(fingerprint);
+      });
+    } else if (subject.index !== undefined) {
+      eel.get_voxel_fingerprint(
+        subject.index,
+        voxelIndex
+      )((contrastFingerprint: number[]) => {
+        setContrastFingerprint(contrastFingerprint);
+      });
+    }
+  }, [voxelIndex, subject, meanFingerprint]);
 
   return (
-    <div id="main-container">
-      <Header voxelIndex={voxelIndex} />
+    <div
+      id="main-container"
+      className={`${
+        voxelIndex !== undefined ? `${orientation}-orientation` : ""
+      }`}
+    >
+      <Header subject={subject.label} voxelIndex={voxelIndex} />
       <div id="scene">
         <ParentSize className="scene-container" debounceTime={10}>
           {({ width: sceneWidth, height: sceneHeight }) => (
@@ -85,6 +126,44 @@ const RegressionExplorer = () => {
           )}
         </ParentSize>
       </div>
+      {voxelIndex !== undefined ? (
+        <div id="fingerprint">
+          <ParentSize className="fingerprint-container" debounceTime={10}>
+            {({ width: fingerprintWidth, height: fingerprintHeight }) => (
+              <ContrastFingerprint
+                changeOrientationCallback={() => {
+                  switch (orientation) {
+                    case Orientation.VERTICAL:
+                      setOrientation(Orientation.HORIZONTAL);
+                      break;
+                    case Orientation.HORIZONTAL:
+                      setOrientation(Orientation.VERTICAL);
+                      break;
+                  }
+                }}
+                closePanelCallback={() => {
+                  setVoxelIndex(undefined);
+                }}
+                orientation={
+                  orientation === Orientation.VERTICAL
+                    ? Orientation.HORIZONTAL
+                    : Orientation.VERTICAL
+                }
+                contrastLabels={contrastLabels}
+                taskLabels={taskLabels}
+                taskCounts={taskCounts}
+                fingerprint={contrastFingerprint}
+                meanFingerprint={meanFingerprint}
+                meanFingerprintCallback={() => {
+                  setMeanFingerprint(!meanFingerprint);
+                }}
+                width={fingerprintWidth}
+                height={fingerprintHeight}
+              />
+            )}
+          </ParentSize>
+        </div>
+      ) : null}
     </div>
   );
 };
