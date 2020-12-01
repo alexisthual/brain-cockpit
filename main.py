@@ -10,9 +10,11 @@ from nilearn.glm.first_level import FirstLevelModel
 import brainsprite_wrapper
 import pandas as pd
 
-
-DATA_PATH = "./public/assets/ibc_surface_conditions_db"
-AVAILABLE_CONTRASTS_PATH = os.path.join(DATA_PATH, "result_db.csv")
+# Load contrasts
+dotenv.load_dotenv()
+DATA_PATH = os.getenv("DATA_PATH")
+AVAILABLE_CONTRASTS_PATH = os.getenv("AVAILABLE_CONTRASTS_PATH")
+DEBUG = os.getenv("DEBUG")
 
 
 def select_subjects_and_contrasts(
@@ -139,16 +141,6 @@ print("Loading contrasts...")
 X = load_fmri(df, subjects, contrasts)
 n_voxels = X.shape[0] // n_subjects
 
-## Load regressed coordinates
-print("Loading regressed coordinates...")
-regressed_coordinates = None
-with open(
-    "/home/alexis/singbrain/outputs/008_position_regression_from_fmri.py/prediction_rbfsvr_epsilon_0.1_gamma_auto_C_1.0.npy",
-    "rb",
-) as f:
-    # regressed_coordinates = np.load(f, allow_pickle=True)
-    regressed_coordinates = np.load(f)
-
 # Util function for exploring contrasts
 @eel.expose
 def get_subjects():
@@ -167,15 +159,17 @@ def get_tasks():
 
 @eel.expose
 def get_voxel_fingerprint(subject_index, voxel_index):
-    print(
-        f"get_voxel_fingerprint {voxel_index} for {subjects[subject_index]} ({subject_index})"
-    )
+    if DEBUG:
+        print(
+            f"get_voxel_fingerprint {voxel_index} for {subjects[subject_index]} ({subject_index})"
+        )
     return X[n_voxels * subject_index + voxel_index, :].tolist()
 
 
 @eel.expose
 def get_voxel_fingerprint_mean(voxel_index):
-    print(f"get_voxel_mean_fingerprint {voxel_index}")
+    if DEBUG:
+        print(f"get_voxel_mean_fingerprint {voxel_index}")
     mean = np.mean(
         X[
             [
@@ -191,9 +185,10 @@ def get_voxel_fingerprint_mean(voxel_index):
 
 @eel.expose
 def get_left_contrast(subject_index, contrast_index):
-    print(
-        f"get_left_contrast {contrasts[contrast_index]} ({contrast_index}) for {subjects[subject_index]} ({subject_index})"
-    )
+    if DEBUG:
+        print(
+            f"get_left_contrast {contrasts[contrast_index]} ({contrast_index}) for {subjects[subject_index]} ({subject_index})"
+        )
     start_index = n_voxels * subject_index
     return X[
         start_index : start_index + n_voxels // 2, contrast_index
@@ -202,9 +197,10 @@ def get_left_contrast(subject_index, contrast_index):
 
 @eel.expose
 def get_left_contrast_mean(contrast_index):
-    print(
-        f"get_left_contrast_mean {contrasts[contrast_index]} ({contrast_index})"
-    )
+    if DEBUG:
+        print(
+            f"get_left_contrast_mean {contrasts[contrast_index]} ({contrast_index})"
+        )
     mean = np.mean(
         np.vstack(
             [
@@ -221,12 +217,40 @@ def get_left_contrast_mean(contrast_index):
     return mean.tolist()
 
 
+## Load regressed coordinates
+print("Loading regressed coordinates...")
+regressed_coordinates = None
+with open(
+    "/home/alexis/singbrain/outputs/008_position_regression_from_fmri.py/prediction_rbfsvr_epsilon_0.1_gamma_auto_C_1.0.npy",
+    "rb",
+) as f:
+    regressed_coordinates = np.load(f)
+
+
 @eel.expose
 def get_regressed_coordinates(voxel_index):
-    print(
-        f"get_regressed_coordinates for voxel {voxel_index} for subject {subjects[-1]}"
-    )
+    if DEBUG:
+        print(
+            f"get_regressed_coordinates for voxel {voxel_index} for subject {subjects[-1]}"
+        )
     return (regressed_coordinates[voxel_index, :]).tolist()
+
+
+## Load regressed coordinates error map
+print("Loading regression error map...")
+regressed_coordinates_error = None
+with open(
+    "/home/alexis/singbrain/outputs/008_position_regression_from_fmri.py/error_rbfsvr_epsilon_0.1_gamma_auto_C_1.0.npy",
+    "rb",
+) as f:
+    regressed_coordinates_error = np.load(f)
+
+
+@eel.expose
+def get_regressed_coordinates_error():
+    if DEBUG:
+        print(f"get_regressed_coordinates_error")
+    return regressed_coordinates_error.tolist()
 
 
 @eel.expose

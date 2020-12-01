@@ -7,7 +7,7 @@ import { eel } from "App";
 
 const RegressionExplorer = () => {
   const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
-  // const [contrastMap, setContrastMap] = useState<number[] | undefined>();
+  const [errorMap, setErrorMap] = useState<number[] | undefined>();
   const [wireframe, setWireframe] = useState(true);
   const [regressedCoordinates, setRegressedCoordinates] = useState<
     number[] | undefined
@@ -15,7 +15,18 @@ const RegressionExplorer = () => {
 
   // Initialise all app state variables
   useEffect(() => {
-    setVoxelIndex(0);
+    const fetchAllData = async () => {
+      // Load static data
+      const errorMap = eel.get_regressed_coordinates_error()();
+
+      // Wait for all data to be loaded before setting app state
+      Promise.all([errorMap]).then((values) => {
+        setVoxelIndex(0);
+        setErrorMap(values[0]);
+      });
+    };
+
+    fetchAllData();
 
     // Set keybinding
     const keyPressEvents = [
@@ -65,6 +76,7 @@ const RegressionExplorer = () => {
                 setVoxelIndex(voxelIndex);
               }}
               selectedVoxel={voxelIndex}
+              surfaceMap={errorMap}
               wireframe={wireframe}
               regressedCoordinates={regressedCoordinates}
               width={sceneWidth}

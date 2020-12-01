@@ -23,7 +23,7 @@ const SurfaceExplorer = () => {
   const [contrastMap, setContrastMap] = useState<number[] | undefined>();
   const [meanContrastMap, setMeanContrastMap] = useState(false);
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
-  const [wireframe, setWireframe] = useState(true);
+  const [wireframe, setWireframe] = useState(false);
 
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
