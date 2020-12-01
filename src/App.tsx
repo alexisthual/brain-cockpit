@@ -10,6 +10,7 @@ import {
 
 import SurfaceExplorer from "views/surface";
 import RegressionExplorer from "views/regression";
+import CutsExplorer from "views/cuts";
 import "./App.scss";
 
 export const eel = window.eel;
@@ -22,6 +23,9 @@ const App = () => {
         <div id="navbar">
           <NavLink className="view-button" exact to="/">
             <Icon icon="symbol-square" />
+          </NavLink>
+          <NavLink className="view-button" exact to="/cuts">
+            <Icon icon="symbol-circle" />
           </NavLink>
           <NavLink className="view-button" to="/regression">
             <Icon icon="regression-chart" />
@@ -36,6 +40,9 @@ const App = () => {
           </Route>
           <Route exact path="/regression">
             <RegressionExplorer />
+          </Route>
+          <Route exact path="/cuts">
+            <CutsExplorer />
           </Route>
           <Route>
             <NonIdealState
