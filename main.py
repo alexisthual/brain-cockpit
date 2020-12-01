@@ -136,16 +136,6 @@ print("Loading contrasts...")
 X = load_fmri(df, subjects, contrasts)
 n_voxels = X.shape[0] // n_subjects
 
-## Load regressed coordinates
-print("Loading regressed coordinates...")
-regressed_coordinates = None
-with open(
-    "/home/alexis/singbrain/outputs/008_position_regression_from_fmri.py/prediction_rbfsvr_epsilon_0.1_gamma_auto_C_1.0.npy",
-    "rb",
-) as f:
-    # regressed_coordinates = np.load(f, allow_pickle=True)
-    regressed_coordinates = np.load(f)
-
 # Util function for exploring contrasts
 @eel.expose
 def get_subjects():
@@ -220,6 +210,16 @@ def get_left_contrast_mean(contrast_index):
         axis=0,
     )
     return mean.tolist()
+
+
+## Load regressed coordinates
+print("Loading regressed coordinates...")
+regressed_coordinates = None
+with open(
+    "/home/alexis/singbrain/outputs/008_position_regression_from_fmri.py/prediction_rbfsvr_epsilon_0.1_gamma_auto_C_1.0.npy",
+    "rb",
+) as f:
+    regressed_coordinates = np.load(f)
 
 
 @eel.expose
