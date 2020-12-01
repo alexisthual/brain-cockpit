@@ -3,12 +3,16 @@ import eel
 import nibabel as nib
 import numpy as np
 import os
+
+from nilearn.datasets import fetch_spm_auditory
+from nilearn.image import concat_imgs, mean_img
+from nilearn.glm.first_level import FirstLevelModel
+import brainsprite_wrapper
 import pandas as pd
 
-# Load contrasts
-dotenv.load_dotenv()
-DATA_PATH = os.getenv("DATA_PATH")
-AVAILABLE_CONTRASTS_PATH = os.getenv("AVAILABLE_CONTRASTS_PATH")
+
+DATA_PATH = "./public/assets/ibc_surface_conditions_db"
+AVAILABLE_CONTRASTS_PATH = os.path.join(DATA_PATH, "result_db.csv")
 
 
 def select_subjects_and_contrasts(
@@ -228,6 +232,25 @@ def get_regressed_coordinates(voxel_index):
 @eel.expose
 def server_log(message):
     print(message)
+
+print("Loading fMRI SPM data...")
+subject_data = fetch_spm_auditory()
+fmri_img = concat_imgs(subject_data.func)
+events = pd.read_table(subject_data["events"])
+fmri_glm = FirstLevelModel(t_r=7, minimize_memory=False).fit(fmri_img, events)
+mean_img = mean_img(fmri_img)
+img = fmri_glm.compute_contrast("active - rest")
+
+
+@eel.expose
+def gimme_bs_json():
+    return brainsprite_wrapper.generate_bs(img, mean_img, 3)
+
+@eel.expose
+def get_t_at_coordinate(coord):
+    return img.dataobj[63 - coord[0], coord[1], coord[2]]
+
+
 
 
 print("Serving...")
