@@ -9,6 +9,7 @@ import pandas as pd
 dotenv.load_dotenv()
 DATA_PATH = os.getenv("DATA_PATH")
 AVAILABLE_CONTRASTS_PATH = os.getenv("AVAILABLE_CONTRASTS_PATH")
+DEBUG = os.getenv("DEBUG")
 
 
 def select_subjects_and_contrasts(
@@ -163,15 +164,17 @@ def get_tasks():
 
 @eel.expose
 def get_voxel_fingerprint(subject_index, voxel_index):
-    print(
-        f"get_voxel_fingerprint {voxel_index} for {subjects[subject_index]} ({subject_index})"
-    )
+    if DEBUG:
+        print(
+            f"get_voxel_fingerprint {voxel_index} for {subjects[subject_index]} ({subject_index})"
+        )
     return X[n_voxels * subject_index + voxel_index, :].tolist()
 
 
 @eel.expose
 def get_voxel_fingerprint_mean(voxel_index):
-    print(f"get_voxel_mean_fingerprint {voxel_index}")
+    if DEBUG:
+        print(f"get_voxel_mean_fingerprint {voxel_index}")
     mean = np.mean(
         X[
             [
@@ -187,9 +190,10 @@ def get_voxel_fingerprint_mean(voxel_index):
 
 @eel.expose
 def get_left_contrast(subject_index, contrast_index):
-    print(
-        f"get_left_contrast {contrasts[contrast_index]} ({contrast_index}) for {subjects[subject_index]} ({subject_index})"
-    )
+    if DEBUG:
+        print(
+            f"get_left_contrast {contrasts[contrast_index]} ({contrast_index}) for {subjects[subject_index]} ({subject_index})"
+        )
     start_index = n_voxels * subject_index
     return X[
         start_index : start_index + n_voxels // 2, contrast_index
@@ -198,9 +202,10 @@ def get_left_contrast(subject_index, contrast_index):
 
 @eel.expose
 def get_left_contrast_mean(contrast_index):
-    print(
-        f"get_left_contrast_mean {contrasts[contrast_index]} ({contrast_index})"
-    )
+    if DEBUG:
+        print(
+            f"get_left_contrast_mean {contrasts[contrast_index]} ({contrast_index})"
+        )
     mean = np.mean(
         np.vstack(
             [
@@ -219,9 +224,10 @@ def get_left_contrast_mean(contrast_index):
 
 @eel.expose
 def get_regressed_coordinates(voxel_index):
-    print(
-        f"get_regressed_coordinates for voxel {voxel_index} for subject {subjects[-1]}"
-    )
+    if DEBUG:
+        print(
+            f"get_regressed_coordinates for voxel {voxel_index} for subject {subjects[-1]}"
+        )
     return (regressed_coordinates[voxel_index, :]).tolist()
 
 
