@@ -3,3 +3,4 @@ node_modules
 yarn-error.log
 public/assets/*
 .env
+__pycache__
