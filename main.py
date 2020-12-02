@@ -234,7 +234,10 @@ def gimme_bs_json():
 
 @eel.expose
 def get_t_at_coordinate(coord):
-    return img.dataobj[63 - coord[0], coord[1], coord[2]]
+    if coord[0] is not None:
+        return img.dataobj[63 - coord[0], coord[1], coord[2]]
+    else:
+        return img.dataobj[63 - 32, 32, 32]
 
 
 # These functions are exposed for specific experiments

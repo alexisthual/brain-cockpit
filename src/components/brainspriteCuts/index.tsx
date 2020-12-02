@@ -4,8 +4,6 @@ import { eel } from "App";
 
 interface IBSCutsProps {
   clickedVoxelCallback?: any;
-  width: number;
-  height: number;
 }
 
 interface BrainSpriteParams {
@@ -69,23 +67,11 @@ class BSCuts extends Component<IBSCutsProps, {}> {
 
   render() {
     return (
-      <div
-        ref={(container) => {
-          this.container = container;
-        }}
-        style={{
-          width: this.props.width,
-            height: this.props.height,
-            position: "absolute",
-            overflow: "hidden",
-        }}
-      >
-        <canvas id="3Dviewer">
-          <img id="spriteImg" alt=""/>
-          <img id="colorMap" alt=""/>
-          <img id="overlayImg" alt=""/>
-        </canvas>
-      </div>
+      <canvas id="3Dviewer">
+        <img id="spriteImg" alt=""/>
+        <img id="colorMap" alt=""/>
+        <img id="overlayImg" alt=""/>
+      </canvas>
     );
   }
 }

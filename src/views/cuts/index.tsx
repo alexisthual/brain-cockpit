@@ -6,6 +6,8 @@ import type { BrainSpriteObject } from "components/brainspriteCuts";
 
 import { eel } from "App";
 
+import "./style.scss";
+
 const CutsExplorer = () => {
   const [mnicoordinates, setMnicoordinates] = useState<[number, number, number]>([NaN, NaN, NaN]);
   const [slicecoordinate, setSlicecoordinate] = useState<[number, number, number]>([NaN, NaN, NaN]);
@@ -18,27 +20,8 @@ const CutsExplorer = () => {
   }, [slicecoordinate, mnicoordinates])
 
   return (
-    <div
-      id="main-container"
-    >
-    <ParentSize className="container" debounceTime={10}>
-      {({ width: cWidth, height: cHeight }) => (
-      <BSCuts
-        clickedVoxelCallback={(brain: BrainSpriteObject) => {
-          if (brain.coordinatesSlice !== undefined && brain.numSlice !== undefined) {
-            setMnicoordinates([brain.coordinatesSlice.X,
-                               brain.coordinatesSlice.Y,
-                               brain.coordinatesSlice.Z]);
-            setSlicecoordinate([brain.numSlice.X,
-                               brain.numSlice.Y,
-                               brain.numSlice.Z]);
-          }
-        }}
-        width={cWidth}
-        height={cHeight}
-      />
-    )}
-    </ParentSize>
+    <div id="grid-container" >
+    <div id="infoscontainer">
     <ul>
       <li>
         X = {mnicoordinates[0]}
@@ -50,6 +33,22 @@ const CutsExplorer = () => {
         At that coordinate, t = {tAtCoordinate}
       </li>
     </ul>
+    </div>
+    <div id="cutsviewer" >
+      <BSCuts
+        clickedVoxelCallback={(brain: BrainSpriteObject) => {
+          if (brain.coordinatesSlice !== undefined && brain.numSlice !== undefined) {
+            setMnicoordinates([brain.coordinatesSlice.X,
+                               brain.coordinatesSlice.Y,
+                               brain.coordinatesSlice.Z]);
+            setSlicecoordinate([brain.numSlice.X,
+                               brain.numSlice.Y,
+                               brain.numSlice.Z]);
+          }
+        }}
+      />
+    </div>
+    <div id="derivatives"></div>
     </div>
   );
 };
