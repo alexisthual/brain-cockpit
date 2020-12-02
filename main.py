@@ -15,6 +15,7 @@ dotenv.load_dotenv()
 DATA_PATH = os.getenv("DATA_PATH")
 AVAILABLE_CONTRASTS_PATH = os.getenv("AVAILABLE_CONTRASTS_PATH")
 DEBUG = os.getenv("DEBUG")
+EXPERIMENT_DATA_PATH = os.getenv("EXPERIMENT_DATA_PATH")
 
 
 def select_subjects_and_contrasts(
@@ -217,56 +218,6 @@ def get_left_contrast_mean(contrast_index):
     return mean.tolist()
 
 
-## Load regressed coordinates
-print("Loading regressed coordinates...")
-regressed_coordinates = None
-with open(
-    "/home/alexis/singbrain/outputs/008_position_regression_from_fmri.py/prediction_rbfsvr_epsilon_0.1_gamma_auto_C_1.0.npy",
-    "rb",
-) as f:
-    regressed_coordinates = np.load(f)
-
-
-@eel.expose
-def get_regressed_coordinates(voxel_index):
-    if DEBUG:
-        print(
-            f"get_regressed_coordinates for voxel {voxel_index} for subject {subjects[-1]}"
-        )
-    return (regressed_coordinates[voxel_index, :]).tolist()
-
-
-## Load regressed coordinates error map
-print("Loading regression error map...")
-regressed_coordinates_error = None
-with open(
-    "/home/alexis/singbrain/outputs/008_position_regression_from_fmri.py/error_rbfsvr_epsilon_0.1_gamma_auto_C_1.0.npy",
-    "rb",
-) as f:
-    regressed_coordinates_error = np.load(f)
-
-
-@eel.expose
-def get_regressed_coordinates_error():
-    if DEBUG:
-        print(f"get_regressed_coordinates_error")
-    return regressed_coordinates_error.tolist()
-
-
-@eel.expose
-def server_log(message):
-    print(message)
-
-
-print("Loading fMRI SPM data...")
-subject_data = fetch_spm_auditory()
-fmri_img = concat_imgs(subject_data.func)
-events = pd.read_table(subject_data["events"])
-fmri_glm = FirstLevelModel(t_r=7, minimize_memory=False).fit(fmri_img, events)
-mean_img = mean_img(fmri_img)
-img = fmri_glm.compute_contrast("active - rest")
-
-
 @eel.expose
 def gimme_bs_json():
     return brainsprite_wrapper.generate_bs(img, mean_img, 3)
@@ -277,6 +228,60 @@ def get_t_at_coordinate(coord):
     return img.dataobj[63 - coord[0], coord[1], coord[2]]
 
 
+# These functions are exposed for specific experiments
+# whose data might not be publicly available
+if EXPERIMENT_DATA_PATH and os.path.exists(EXPERIMENT_DATA_PATH):
+    ## Load regressed coordinates
+    print("Loading regressed coordinates...")
+    regressed_coordinates = None
+    with open(
+        os.path.join(
+            EXPERIMENT_DATA_PATH,
+            "008_position_regression_from_fmri.py/prediction_rbfsvr_epsilon_0.1_gamma_auto_C_1.0.npy",
+        ),
+        "rb",
+    ) as f:
+        regressed_coordinates = np.load(f)
+
+    @eel.expose
+    def get_regressed_coordinates(voxel_index):
+        if DEBUG:
+            print(
+                f"get_regressed_coordinates for voxel {voxel_index} for subject {subjects[-1]}"
+            )
+        return (regressed_coordinates[voxel_index, :]).tolist()
+
+    ## Load regressed coordinates error map
+    print("Loading regression error map...")
+    regressed_coordinates_error = None
+    with open(
+        os.path.join(
+            EXPERIMENT_DATA_PATH,
+            "008_position_regression_from_fmri.py/error_rbfsvr_epsilon_0.1_gamma_auto_C_1.0.npy",
+        ),
+        "rb",
+    ) as f:
+        regressed_coordinates_error = np.load(f)
+
+    @eel.expose
+    def get_regressed_coordinates_error():
+        if DEBUG:
+            print(f"get_regressed_coordinates_error")
+        return regressed_coordinates_error.tolist()
+
+    @eel.expose
+    def server_log(message):
+        print(message)
+
+    print("Loading fMRI SPM data...")
+    subject_data = fetch_spm_auditory()
+    fmri_img = concat_imgs(subject_data.func)
+    events = pd.read_table(subject_data["events"])
+    fmri_glm = FirstLevelModel(t_r=7, minimize_memory=False).fit(
+        fmri_img, events
+    )
+    mean_img = mean_img(fmri_img)
+    img = fmri_glm.compute_contrast("active - rest")
 print("Serving...")
 eel.init("src", [".tsx", ".ts", ".jsx", ".js", ".html"])
 eel.start({"port": 3000}, app=None, mode=None, host="localhost", port=9442)
