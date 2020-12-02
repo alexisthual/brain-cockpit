@@ -26,8 +26,8 @@ interface BrainCoordinates {
 }
 
 interface BrainSpriteObject {
-  coordinatesSlice: BrainCoordinates;
-  numSlice: BrainCoordinates;
+  coordinatesSlice?: BrainCoordinates;
+  numSlice?: BrainCoordinates;
 }
 
 class BSCuts extends Component<IBSCutsProps, {}> {
@@ -39,7 +39,7 @@ class BSCuts extends Component<IBSCutsProps, {}> {
     super(props);
     this.state = {};
     this.brainsprite_json = {};
-    this.brainsprite_object = {} as BrainSpriteObject;
+    this.brainsprite_object = {};
     this.onMouseClick = this.onMouseClick.bind(this);
   }
 
@@ -53,7 +53,7 @@ class BSCuts extends Component<IBSCutsProps, {}> {
       stat_map.src = "data:image/png;base64," + (bs_json.stat_map_base64)
       this.brainsprite_json = bs_json;
       // This is a hack around a proper event that images are loaded:
-      setTimeout(() => this.brainsprite_object = brainsprite(bs_json.params) as BrainSpriteObject, 100);
+      setTimeout(() => this.brainsprite_object = brainsprite(bs_json.params), 100);
     });
 
     window.addEventListener("click", this.onMouseClick, false);

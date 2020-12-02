@@ -25,12 +25,14 @@ const CutsExplorer = () => {
       {({ width: cWidth, height: cHeight }) => (
       <BSCuts
         clickedVoxelCallback={(brain: BrainSpriteObject) => {
-          setMnicoordinates([brain.coordinatesSlice.X,
-                             brain.coordinatesSlice.Y,
-                             brain.coordinatesSlice.Z]);
-          setSlicecoordinate([brain.numSlice.X,
-                             brain.numSlice.Y,
-                             brain.numSlice.Z]);
+          if (brain.coordinatesSlice !== undefined && brain.numSlice !== undefined) {
+            setMnicoordinates([brain.coordinatesSlice.X,
+                               brain.coordinatesSlice.Y,
+                               brain.coordinatesSlice.Z]);
+            setSlicecoordinate([brain.numSlice.X,
+                               brain.numSlice.Y,
+                               brain.numSlice.Z]);
+          }
         }}
         width={cWidth}
         height={cHeight}
