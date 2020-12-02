@@ -282,6 +282,21 @@ if EXPERIMENT_DATA_PATH and os.path.exists(EXPERIMENT_DATA_PATH):
     )
     mean_img = mean_img(fmri_img)
     img = fmri_glm.compute_contrast("active - rest")
+
+
+# When all websockets are closed, the eel server shuts down.
+# One can prevent it from doing so (useful for development purposes).
+def no_stop(page, sockets):
+    pass
+
+
 print("Serving...")
 eel.init("src", [".tsx", ".ts", ".jsx", ".js", ".html"])
-eel.start({"port": 3000}, app=None, mode=None, host="localhost", port=9442)
+eel.start(
+    {"port": 3000},
+    app=None,
+    mode=None,
+    close_callback=no_stop,
+    host="localhost",
+    port=9442,
+)
