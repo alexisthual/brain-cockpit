@@ -257,6 +257,7 @@ def get_regressed_coordinates_error():
 def server_log(message):
     print(message)
 
+
 print("Loading fMRI SPM data...")
 subject_data = fetch_spm_auditory()
 fmri_img = concat_imgs(subject_data.func)
@@ -270,15 +271,12 @@ img = fmri_glm.compute_contrast("active - rest")
 def gimme_bs_json():
     return brainsprite_wrapper.generate_bs(img, mean_img, 3)
 
+
 @eel.expose
 def get_t_at_coordinate(coord):
     return img.dataobj[63 - coord[0], coord[1], coord[2]]
 
 
-
-
 print("Serving...")
 eel.init("src", [".tsx", ".ts", ".jsx", ".js", ".html"])
-eel.start(
-    {"port": 3000}, app=None, host="localhost", port=8080, size=(1280, 800)
-)
+eel.start({"port": 3000}, app=None, mode=None, host="localhost", port=9442)

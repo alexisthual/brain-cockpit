@@ -14,7 +14,7 @@ import CutsExplorer from "views/cuts";
 import "./App.scss";
 
 export const eel = window.eel;
-eel.set_host("ws://localhost:8080");
+eel.set_host("ws://localhost:9442");
 
 const App = () => {
   return (
