@@ -1,4 +1,4 @@
-import { Button, Icon, NonIdealState } from "@blueprintjs/core";
+import { Button, Divider, Icon, NonIdealState } from "@blueprintjs/core";
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -27,6 +27,10 @@ const App = () => {
           <NavLink className="view-button" exact to="/cuts">
             <Icon icon="symbol-circle" />
           </NavLink>
+          <NavLink className="view-button" to="/volume">
+            <Icon icon="cube" />
+          </NavLink>
+          <Divider />
           <NavLink className="view-button" to="/regression">
             <Icon icon="regression-chart" />
           </NavLink>

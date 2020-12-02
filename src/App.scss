@@ -22,6 +22,10 @@
   flex-direction: column;
   align-items: stretch;
 
+  .bp3-divider {
+    border-bottom: 1px solid $dark-gray5;
+  }
+
   .view-button {
     width: 100%;
     display: flex;
