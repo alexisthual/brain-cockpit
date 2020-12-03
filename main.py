@@ -220,26 +220,29 @@ def get_left_contrast_mean(contrast_index):
     return mean.tolist()
 
 
-# print("Loading fMRI SPM data...")
-# subject_data = fetch_spm_auditory()
-# fmri_img = concat_imgs(subject_data.func)
-# events = pd.read_table(subject_data["events"])
-# fmri_glm = FirstLevelModel(t_r=7, minimize_memory=False).fit(
-#     fmri_img, events
-# )
-# mean_img = mean_img(fmri_img)
-# img = fmri_glm.compute_contrast("active - rest")
-#
-# @eel.expose
-# def gimme_bs_json():
-#     return brainsprite_wrapper.generate_bs(img, mean_img, 3)
-#
-# @eel.expose
-# def get_t_at_coordinate(coord):
-#     return img.dataobj[63 - coord[0], coord[1], coord[2]]
+print("Loading fMRI SPM data...")
+subject_data = fetch_spm_auditory()
+fmri_img = concat_imgs(subject_data.func)
+events = pd.read_table(subject_data["events"])
+fmri_glm = FirstLevelModel(t_r=7, minimize_memory=False).fit(fmri_img, events)
+mean_img = mean_img(fmri_img)
+img = fmri_glm.compute_contrast("active - rest")
 
 
-# Functions below are exposed for specific experiments
+@eel.expose
+def gimme_bs_json():
+    return brainsprite_wrapper.generate_bs(img, mean_img, 3)
+
+
+@eel.expose
+def get_t_at_coordinate(coord):
+    if coord[0] is not None:
+        return img.dataobj[63 - coord[0], coord[1], coord[2]]
+    else:
+        return img.dataobj[63 - 32, 32, 32]
+
+
+# These functions are exposed for specific experiments
 # whose data might not be publicly available
 
 ## Load regressed coordinates
