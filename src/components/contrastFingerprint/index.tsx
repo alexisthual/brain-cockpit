@@ -1,4 +1,4 @@
-import { Button, Colors } from "@blueprintjs/core";
+import { Colors } from "@blueprintjs/core";
 import { AxisLeft, AxisTop } from "@visx/axis";
 import { Group } from "@visx/group";
 import { scaleBand, scaleLinear } from "@visx/scale";
