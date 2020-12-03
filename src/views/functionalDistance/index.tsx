@@ -361,6 +361,7 @@ const FunctionalDistanceExplorer = () => {
                 }}
                 width={functionalDistanceWidth}
                 height={functionalDistanceHeight}
+                sliderEnabled={surfaceMapType === SurfaceMapType.M_DISTANCE}
               />
             )}
           </ParentSize>

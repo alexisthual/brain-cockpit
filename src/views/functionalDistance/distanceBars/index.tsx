@@ -15,6 +15,7 @@ interface Props {
   mChangeCallback: (m: number) => void;
   width: number;
   height: number;
+  sliderEnabled?: boolean;
 }
 
 const DistanceBars = ({
@@ -24,6 +25,7 @@ const DistanceBars = ({
   mChangeCallback = () => {},
   width,
   height,
+  sliderEnabled = false,
 }: Props) => {
   let padding = 10;
   let labelMargin = 0;
@@ -57,7 +59,9 @@ const DistanceBars = ({
       {loading ? <OverlayLoader /> : null}
       <Slider
         className="functional-slider"
-        disabled={distances === undefined || distances.length === 0}
+        disabled={
+          !sliderEnabled || distances === undefined || distances.length === 0
+        }
         labelStepSize={0.2}
         max={yDomain[0]}
         min={yDomain[1]}
