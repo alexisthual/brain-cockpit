@@ -172,17 +172,15 @@ const FunctionalDistanceExplorer = () => {
           break;
         case SurfaceMapType.M_DISTANCE:
           if (meanSurfaceMap) {
-            eel.get_mean_topographic_distance_to_m_functional_distance(
-              voxelIndex,
-              m
-            )((surfaceMap: number[]) => {
-              setSurfaceMap(surfaceMap);
-              setLoadingSurfaceMap(false);
-            });
+            eel.get_mean_topographic_distance_to_m_functional_distance(m)(
+              (surfaceMap: number[]) => {
+                setSurfaceMap(surfaceMap);
+                setLoadingSurfaceMap(false);
+              }
+            );
           } else {
             eel.get_topographic_distance_to_m_functional_distance(
               subject.index,
-              voxelIndex,
               m
             )((surfaceMap: number[]) => {
               setSurfaceMap(surfaceMap);
@@ -354,6 +352,9 @@ const FunctionalDistanceExplorer = () => {
                 loading={loadingFunctionalDistances}
                 distances={functionalDistances}
                 m={m}
+                mChangeCallback={(newM: number) => {
+                  setM(newM);
+                }}
                 width={functionalDistanceWidth}
                 height={functionalDistanceHeight}
               />

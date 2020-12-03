@@ -1,6 +1,6 @@
-import { Colors } from "@blueprintjs/core";
-import React from "react";
-import { AxisBottom, AxisLeft, AxisTop } from "@visx/axis";
+import { Colors, Slider } from "@blueprintjs/core";
+import React, { useState } from "react";
+import { AxisBottom } from "@visx/axis";
 import { Group } from "@visx/group";
 import { scaleBand, scaleLinear } from "@visx/scale";
 import { Bar } from "@visx/shape";
@@ -12,14 +12,22 @@ interface Props {
   loading?: boolean;
   distances?: number[];
   m?: number;
+  mChangeCallback: (m: number) => void;
   width: number;
   height: number;
 }
 
-const DistanceBars = ({ loading, distances, m, width, height }: Props) => {
+const DistanceBars = ({
+  loading,
+  distances,
+  m,
+  mChangeCallback = () => {},
+  width,
+  height,
+}: Props) => {
   let padding = 10;
   let labelMargin = 0;
-  let offsetLeft = 20;
+  let offsetLeft = 30;
   let offsetTop = 0;
   let offsetRight = 0;
   let offsetBottom = 20;
@@ -36,14 +44,29 @@ const DistanceBars = ({ loading, distances, m, width, height }: Props) => {
   xScale.paddingOuter(0);
 
   const yScale = scaleLinear<number>({
-    domain: [distances ? Math.max(...distances) : 0, 0],
+    domain: [distances ? Math.max(Math.max(...distances), 1) : 0, 0],
     range: [0, yMax],
     round: true,
   });
+  const yDomain = yScale.domain();
+
+  const [sliderValue, setSliderValue] = useState(m);
 
   return (
     <>
       {loading ? <OverlayLoader /> : null}
+      <Slider
+        className="functional-slider"
+        disabled={distances === undefined || distances.length === 0}
+        labelStepSize={0.2}
+        max={yDomain[0]}
+        min={yDomain[1]}
+        onChange={(newSliderValue: number) => setSliderValue(newSliderValue)}
+        onRelease={(newM: number) => mChangeCallback(newM)}
+        stepSize={0.1}
+        value={sliderValue ?? (yDomain[0] - yDomain[1]) / 2}
+        vertical={true}
+      />
       <svg width={width} height={height} className="functional-distance-bars">
         {distances ? (
           <Group
@@ -52,19 +75,6 @@ const DistanceBars = ({ loading, distances, m, width, height }: Props) => {
             left={padding + offsetLeft}
             top={padding + offsetTop}
           >
-            <AxisLeft
-              axisClassName="axis"
-              scale={yScale}
-              stroke={Colors.GRAY3}
-              tickStroke={Colors.GRAY3}
-              tickClassName="tick"
-              tickLabelProps={() => ({
-                textAnchor: "end",
-                alignmentBaseline: "middle",
-                dominantBaseline: "middle",
-              })}
-              tickLength={4}
-            />
             <AxisBottom
               axisClassName="axis"
               numTicks={distances ? distances.length / 10 : 1}
@@ -80,15 +90,20 @@ const DistanceBars = ({ loading, distances, m, width, height }: Props) => {
             />
             <Group>
               {distances.map((distance: number, index: number) => {
+                const height = yScale(yDomain[1]) - yScale(distance);
                 return (
                   <Bar
                     className="distance-bar"
                     key={`distance-bar-${index}`}
-                    fill={Colors.GRAY4}
+                    fill={
+                      sliderValue && distance <= sliderValue
+                        ? Colors.GRAY2
+                        : Colors.GRAY4
+                    }
                     x={xScale(index)}
                     width={xScale.bandwidth()}
                     y={yScale(distance)}
-                    height={yScale(yScale.domain()[1]) - yScale(distance)}
+                    height={height}
                   />
                 );
               })}
