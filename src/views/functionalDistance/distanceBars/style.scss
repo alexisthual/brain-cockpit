@@ -7,11 +7,14 @@ $offsetBottom: 20px;
   z-index: 2;
   position: absolute;
   top: $padding;
+  left: $padding;
   height: calc(100% - 2 * #{$padding} - #{$offsetBottom}) !important;
 }
 
 .functional-distance-bars {
   box-sizing: border-box;
+  border-top: 1px solid $light-gray3;
+  border-left: 1px solid $light-gray3;
 
   min-height: 0px;
   overflow: hidden;
