@@ -4,6 +4,7 @@ import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import ContrastFingerprint from "components/contrastFingerprint";
 import InfoPanel from "./infoPanel";
 import Scene from "components/scene";
+import TextualLoader from "components/textualLoader";
 import { Orientation, Subject } from "constants/index";
 import { eel } from "App";
 
@@ -32,8 +33,10 @@ const FunctionalDistanceExplorer = () => {
   const [taskCounts, setTaskCounts] = useState<number[]>([]);
   const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
   const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
+  const [loadingFingerprint, setLoadingFingerprint] = useState(false);
   const [meanFingerprint, setMeanFingerprint] = useState(false);
   const [surfaceMap, setSurfaceMap] = useState<number[] | undefined>();
+  const [loadingSurfaceMap, setLoadingSurfaceMap] = useState(false);
   const [surfaceMapType, setSurfaceMapType] = useState(
     SurfaceMapType.SEED_BASED
   );
@@ -147,11 +150,13 @@ const FunctionalDistanceExplorer = () => {
     if (subject && subject.index !== undefined && voxelIndex) {
       console.log("filter OK");
       console.log(surfaceMapType);
+      setLoadingSurfaceMap(true);
       switch (surfaceMapType) {
         case SurfaceMapType.SEED_BASED:
           if (meanSurfaceMap) {
             eel.get_mean_distance_map(voxelIndex)((surfaceMap: number[]) => {
               setSurfaceMap(surfaceMap);
+              setLoadingSurfaceMap(false);
             });
           } else {
             eel.get_distance_map(
@@ -159,6 +164,7 @@ const FunctionalDistanceExplorer = () => {
               voxelIndex
             )((surfaceMap: number[]) => {
               setSurfaceMap(surfaceMap);
+              setLoadingSurfaceMap(false);
             });
           }
           break;
@@ -169,6 +175,7 @@ const FunctionalDistanceExplorer = () => {
               m
             )((surfaceMap: number[]) => {
               setSurfaceMap(surfaceMap);
+              setLoadingSurfaceMap(false);
             });
           } else {
             eel.get_topographic_distance_to_m_functional_distance(
@@ -177,11 +184,13 @@ const FunctionalDistanceExplorer = () => {
               m
             )((surfaceMap: number[]) => {
               setSurfaceMap(surfaceMap);
+              setLoadingSurfaceMap(false);
             });
           }
           break;
         default:
           console.log("Unknown surfaceMapType");
+          setLoadingSurfaceMap(false);
           break;
       }
     }
@@ -190,9 +199,11 @@ const FunctionalDistanceExplorer = () => {
   // Update fingerprint when voxelIndex or subjectIndex change
   useEffect(() => {
     if (voxelIndex !== undefined) {
+      setLoadingFingerprint(true);
       if (meanFingerprint) {
         eel.get_voxel_fingerprint_mean(voxelIndex)((fingerprint: number[]) => {
           setContrastFingerprint(fingerprint);
+          setLoadingFingerprint(false);
         });
       } else if (subject.index !== undefined) {
         eel.get_voxel_fingerprint(
@@ -200,6 +211,7 @@ const FunctionalDistanceExplorer = () => {
           voxelIndex
         )((contrastFingerprint: number[]) => {
           setContrastFingerprint(contrastFingerprint);
+          setLoadingFingerprint(false);
         });
       }
     }
@@ -236,6 +248,9 @@ const FunctionalDistanceExplorer = () => {
           setSurfaceMapType(surfaceMapType);
         }}
       />
+      {loadingSurfaceMap ? (
+        <TextualLoader text="Loading surface map..." />
+      ) : null}
       <div id="scene">
         <ParentSize className="scene-container" debounceTime={10}>
           {({ width: sceneWidth, height: sceneHeight }) => (
@@ -257,6 +272,7 @@ const FunctionalDistanceExplorer = () => {
           <ParentSize className="fingerprint-container" debounceTime={10}>
             {({ width: fingerprintWidth, height: fingerprintHeight }) => (
               <ContrastFingerprint
+                loading={loadingFingerprint}
                 changeOrientationCallback={() => {
                   switch (orientation) {
                     case Orientation.VERTICAL:
