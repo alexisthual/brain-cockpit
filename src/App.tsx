@@ -8,9 +8,10 @@ import {
   Switch,
 } from "react-router-dom";
 
-import SurfaceExplorer from "views/surface";
-import RegressionExplorer from "views/regression";
 import CutsExplorer from "views/cuts";
+import FunctionalDistanceExplorer from "views/functionalDistance";
+import RegressionExplorer from "views/regression";
+import SurfaceExplorer from "views/surface";
 import "./App.scss";
 
 export const eel = window.eel;
@@ -34,19 +35,22 @@ const App = () => {
           <NavLink className="view-button" to="/regression">
             <Icon icon="regression-chart" />
           </NavLink>
-          <NavLink className="view-button" to="/volume">
-            <Icon icon="cube" />
+          <NavLink className="view-button" to="/functional-distance">
+            <Icon icon="heatmap" />
           </NavLink>
         </div>
         <Switch>
           <Route exact path="/">
             <SurfaceExplorer />
           </Route>
+          <Route exact path="/cuts">
+            <CutsExplorer />
+          </Route>
           <Route exact path="/regression">
             <RegressionExplorer />
           </Route>
-          <Route exact path="/cuts">
-            <CutsExplorer />
+          <Route exact path="/functional-distance">
+            <FunctionalDistanceExplorer />
           </Route>
           <Route>
             <NonIdealState
