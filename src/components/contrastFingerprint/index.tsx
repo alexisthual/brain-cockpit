@@ -1,10 +1,10 @@
 import { Button, Colors } from "@blueprintjs/core";
-import React from "react";
 import { AxisLeft, AxisTop } from "@visx/axis";
 import { Group } from "@visx/group";
 import { scaleBand, scaleLinear } from "@visx/scale";
 import { Bar } from "@visx/shape";
 import { Text } from "@visx/text";
+import React from "react";
 
 import { Contrast, Orientation } from "constants/index";
 import OverlayLoader from "components/overlayLoader";
@@ -19,12 +19,8 @@ interface Props {
   width: number;
   height: number;
   clickedLabelCallback?: (labelIndex: number) => void;
-  closePanelCallback?: () => void;
-  changeOrientationCallback?: () => void;
   orientation: Orientation;
   selectedContrast?: Contrast;
-  meanFingerprint: boolean;
-  meanFingerprintCallback: () => void;
 }
 
 const ContrastFingerprint = ({
@@ -38,10 +34,6 @@ const ContrastFingerprint = ({
   clickedLabelCallback,
   orientation = Orientation.VERTICAL,
   selectedContrast,
-  changeOrientationCallback,
-  closePanelCallback,
-  meanFingerprint,
-  meanFingerprintCallback,
 }: Props) => {
   let padding = 40;
   let labelMargin = 15;
@@ -88,29 +80,6 @@ const ContrastFingerprint = ({
   return (
     <>
       {loading ? <OverlayLoader /> : null}
-      <div
-        className={`contrast-fingerprint-buttons ${orientation}-orientation`}
-      >
-        <Button
-          active={meanFingerprint}
-          icon={meanFingerprint ? "ungroup-objects" : "group-objects"}
-          onClick={meanFingerprintCallback}
-          outlined
-          title={"Take subjects' mean"}
-        />
-        <Button
-          icon={"rotate-page"}
-          onClick={changeOrientationCallback}
-          outlined
-          title="Change panel orientation"
-        />
-        <Button
-          icon={"cross"}
-          onClick={closePanelCallback}
-          outlined
-          title="Close panel"
-        />
-      </div>
       <svg
         width={width}
         height={height}

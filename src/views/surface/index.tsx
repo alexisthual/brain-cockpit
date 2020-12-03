@@ -1,8 +1,10 @@
-import React, { useEffect, useReducer, useState } from "react";
+import { Button } from "@blueprintjs/core";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
+import React, { useEffect, useReducer, useState } from "react";
 
 import ContrastFingerprint from "components/contrastFingerprint";
 import InfoPanel from "components/infoPanel";
+import PanelButtons from "components/infoPanel/buttons";
 import Scene from "components/scene";
 import { Contrast, Orientation, Subject } from "constants/index";
 import { eel } from "App";
@@ -231,22 +233,33 @@ const SurfaceExplorer = () => {
       </div>
       {voxelIndex !== undefined ? (
         <div id="fingerprint">
+          <PanelButtons
+            orientation={
+              orientation === Orientation.VERTICAL
+                ? Orientation.HORIZONTAL
+                : Orientation.VERTICAL
+            }
+            orientationChangeCallback={() => {
+              switch (orientation) {
+                case Orientation.VERTICAL:
+                  setOrientation(Orientation.HORIZONTAL);
+                  break;
+                case Orientation.HORIZONTAL:
+                  setOrientation(Orientation.VERTICAL);
+                  break;
+              }
+            }}
+            meanFingerprint={meanFingerprint}
+            meanChangeCallback={() => {
+              setMeanFingerprint(!meanFingerprint);
+            }}
+            clickCloseCallback={() => {
+              setVoxelIndex(undefined);
+            }}
+          />
           <ParentSize className="fingerprint-container" debounceTime={10}>
             {({ width: fingerprintWidth, height: fingerprintHeight }) => (
               <ContrastFingerprint
-                changeOrientationCallback={() => {
-                  switch (orientation) {
-                    case Orientation.VERTICAL:
-                      setOrientation(Orientation.HORIZONTAL);
-                      break;
-                    case Orientation.HORIZONTAL:
-                      setOrientation(Orientation.VERTICAL);
-                      break;
-                  }
-                }}
-                closePanelCallback={() => {
-                  setVoxelIndex(undefined);
-                }}
                 clickedLabelCallback={(contrastIndex: number) => {
                   setContrast({ payload: contrastIndex });
                 }}
@@ -260,10 +273,6 @@ const SurfaceExplorer = () => {
                 taskLabels={taskLabels}
                 taskCounts={taskCounts}
                 fingerprint={contrastFingerprint}
-                meanFingerprint={meanFingerprint}
-                meanFingerprintCallback={() => {
-                  setMeanFingerprint(!meanFingerprint);
-                }}
                 width={fingerprintWidth}
                 height={fingerprintHeight}
               />

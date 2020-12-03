@@ -1,9 +1,10 @@
-import React, { useEffect, useReducer, useState } from "react";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
+import React, { useEffect, useReducer, useState } from "react";
 
 import ContrastFingerprint from "components/contrastFingerprint";
 import DistanceBars from "./distanceBars";
 import InfoPanel from "./infoPanel";
+import PanelButtons from "components/infoPanel/buttons";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
 import { Orientation, Subject } from "constants/index";
@@ -303,24 +304,31 @@ const FunctionalDistanceExplorer = () => {
               : Orientation.HORIZONTAL
           }-orientation`}
         >
+          <PanelButtons
+            orientationChangeCallback={() => {
+              switch (orientation) {
+                case Orientation.VERTICAL:
+                  setOrientation(Orientation.HORIZONTAL);
+                  break;
+                case Orientation.HORIZONTAL:
+                  setOrientation(Orientation.VERTICAL);
+                  break;
+              }
+            }}
+            meanFingerprint={meanFingerprint}
+            meanChangeCallback={() => {
+              setMeanFingerprint(!meanFingerprint);
+              setMeanFunctionalDistance(!meanFunctionalDistance);
+            }}
+            clickCloseCallback={() => {
+              setVoxelIndex(undefined);
+            }}
+          />
           <div id="fingerprint">
             <ParentSize className="fingerprint-container" debounceTime={10}>
               {({ width: fingerprintWidth, height: fingerprintHeight }) => (
                 <ContrastFingerprint
                   loading={loadingFingerprint}
-                  changeOrientationCallback={() => {
-                    switch (orientation) {
-                      case Orientation.VERTICAL:
-                        setOrientation(Orientation.HORIZONTAL);
-                        break;
-                      case Orientation.HORIZONTAL:
-                        setOrientation(Orientation.VERTICAL);
-                        break;
-                    }
-                  }}
-                  closePanelCallback={() => {
-                    setVoxelIndex(undefined);
-                  }}
                   orientation={
                     orientation === Orientation.VERTICAL
                       ? Orientation.HORIZONTAL
@@ -330,10 +338,6 @@ const FunctionalDistanceExplorer = () => {
                   taskLabels={taskLabels}
                   taskCounts={taskCounts}
                   fingerprint={contrastFingerprint}
-                  meanFingerprint={meanFingerprint}
-                  meanFingerprintCallback={() => {
-                    setMeanFingerprint(!meanFingerprint);
-                  }}
                   width={fingerprintWidth}
                   height={fingerprintHeight}
                 />
