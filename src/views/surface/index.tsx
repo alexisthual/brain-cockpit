@@ -2,7 +2,7 @@ import React, { useEffect, useReducer, useState } from "react";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 
 import ContrastFingerprint from "components/contrastFingerprint";
-import Header from "components/header";
+import InfoPanel from "components/infoPanel";
 import Scene from "components/scene";
 import { Contrast, Orientation, Subject } from "constants/index";
 import { eel } from "App";
@@ -199,7 +199,7 @@ const SurfaceExplorer = () => {
         voxelIndex !== undefined ? `${orientation}-orientation` : ""
       }`}
     >
-      <Header
+      <InfoPanel
         subjectLabels={subjectLabels}
         subject={subject.label}
         contrast={contrast.label}

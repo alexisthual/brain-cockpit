@@ -14,7 +14,7 @@ interface IProps {
   meanChangeCallback?: () => void;
 }
 
-const Header = ({
+const InfoPanel = ({
   subjectLabels,
   subject,
   contrast,
@@ -97,4 +97,4 @@ const Header = ({
   );
 };
 
-export default Header;
+export default InfoPanel;
