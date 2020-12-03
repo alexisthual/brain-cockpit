@@ -27,16 +27,18 @@ class MplD3 extends Component<IMplD3Props, {}> {
   }
 
   componentDidMount() {
-    if (document.getElementById("fig") != null) {
-      document.getElementById("fig").innerHTML = "";
+    const fig = document.getElementById("fig");
+    if (fig !== null) {
+      fig.innerHTML = "";
     }
     this.content = this.props.content;
     mpld3.draw_figure("fig", this.content)
   }
 
   componentDidUpdate(prevProps: IMplD3Props) {
-    if (document.getElementById("fig") != null) {
-      document.getElementById("fig").innerHTML = "";
+    const fig = document.getElementById("fig");
+    if (fig !== null) {
+      fig.innerHTML = "";
     }
     this.content = this.props.content;
     mpld3.draw_figure("fig", this.content)
