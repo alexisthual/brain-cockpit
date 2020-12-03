@@ -352,7 +352,7 @@ if SERVE_CUTS:
 
 ## Load regressed coordinates
 regressed_coordinates = None
-if os.path.exists(EXPERIMENT_DATA_PATH):
+if EXPERIMENT_DATA_PATH is not None and os.path.exists(EXPERIMENT_DATA_PATH):
     print("Loading regressed coordinates...")
     with open(
         os.path.join(
@@ -375,7 +375,7 @@ def get_regressed_coordinates(voxel_index):
 
 ## Load regressed coordinates error map
 regressed_coordinates_error = None
-if os.path.exists(EXPERIMENT_DATA_PATH):
+if EXPERIMENT_DATA_PATH is not None and os.path.exists(EXPERIMENT_DATA_PATH):
     print("Loading regression error map...")
     with open(
         os.path.join(
@@ -400,7 +400,7 @@ d_max = 40
 
 ## Load correlation maps
 distance_maps = []
-if os.path.exists(EXPERIMENT_DATA_PATH):
+if EXPERIMENT_DATA_PATH is not None and os.path.exists(EXPERIMENT_DATA_PATH):
     print("Loading correlation maps...")
     for subject in tqdm(subjects):
         with open(
@@ -412,8 +412,8 @@ if os.path.exists(EXPERIMENT_DATA_PATH):
         ) as f:
             distance_maps.append(np.load(f))
 
-distance_maps = np.stack(distance_maps)
-mean_distance_map = np.mean(distance_maps, axis=0)
+    distance_maps = np.stack(distance_maps)
+    mean_distance_map = np.mean(distance_maps, axis=0)
 
 
 @eel.expose
@@ -484,7 +484,7 @@ def get_mean_topographic_distance_to_m_functional_distance(m):
 
 ## Load functional distance means
 mean_functional_distances = []
-if os.path.exists(EXPERIMENT_DATA_PATH):
+if EXPERIMENT_DATA_PATH is not None and os.path.exists(EXPERIMENT_DATA_PATH):
     print("Loading mean functional distances...")
     for subject in tqdm(subjects):
         with open(
@@ -496,10 +496,10 @@ if os.path.exists(EXPERIMENT_DATA_PATH):
         ) as f:
             mean_functional_distances.append(np.load(f))
 
-mean_functional_distances = np.stack(mean_functional_distances)
-mean_across_subjects_mean_function_distances = np.mean(
-    mean_functional_distances, axis=0
-)
+    mean_functional_distances = np.stack(mean_functional_distances)
+    mean_across_subjects_mean_function_distances = np.mean(
+        mean_functional_distances, axis=0
+    )
 
 
 @eel.expose
