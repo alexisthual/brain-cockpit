@@ -66,10 +66,21 @@
   top: 5px;
   right: 5px;
   display: flex;
-  flex-direction: row;
 
-  & > *:not(:last-child) {
-    margin-right: 5px;
+  &.horizontal-orientation {
+    flex-direction: column-reverse;
+
+    & > *:not(:last-child) {
+      margin-top: 5px;
+    }
+  }
+
+  &.vertical-orientation {
+    flex-direction: row;
+
+    & > *:not(:last-child) {
+      margin-right: 5px;
+    }
   }
 
   & > * {

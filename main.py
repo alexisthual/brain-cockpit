@@ -3,8 +3,10 @@ import eel
 import nibabel as nib
 import numpy as np
 import os
+import pandas as pd
 
 import pandas as pd
+from tqdm import tqdm
 
 # Load contrasts
 dotenv.load_dotenv()
@@ -231,7 +233,6 @@ if SERVE_CUTS:
     import matplotlib.pyplot as plt
     import mpld3
 
-
     print("Loading fMRI SPM data...")
     subject_data = fetch_spm_auditory()
     fmri_img = concat_imgs(subject_data.func)
@@ -348,10 +349,11 @@ if SERVE_CUTS:
 
 # These functions are exposed for specific experiments
 # whose data might not be publicly available
-if EXPERIMENT_DATA_PATH and os.path.exists(EXPERIMENT_DATA_PATH):
-    ## Load regressed coordinates
+
+## Load regressed coordinates
+regressed_coordinates = None
+if os.path.exists(EXPERIMENT_DATA_PATH):
     print("Loading regressed coordinates...")
-    regressed_coordinates = None
     with open(
         os.path.join(
             EXPERIMENT_DATA_PATH,
@@ -361,17 +363,20 @@ if EXPERIMENT_DATA_PATH and os.path.exists(EXPERIMENT_DATA_PATH):
     ) as f:
         regressed_coordinates = np.load(f)
 
-    @eel.expose
-    def get_regressed_coordinates(voxel_index):
-        if DEBUG:
-            print(
-                f"get_regressed_coordinates for voxel {voxel_index} for subject {subjects[-1]}"
-            )
-        return (regressed_coordinates[voxel_index, :]).tolist()
 
-    ## Load regressed coordinates error map
+@eel.expose
+def get_regressed_coordinates(voxel_index):
+    if DEBUG:
+        print(
+            f"get_regressed_coordinates for voxel {voxel_index} for subject {subjects[-1]}"
+        )
+    return (regressed_coordinates[voxel_index, :]).tolist()
+
+
+## Load regressed coordinates error map
+regressed_coordinates_error = None
+if os.path.exists(EXPERIMENT_DATA_PATH):
     print("Loading regression error map...")
-    regressed_coordinates_error = None
     with open(
         os.path.join(
             EXPERIMENT_DATA_PATH,
@@ -381,25 +386,151 @@ if EXPERIMENT_DATA_PATH and os.path.exists(EXPERIMENT_DATA_PATH):
     ) as f:
         regressed_coordinates_error = np.load(f)
 
-    @eel.expose
-    def get_regressed_coordinates_error():
-        if DEBUG:
-            print(f"get_regressed_coordinates_error")
-        return regressed_coordinates_error.tolist()
 
-    @eel.expose
-    def server_log(message):
-        print(message)
+@eel.expose
+def get_regressed_coordinates_error():
+    if DEBUG:
+        print(f"get_regressed_coordinates_error")
+    return regressed_coordinates_error.tolist()
 
-    print("Loading fMRI SPM data...")
-    subject_data = fetch_spm_auditory()
-    fmri_img = concat_imgs(subject_data.func)
-    events = pd.read_table(subject_data["events"])
-    fmri_glm = FirstLevelModel(t_r=7, minimize_memory=False).fit(
-        fmri_img, events
+
+# Functional distance vs topographical distance experiment
+metric = "cosine"
+d_max = 40
+
+## Load correlation maps
+distance_maps = []
+if os.path.exists(EXPERIMENT_DATA_PATH):
+    print("Loading correlation maps...")
+    for subject in tqdm(subjects):
+        with open(
+            os.path.join(
+                EXPERIMENT_DATA_PATH,
+                f"011_mean_m_distance_correlation_map.py/pairwise_{metric}_{subject}.npy",
+            ),
+            "rb",
+        ) as f:
+            distance_maps.append(np.load(f))
+
+distance_maps = np.stack(distance_maps)
+mean_distance_map = np.mean(distance_maps, axis=0)
+
+
+@eel.expose
+def get_distance_map(subject_index, voxel_index):
+    """Exports array of shape n_voxels * n_voxels"""
+
+    if DEBUG:
+        print(
+            f"get_distance_map for voxel {voxel_index} for {subjects[subject_index]}"
+        )
+
+    return distance_maps[subject_index][voxel_index, :].tolist()
+
+
+@eel.expose
+def get_mean_distance_map(voxel_index):
+    """Exports array of shape n_voxels * n_voxels"""
+
+    if DEBUG:
+        print(f"get_mean_distance_map for voxel {voxel_index}")
+
+    return mean_distance_map[voxel_index, :].tolist()
+
+
+@eel.expose
+def get_topographic_distance_to_m_functional_distance(subject_index, m):
+    """Exports array of shape n_voxels"""
+
+    if DEBUG:
+        print(
+            f"get_topographic_distance_to_m_functional_distance at distance {m} for {subjects[subject_index]}"
+        )
+    surface_map = np.min(
+        np.where(
+            mean_functional_distances[subject_index] >= m,
+            np.arange(d_max),
+            np.inf,
+        ),
+        axis=1,
     )
-    mean_img = mean_img(fmri_img)
-    img = fmri_glm.compute_contrast("active - rest")
+
+    return surface_map.tolist()
+
+
+@eel.expose
+def get_mean_topographic_distance_to_m_functional_distance(m):
+    """Exports array of shape n_voxels"""
+
+    if DEBUG:
+        print(
+            f"get_mean_topographic_distance_to_m_functional_distance at distance {m}"
+        )
+    surface_maps = [
+        np.min(
+            np.where(
+                mean_functional_distances[subject_index] >= m,
+                np.arange(d_max),
+                np.inf,
+            ),
+            axis=1,
+        )
+        for subject_index in range(len(subjects))
+    ]
+    mean = np.mean(np.stack(surface_maps), axis=0)
+
+    return mean.tolist()
+
+
+## Load functional distance means
+mean_functional_distances = []
+if os.path.exists(EXPERIMENT_DATA_PATH):
+    print("Loading mean functional distances...")
+    for subject in tqdm(subjects):
+        with open(
+            os.path.join(
+                EXPERIMENT_DATA_PATH,
+                f"011_mean_m_distance_correlation_map.py/mean_functional_distance_{metric}_{subject}.npy",
+            ),
+            "rb",
+        ) as f:
+            mean_functional_distances.append(np.load(f))
+
+mean_functional_distances = np.stack(mean_functional_distances)
+mean_across_subjects_mean_function_distances = np.mean(
+    mean_functional_distances, axis=0
+)
+
+
+@eel.expose
+def get_mean_functional_distance(subject_index, voxel_index):
+    """Exports array of shape d_max"""
+
+    if DEBUG:
+        print(
+            f"get_mean_functional_distance for voxel {voxel_index} for {subjects[subject_index]}"
+        )
+
+    return mean_functional_distances[subject_index][voxel_index, :].tolist()
+
+
+@eel.expose
+def get_mean_across_subjects_mean_functional_distance(voxel_index):
+    """Exports array of shape d_max"""
+
+    if DEBUG:
+        print(
+            f"get_mean_across_subjects_mean_functional_distance for voxel {voxel_index}"
+        )
+
+    return mean_across_subjects_mean_function_distances[
+        voxel_index, :
+    ].tolist()
+
+
+@eel.expose
+def server_log(message):
+    print(message)
 
 
 # When all websockets are closed, the eel server shuts down.

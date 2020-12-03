@@ -1,0 +1,19 @@
+@import "~@blueprintjs/core/lib/scss/variables";
+
+.textual-loader {
+  z-index: 2;
+  position: absolute;
+  left: 0;
+  top: 20px;
+  right: 0;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  color: $dark-gray5;
+
+  .bp3-spinner {
+    margin-right: 10px;
+  }
+}

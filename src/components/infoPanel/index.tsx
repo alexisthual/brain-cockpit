@@ -14,7 +14,7 @@ interface IProps {
   meanChangeCallback?: () => void;
 }
 
-const Header = ({
+const InfoPanel = ({
   subjectLabels,
   subject,
   contrast,
@@ -56,7 +56,6 @@ const Header = ({
                   items={subjectLabels}
                   itemRenderer={subjectRenderer}
                   onItemSelect={(item: string) => {
-                    console.log(item);
                     subjectChangeCallback(subjectLabels.indexOf(item));
                   }}
                 >
@@ -98,4 +97,4 @@ const Header = ({
   );
 };
 
-export default Header;
+export default InfoPanel;

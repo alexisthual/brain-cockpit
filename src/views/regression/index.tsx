@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 
 import ContrastFingerprint from "components/contrastFingerprint";
-import Header from "components/header";
+import InfoPanel from "components/infoPanel";
 import Scene from "components/scene";
 import { Orientation, Subject } from "constants/index";
 import { eel } from "App";
@@ -108,7 +108,7 @@ const RegressionExplorer = () => {
         voxelIndex !== undefined ? `${orientation}-orientation` : ""
       }`}
     >
-      <Header subject={subject.label} voxelIndex={voxelIndex} />
+      <InfoPanel subject={subject.label} voxelIndex={voxelIndex} />
       <div id="scene">
         <ParentSize className="scene-container" debounceTime={10}>
           {({ width: sceneWidth, height: sceneHeight }) => (

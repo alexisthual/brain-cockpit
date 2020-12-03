@@ -7,9 +7,11 @@ import { Bar } from "@visx/shape";
 import { Text } from "@visx/text";
 
 import { Contrast, Orientation } from "constants/index";
+import OverlayLoader from "components/overlayLoader";
 import "./style.scss";
 
 interface Props {
+  loading?: boolean;
   contrastLabels: string[];
   taskLabels?: string[];
   taskCounts?: number[];
@@ -26,6 +28,7 @@ interface Props {
 }
 
 const ContrastFingerprint = ({
+  loading,
   contrastLabels,
   taskLabels = [],
   taskCounts = [],
@@ -84,7 +87,10 @@ const ContrastFingerprint = ({
 
   return (
     <>
-      <div className="contrast-fingerprint-buttons">
+      {loading ? <OverlayLoader /> : null}
+      <div
+        className={`contrast-fingerprint-buttons ${orientation}-orientation`}
+      >
         <Button
           active={meanFingerprint}
           icon={meanFingerprint ? "ungroup-objects" : "group-objects"}
