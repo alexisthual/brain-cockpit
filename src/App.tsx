@@ -1,4 +1,11 @@
-import { Button, Divider, Icon, NonIdealState } from "@blueprintjs/core";
+import {
+  Button,
+  Divider,
+  Icon,
+  NonIdealState,
+  Position,
+  Tooltip,
+} from "@blueprintjs/core";
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -22,22 +29,38 @@ const App = () => {
     <Router>
       <div id="app-container">
         <div id="navbar">
-          <NavLink className="view-button" exact to="/">
-            <Icon icon="symbol-square" />
-          </NavLink>
-          <NavLink className="view-button" exact to="/cuts">
-            <Icon icon="symbol-circle" />
-          </NavLink>
-          <NavLink className="view-button" to="/volume">
-            <Icon icon="cube" />
-          </NavLink>
+          <Tooltip
+            content="IBC conditions on surface"
+            position={Position.RIGHT}
+          >
+            <NavLink className="view-button" exact to="/">
+              <Icon icon="symbol-square" />
+            </NavLink>
+          </Tooltip>
+          <Tooltip content="IBC conditions slices" position={Position.RIGHT}>
+            <NavLink className="view-button" exact to="/cuts">
+              <Icon icon="symbol-circle" />
+            </NavLink>
+          </Tooltip>
+          <Tooltip content="IBC conditions volume" position={Position.RIGHT}>
+            <NavLink className="view-button" to="/volume">
+              <Icon icon="cube" />
+            </NavLink>
+          </Tooltip>
           <Divider />
-          <NavLink className="view-button" to="/regression">
-            <Icon icon="regression-chart" />
-          </NavLink>
-          <NavLink className="view-button" to="/functional-distance">
-            <Icon icon="heatmap" />
-          </NavLink>
+          <Tooltip
+            content="Regressed MNI coordinates"
+            position={Position.RIGHT}
+          >
+            <NavLink className="view-button" to="/regression">
+              <Icon icon="regression-chart" />
+            </NavLink>
+          </Tooltip>
+          <Tooltip content="Functional distance maps" position={Position.RIGHT}>
+            <NavLink className="view-button" to="/functional-distance">
+              <Icon icon="heatmap" />
+            </NavLink>
+          </Tooltip>
         </div>
         <Switch>
           <Route exact path="/">
