@@ -22,6 +22,8 @@ import SurfaceExplorer from "views/surface";
 import "./App.scss";
 
 export const eel = window.eel;
+export const brainsprite = window.brainsprite;
+export const mpld3: any = window.mpld3;
 eel.set_host("ws://localhost:9442");
 
 const App = () => {
