@@ -398,24 +398,24 @@ mean_across_subjects_mean_function_distances = np.mean(
 
 
 @eel.expose
-def get_mean_functional_distance_for_voxel(subject_index, voxel_index):
+def get_mean_functional_distance(subject_index, voxel_index):
     """Exports array of shape d_max"""
 
     if DEBUG:
         print(
-            f"get_mean_functional_distance_for_voxel for voxel {voxel_index} for {subjects[subject_index]}"
+            f"get_mean_functional_distance for voxel {voxel_index} for {subjects[subject_index]}"
         )
 
     return mean_functional_distances[subject_index][voxel_index, :].tolist()
 
 
 @eel.expose
-def get_mean_across_subjects_mean_functional_distance_for_voxel(voxel_index,):
+def get_mean_across_subjects_mean_functional_distance(voxel_index):
     """Exports array of shape d_max"""
 
     if DEBUG:
         print(
-            f"get_mean_across_subjects_mean_functional_distance_for_voxel for voxel {voxel_index}"
+            f"get_mean_across_subjects_mean_functional_distance for voxel {voxel_index}"
         )
 
     return mean_across_subjects_mean_function_distances[
