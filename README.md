@@ -26,6 +26,15 @@ Once the `conda` environment is created, activate it with
 conda activate brain-cockpit
 ```
 
+#### Updating dependencies after installation
+
+Dependencies in `package.json` and `environment.yml` might evolve quickly. In order to update your local environment, run the following commands:
+
+```
+yarn install
+conda env update --file environment.yml
+```
+
 ### Generate assets (3D meshes)
 
 This command generates `fsaverage` meshes from `nilearn` and stores them in `./public/assets`
