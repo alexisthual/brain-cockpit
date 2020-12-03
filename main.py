@@ -4,10 +4,6 @@ import nibabel as nib
 import numpy as np
 import os
 
-from nilearn.datasets import fetch_spm_auditory
-from nilearn.image import concat_imgs, mean_img
-from nilearn.glm.first_level import FirstLevelModel
-import brainsprite_wrapper
 import pandas as pd
 
 # Load contrasts
@@ -16,6 +12,7 @@ DATA_PATH = os.getenv("DATA_PATH")
 AVAILABLE_CONTRASTS_PATH = os.getenv("AVAILABLE_CONTRASTS_PATH")
 DEBUG = os.getenv("DEBUG")
 EXPERIMENT_DATA_PATH = os.getenv("EXPERIMENT_DATA_PATH")
+SERVE_CUTS = os.getenv("SERVE_CUTS")
 
 
 def select_subjects_and_contrasts(
@@ -218,27 +215,136 @@ def get_left_contrast_mean(contrast_index):
     return mean.tolist()
 
 
+if SERVE_CUTS:
+    from nilearn.datasets import fetch_spm_auditory
+    from nilearn.image import concat_imgs, mean_img
+    from nilearn.image.resampling import coord_transform
+    from nilearn.glm.first_level import FirstLevelModel
+    import brainsprite_wrapper
+    import plotly.graph_objects as go
+    import plotly.express as px
+    from plotly.io import to_json
+    from scipy.stats import zscore
 
-print("Loading fMRI SPM data...")
-subject_data = fetch_spm_auditory()
-fmri_img = concat_imgs(subject_data.func)
-events = pd.read_table(subject_data["events"])
-fmri_glm = FirstLevelModel(t_r=7, minimize_memory=False).fit(fmri_img, events)
-mean_img = mean_img(fmri_img)
-img = fmri_glm.compute_contrast("active - rest")
-
-@eel.expose
-def gimme_bs_json():
-    return brainsprite_wrapper.generate_bs(img, mean_img, 3)
+    import matplotlib
+    matplotlib.use('Agg') # Make it headless
+    import matplotlib.pyplot as plt
+    import mpld3
 
 
-@eel.expose
-def get_t_at_coordinate(coord):
-    if coord[0] is not None:
-        return img.dataobj[63 - coord[0], coord[1], coord[2]]
-    else:
-        return img.dataobj[63 - 32, 32, 32]
+    print("Loading fMRI SPM data...")
+    subject_data = fetch_spm_auditory()
+    fmri_img = concat_imgs(subject_data.func)
+    events = pd.read_table(subject_data["events"])
+    fmri_glm = FirstLevelModel(t_r=7, minimize_memory=False).fit(fmri_img, events)
+    mean_img = mean_img(fmri_img)
+    img = fmri_glm.compute_contrast("active - rest")
+    affine = np.linalg.inv(img.affine)
 
+    @eel.expose
+    def get_brainsprite(contrast, threshold):
+        print(f"Serving images for `{contrast}` at t-threshold {threshold}")
+        img = fmri_glm.compute_contrast(contrast)
+        return brainsprite_wrapper.generate_bs(img, mean_img, threshold)
+
+
+    @eel.expose
+    def get_t_at_coordinate(coord):
+        if coord[0] is not None:
+            return img.dataobj[63 - coord[0], coord[1], coord[2]]
+        else:
+            return img.dataobj[63 - 32, 32, 32]
+
+    # Prepares the structure for the beta plot
+    effect = np.zeros(
+        (len(fmri_glm.design_matrices_[0].columns), fmri_glm.labels_[0].size)
+    )
+    for label_ in fmri_glm.results_[0]:
+        label_mask = fmri_glm.labels_[0] == label_
+        resl = fmri_glm.results_[0][label_].theta
+        effect[:, label_mask] = resl
+
+    effect = fmri_glm.masker_.inverse_transform(effect).get_fdata()
+    labels = fmri_glm.design_matrices_[0].columns
+
+    n_elem = len(fmri_img.dataobj[0, 0, 0])
+    df_events = pd.DataFrame({"x": [], "trial_type": []})
+    base_df = pd.DataFrame({"x": list(np.arange(0, fmri_glm.t_r * n_elem, 0.1))})
+
+    for trial_type in list(set(events["trial_type"])):
+        this_df = base_df.copy()
+        this_df["trial_type"] = trial_type
+        this_df["value"] = None
+        df_events = df_events.append(this_df)
+
+    for idx, row in events.iterrows():
+        l1 = df_events["trial_type"] == row["trial_type"]
+        l2 = df_events["x"] >= row["onset"]
+        l3 = df_events["x"] < row["onset"] + row["duration"]
+        df_events.loc[l1 & l2 & l3, "value"] = 0
+
+    base_fig = go.Figure()
+    for trial_type in list(set(events["trial_type"])):
+        base_fig.add_trace(
+            go.Scatter(
+                x=list(np.arange(0, fmri_glm.t_r * n_elem, 0.1)),
+                y=df_events.loc[df_events["trial_type"] == trial_type, "value"],
+                mode="lines",
+                name=trial_type,
+                line=dict(width=250),
+            )
+        )
+
+    def plot_activation(mni):
+        if (mni[0] is None):
+            return None
+        x, y, z = coord_transform(mni[0], mni[1], mni[2], affine)
+        x, y, z = round(x) + 1, round(y) - 1, round(z) - 1
+        d1 = zscore(fmri_img.dataobj[x, y, z])
+        d2 = zscore(fmri_glm.predicted[0].dataobj[x, y, z])
+        fig = go.Figure(base_fig)
+        fig.add_trace(
+            go.Scatter(
+                x=list(range(0, fmri_glm.t_r * len(d1), fmri_glm.t_r)),
+                y=d1,
+                mode="lines",
+                name="raw",
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=list(range(0, fmri_glm.t_r * len(d2), fmri_glm.t_r)),
+                y=d2,
+                mode="lines",
+                name="predicted",
+            )
+        )
+        return {"engine": "plotly", "content_raw": to_json(fig)}
+
+    def plot_beta(mni):
+        if (mni[0] is None):
+            return None
+        x, y, z = coord_transform(mni[0], mni[1], mni[2], affine)
+        x, y, z = round(x) + 1, round(y) - 1, round(z) - 1
+        filtered_effect = effect[x, y, z]
+        df = pd.DataFrame({"value": filtered_effect, "name": labels})
+        df = df[~df.name.str.contains("trans|rot|drift|constant", regex=True)]
+
+        fig = plt.figure()
+        plt.rcParams['axes.facecolor'] = 'black'
+        values = list(df['value'])
+        names = list(df['name'])
+        plt.bar(range(len(values)), values, figure=fig)
+        plt.xticks(range(len(values)), names, figure=fig)
+        fig_json = mpld3.fig_to_dict(fig)
+        plt.close('all')
+
+        return {"engine": "mpld3", "content_raw": fig_json}
+
+
+    @eel.expose
+    def get_callbacks(mni):
+        return [plot_activation(mni), plot_beta(mni)]
 
 # These functions are exposed for specific experiments
 # whose data might not be publicly available

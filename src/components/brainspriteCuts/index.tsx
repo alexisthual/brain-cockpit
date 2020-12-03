@@ -4,6 +4,8 @@ import { eel } from "App";
 
 interface IBSCutsProps {
   clickedVoxelCallback?: any;
+  contrast: string;
+  tThreshold: number;
 }
 
 interface BrainSpriteParams {
@@ -32,17 +34,29 @@ class BSCuts extends Component<IBSCutsProps, {}> {
   container?: any;
   brainsprite_object: BrainSpriteObject;
   brainsprite_json: BrainSpriteJson;
+  contrast: string;
+  tThreshold: number;
 
   constructor(props: IBSCutsProps) {
     super(props);
     this.state = {};
     this.brainsprite_json = {};
     this.brainsprite_object = {};
+    this.contrast = this.props.contrast;
+    this.tThreshold = this.props.tThreshold;
     this.onMouseClick = this.onMouseClick.bind(this);
   }
 
   componentDidMount() {
-    eel.gimme_bs_json()((bs_json: BrainSpriteJson) => {
+    this.updateBrainsprite();
+    const canvas = document.getElementById("3Dviewer") as HTMLCanvasElement;
+    if (canvas !== undefined) {
+      canvas.addEventListener("click", this.onMouseClick, false);
+    }
+  }
+
+  updateBrainsprite() {
+    eel.get_brainsprite(this.contrast, this.tThreshold)((bs_json: BrainSpriteJson) => {
       const bg = document.getElementById("spriteImg") as HTMLImageElement;
       const cm = document.getElementById("colorMap") as HTMLImageElement;
       const stat_map = document.getElementById("overlayImg") as HTMLImageElement;
@@ -54,11 +68,15 @@ class BSCuts extends Component<IBSCutsProps, {}> {
       setTimeout(() => this.brainsprite_object = brainsprite(bs_json.params), 100);
     });
 
-    window.addEventListener("click", this.onMouseClick, false);
   }
 
   componentDidUpdate(prevProps: IBSCutsProps) {
-    // Update height and width
+    if (this.props.contrast !== prevProps.contrast ||
+      this.props.tThreshold !== prevProps.tThreshold) {
+      this.contrast = this.props.contrast;
+      this.tThreshold = this.props.tThreshold;
+      this.updateBrainsprite();
+    }
   }
 
   onMouseClick(event: MouseEvent) {
