@@ -84,7 +84,9 @@ const ContrastFingerprint = ({
 
   return (
     <>
-      <div className="contrast-fingerprint-buttons">
+      <div
+        className={`contrast-fingerprint-buttons ${orientation}-orientation`}
+      >
         <Button
           active={meanFingerprint}
           icon={meanFingerprint ? "ungroup-objects" : "group-objects"}
