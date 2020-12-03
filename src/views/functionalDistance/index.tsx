@@ -2,11 +2,13 @@ import React, { useEffect, useReducer, useState } from "react";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 
 import ContrastFingerprint from "components/contrastFingerprint";
+import DistanceBars from "./distanceBars";
 import InfoPanel from "./infoPanel";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
 import { Orientation, Subject } from "constants/index";
 import { eel } from "App";
+import "./style.scss";
 
 type ActionLabel = {
   type?: "increment" | "decrement";
@@ -36,13 +38,18 @@ const FunctionalDistanceExplorer = () => {
   const [loadingFingerprint, setLoadingFingerprint] = useState(false);
   const [meanFingerprint, setMeanFingerprint] = useState(false);
   const [surfaceMap, setSurfaceMap] = useState<number[] | undefined>();
+  const [meanSurfaceMap, setMeanSurfaceMap] = useState(false);
   const [loadingSurfaceMap, setLoadingSurfaceMap] = useState(false);
   const [surfaceMapType, setSurfaceMapType] = useState(
     SurfaceMapType.SEED_BASED
   );
   const [metric, setMetric] = useState(Metric.COSINE);
   const [m, setM] = useState(0.3);
-  const [meanSurfaceMap, setMeanSurfaceMap] = useState(false);
+  const [functionalDistances, setFunctionalDistances] = useState<number[]>([]);
+  const [loadingFunctionalDistances, setLoadingFunctionalDistances] = useState(
+    false
+  );
+  const [meanFunctionalDistance, setMeanFunctionalDistance] = useState(false);
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [wireframe, setWireframe] = useState(false);
 
@@ -142,14 +149,9 @@ const FunctionalDistanceExplorer = () => {
     };
   }, []);
 
-  // Update contrast map when subject or contrast change
+  // Update surface map when subject, voxel, metric or type change
   useEffect(() => {
-    console.log("useEffect");
-    console.log(subject);
-    console.log(voxelIndex);
     if (subject && subject.index !== undefined && voxelIndex) {
-      console.log("filter OK");
-      console.log(surfaceMapType);
       setLoadingSurfaceMap(true);
       switch (surfaceMapType) {
         case SurfaceMapType.SEED_BASED:
@@ -196,7 +198,7 @@ const FunctionalDistanceExplorer = () => {
     }
   }, [subject, voxelIndex, m, surfaceMapType, meanSurfaceMap]);
 
-  // Update fingerprint when voxelIndex or subjectIndex change
+  // Update fingerprint when voxelIndex or subject change
   useEffect(() => {
     if (voxelIndex !== undefined) {
       setLoadingFingerprint(true);
@@ -213,9 +215,36 @@ const FunctionalDistanceExplorer = () => {
           setContrastFingerprint(contrastFingerprint);
           setLoadingFingerprint(false);
         });
+      } else {
+        setLoadingFingerprint(false);
       }
     }
   }, [voxelIndex, subject, meanFingerprint]);
+
+  // Update functional distances when voxelIndex or subject change
+  useEffect(() => {
+    if (voxelIndex !== undefined) {
+      setLoadingFunctionalDistances(true);
+      if (meanFunctionalDistance) {
+        eel.get_mean_across_subjects_mean_functional_distance(voxelIndex)(
+          (distances: number[]) => {
+            setFunctionalDistances(distances);
+            setLoadingFunctionalDistances(false);
+          }
+        );
+      } else if (subject.index !== undefined) {
+        eel.get_mean_functional_distance(
+          subject.index,
+          voxelIndex
+        )((distances: number[]) => {
+          setFunctionalDistances(distances);
+          setLoadingFunctionalDistances(false);
+        });
+      } else {
+        setLoadingFunctionalDistances(false);
+      }
+    }
+  }, [voxelIndex, subject, meanFunctionalDistance]);
 
   return (
     <div
@@ -268,42 +297,69 @@ const FunctionalDistanceExplorer = () => {
         </ParentSize>
       </div>
       {voxelIndex !== undefined ? (
-        <div id="fingerprint">
-          <ParentSize className="fingerprint-container" debounceTime={10}>
-            {({ width: fingerprintWidth, height: fingerprintHeight }) => (
-              <ContrastFingerprint
-                loading={loadingFingerprint}
-                changeOrientationCallback={() => {
-                  switch (orientation) {
-                    case Orientation.VERTICAL:
-                      setOrientation(Orientation.HORIZONTAL);
-                      break;
-                    case Orientation.HORIZONTAL:
-                      setOrientation(Orientation.VERTICAL);
-                      break;
+        <div
+          id="plots-container"
+          className={`${
+            orientation === Orientation.HORIZONTAL
+              ? Orientation.VERTICAL
+              : Orientation.HORIZONTAL
+          }-orientation`}
+        >
+          <div id="fingerprint">
+            <ParentSize className="fingerprint-container" debounceTime={10}>
+              {({ width: fingerprintWidth, height: fingerprintHeight }) => (
+                <ContrastFingerprint
+                  loading={loadingFingerprint}
+                  changeOrientationCallback={() => {
+                    switch (orientation) {
+                      case Orientation.VERTICAL:
+                        setOrientation(Orientation.HORIZONTAL);
+                        break;
+                      case Orientation.HORIZONTAL:
+                        setOrientation(Orientation.VERTICAL);
+                        break;
+                    }
+                  }}
+                  closePanelCallback={() => {
+                    setVoxelIndex(undefined);
+                  }}
+                  orientation={
+                    orientation === Orientation.VERTICAL
+                      ? Orientation.HORIZONTAL
+                      : Orientation.VERTICAL
                   }
-                }}
-                closePanelCallback={() => {
-                  setVoxelIndex(undefined);
-                }}
-                orientation={
-                  orientation === Orientation.VERTICAL
-                    ? Orientation.HORIZONTAL
-                    : Orientation.VERTICAL
-                }
-                contrastLabels={contrastLabels}
-                taskLabels={taskLabels}
-                taskCounts={taskCounts}
-                fingerprint={contrastFingerprint}
-                meanFingerprint={meanFingerprint}
-                meanFingerprintCallback={() => {
-                  setMeanFingerprint(!meanFingerprint);
-                }}
-                width={fingerprintWidth}
-                height={fingerprintHeight}
+                  contrastLabels={contrastLabels}
+                  taskLabels={taskLabels}
+                  taskCounts={taskCounts}
+                  fingerprint={contrastFingerprint}
+                  meanFingerprint={meanFingerprint}
+                  meanFingerprintCallback={() => {
+                    setMeanFingerprint(!meanFingerprint);
+                  }}
+                  width={fingerprintWidth}
+                  height={fingerprintHeight}
+                />
+              )}
+            </ParentSize>
+          </div>
+          <ParentSize
+            className="functional-distances-container"
+            debounceTime={10}
+          >
+            {({
+              width: functionalDistanceWidth,
+              height: functionalDistanceHeight,
+            }) => (
+              <DistanceBars
+                loading={loadingFunctionalDistances}
+                distances={functionalDistances}
+                m={m}
+                width={functionalDistanceWidth}
+                height={functionalDistanceHeight}
               />
             )}
           </ParentSize>
+          <div></div>
         </div>
       ) : null}
     </div>

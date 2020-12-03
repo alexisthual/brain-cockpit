@@ -1,0 +1,18 @@
+@import "~@blueprintjs/core/lib/scss/variables";
+
+.functional-distance-bars {
+  box-sizing: border-box;
+
+  min-height: 0px;
+  overflow: hidden;
+  position: relative;
+
+  .axis {
+    position: absolute;
+
+    .tick {
+      fill: $gray3;
+      font-size: 11px;
+    }
+  }
+}
