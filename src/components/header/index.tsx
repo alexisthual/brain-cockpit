@@ -56,7 +56,6 @@ const Header = ({
                   items={subjectLabels}
                   itemRenderer={subjectRenderer}
                   onItemSelect={(item: string) => {
-                    console.log(item);
                     subjectChangeCallback(subjectLabels.indexOf(item));
                   }}
                 >
