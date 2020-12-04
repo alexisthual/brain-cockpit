@@ -5,7 +5,13 @@ import ContrastFingerprint from "components/contrastFingerprint";
 import InfoPanel from "components/infoPanel";
 import PanelButtons from "components/infoPanel/buttons";
 import Scene from "components/scene";
-import { Contrast, Orientation, Subject } from "constants/index";
+import {
+  Contrast,
+  MeshType,
+  MeshTypeString,
+  Orientation,
+  Subject,
+} from "constants/index";
 import { eel } from "App";
 
 type ActionLabel = {
@@ -25,6 +31,7 @@ const SurfaceExplorer = () => {
   const [meanContrastMap, setMeanContrastMap] = useState(false);
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [wireframe, setWireframe] = useState(false);
+  const [meshType, setMeshType] = useState(MeshType.PIAL);
 
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
@@ -213,6 +220,11 @@ const SurfaceExplorer = () => {
         meanChangeCallback={() => {
           setMeanContrastMap(!meanContrastMap);
         }}
+        meshType={meshType}
+        meshTypes={Object.keys(MeshType) as MeshTypeString[]}
+        meshTypeChangeCallback={(meshType: MeshType) => {
+          setMeshType(meshType);
+        }}
       />
       <div id="scene">
         <ParentSize className="scene-container" debounceTime={10}>
@@ -223,6 +235,7 @@ const SurfaceExplorer = () => {
               }}
               selectedVoxel={voxelIndex}
               surfaceMap={contrastMap}
+              meshType={meshType}
               wireframe={wireframe}
               width={sceneWidth}
               height={sceneHeight}

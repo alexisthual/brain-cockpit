@@ -1,49 +1,77 @@
 import { Button, ButtonGroup, MenuItem } from "@blueprintjs/core";
 import { ItemRenderer, Select } from "@blueprintjs/select";
 import React from "react";
+
+import { MeshType, MeshTypeString } from "constants/index";
 import "./style.scss";
 
 interface IProps {
-  subjectLabels?: string[];
   subject?: string;
+  subjectLabels?: string[];
+  subjectChangeCallback?: (subjectIndex: number) => void;
   contrast?: string;
   contrastIndex?: number;
   voxelIndex?: number;
-  subjectChangeCallback?: (subjectIndex: number) => void;
   meanContrastMap?: boolean;
   meanChangeCallback?: () => void;
+  meshType?: MeshType;
+  meshTypes?: MeshTypeString[];
+  meshTypeChangeCallback?: (meshType: MeshType) => void;
 }
 
 const InfoPanel = ({
-  subjectLabels,
   subject,
+  subjectLabels,
+  subjectChangeCallback = () => {},
   contrast,
   contrastIndex,
   voxelIndex,
-  subjectChangeCallback = () => {},
   meanContrastMap,
   meanChangeCallback = () => {},
+  meshType,
+  meshTypes,
+  meshTypeChangeCallback = () => {},
 }: IProps) => {
-  const subjectRenderer: ItemRenderer<string> = (
-    subject,
+  const stringRenderer: ItemRenderer<string> = (
+    str,
     { handleClick, modifiers, query }
   ) => {
     if (!modifiers.matchesPredicate) {
       return null;
     }
     return (
-      <MenuItem
-        key={`menuitem-subject-${subject}`}
-        onClick={handleClick}
-        text={subject}
-      />
+      <MenuItem key={`menuitem-${str}`} onClick={handleClick} text={str} />
     );
   };
 
   const SelectSubject = Select.ofType<string>();
+  const MeshTypeSelect = Select.ofType<MeshTypeString>();
 
   return (
     <div id="header">
+      {meshType ? (
+        <>
+          <div className="header-item-label">Mesh type</div>
+          <div className="header-item-value">
+            {meshTypes ? (
+              <ButtonGroup>
+                <MeshTypeSelect
+                  filterable={false}
+                  items={meshTypes}
+                  itemRenderer={stringRenderer}
+                  onItemSelect={(meshTypeString: MeshTypeString) => {
+                    meshTypeChangeCallback(MeshType[meshTypeString]);
+                  }}
+                >
+                  <Button rightIcon="double-caret-vertical" text={meshType} />
+                </MeshTypeSelect>
+              </ButtonGroup>
+            ) : (
+              <>{meshType}</>
+            )}
+          </div>
+        </>
+      ) : null}
       {subjectLabels || subject ? (
         <>
           <div className="header-item-label">Subject</div>
@@ -54,7 +82,7 @@ const InfoPanel = ({
                   disabled={meanContrastMap}
                   filterable={false}
                   items={subjectLabels}
-                  itemRenderer={subjectRenderer}
+                  itemRenderer={stringRenderer}
                   onItemSelect={(item: string) => {
                     subjectChangeCallback(subjectLabels.indexOf(item));
                   }}

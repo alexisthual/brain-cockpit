@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
+import { MeshType } from "constants/index";
 import "./style.scss";
 
 interface ISceneProps {
@@ -14,6 +15,7 @@ interface ISceneProps {
   selectedVoxel?: number;
   wireframe?: boolean;
   regressedCoordinates?: number[];
+  meshType?: MeshType;
 }
 
 class Scene extends Component<ISceneProps, {}> {
@@ -30,6 +32,10 @@ class Scene extends Component<ISceneProps, {}> {
   hotspot: any;
   regressedSphere?: THREE.Mesh;
   gridHelper?: THREE.GridHelper;
+
+  static defaultProps = {
+    meshType: MeshType.INFL,
+  };
 
   constructor(props: ISceneProps) {
     super(props);
@@ -53,7 +59,7 @@ class Scene extends Component<ISceneProps, {}> {
     const loader = new GLTFLoader();
 
     loader.load(
-      "/assets/fsaverage_pial_left.gltf",
+      `/assets/fsaverage_${this.props.meshType}_left.gltf`,
       (gltf: any) => {
         let object = gltf.scene.children[0] as any;
 
@@ -109,6 +115,25 @@ class Scene extends Component<ISceneProps, {}> {
       prevProps.height !== this.props.height
     ) {
       this.handleWindowResize();
+    }
+
+    // Update object geometry position in accordance with meshType
+    if (prevProps.meshType !== this.props.meshType) {
+      const loader = new GLTFLoader();
+      loader.load(
+        `/assets/fsaverage_${this.props.meshType}_left.gltf`,
+        (gltf: any) => {
+          let newObject = gltf.scene.children[0] as any;
+          this.object.geometry.setAttribute(
+            "position",
+            newObject.geometry.attributes.position
+          );
+        },
+        undefined,
+        (error) => {
+          console.error(error);
+        }
+      );
     }
 
     // Update object color
