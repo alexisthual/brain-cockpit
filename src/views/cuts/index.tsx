@@ -61,7 +61,7 @@ const CutsExplorer = () => {
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
               setSubject((e.target as HTMLSelectElement).value);
             }}>
-              { subList.map(e => {return (<option value={e}>{e}</option>)}) }
+              { subList.map((e,i) => {return (<option value={e} key={i}>{e}</option>)}) }
           </select>
         </label>
         <label className="form">
@@ -71,7 +71,7 @@ const CutsExplorer = () => {
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
               setTask((e.target as HTMLSelectElement).value);
             }}>
-              {taskList.map(e => {return (<option value={e}>{e}</option>)})}
+              {taskList.map((e, i) => {return (<option value={e} key={i}>{e}</option>)})}
           </select>
         </label>
         <label className="form">

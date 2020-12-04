@@ -261,7 +261,7 @@ if CUTS_DATA_PATH is not None or MOCK_CUTS is not None:
         if MOCK_CUTS is None or not MOCK_CUTS:
             subjects = [f"sub-100{i+1}" for i in range(5)]
             tasks = ["geomloc", "passivestatic", "passiveseq"]
-            return {"subList": subjects, "taskList": tasks, "contrastList": ["NA"]}
+            return {"subList": subjects, "taskList": tasks, "contrastList": ["press_right"]}
         else:
             return {"subList": ["NA"], "taskList": ["NA"], "contrastList": ["active - rest"]}
 

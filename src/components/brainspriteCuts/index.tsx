@@ -54,19 +54,20 @@ class BSCuts extends Component<IBSCutsProps, {}> {
   }
 
   componentDidMount() {
+    const canvas = document.getElementById("3Dviewer") as HTMLCanvasElement;
+    if (canvas !== undefined) {
+      canvas.addEventListener("click", this.onMouseClick, false);
+    }
     eel.update_glm(this.subject, this.task)((success: string) => {
-      if (success !== "Loaded") {
+      if (success === "Loaded") {
         this.updateBrainsprite();
-        const canvas = document.getElementById("3Dviewer") as HTMLCanvasElement;
-        if (canvas !== undefined) {
-          canvas.addEventListener("click", this.onMouseClick, false);
-        }
       }
     });
   }
 
   updateBrainsprite() {
     eel.get_brainsprite(this.contrast, this.tThreshold)((bs_json: BrainSpriteJson) => {
+      console.log("got bs");
       const bg = document.getElementById("spriteImg") as HTMLImageElement;
       const cm = document.getElementById("colorMap") as HTMLImageElement;
       const stat_map = document.getElementById("overlayImg") as HTMLImageElement;
@@ -91,7 +92,7 @@ class BSCuts extends Component<IBSCutsProps, {}> {
       this.subject = this.props.subject;
       this.task = this.props.task;
       eel.update_glm(this.subject, this.task)((success: string) => {
-        if (success !== "Loaded") {
+        if (success === "Loaded") {
           this.updateBrainsprite();
         }
       });
