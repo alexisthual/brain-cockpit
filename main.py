@@ -5,7 +5,6 @@ import numpy as np
 import os
 import pandas as pd
 
-import pandas as pd
 from tqdm import tqdm
 
 # Load contrasts
@@ -229,7 +228,8 @@ if SERVE_CUTS:
     from scipy.stats import zscore
 
     import matplotlib
-    matplotlib.use('Agg') # Make it headless
+
+    matplotlib.use("Agg")  # Make it headless
     import matplotlib.pyplot as plt
     import mpld3
 
@@ -237,7 +237,9 @@ if SERVE_CUTS:
     subject_data = fetch_spm_auditory()
     fmri_img = concat_imgs(subject_data.func)
     events = pd.read_table(subject_data["events"])
-    fmri_glm = FirstLevelModel(t_r=7, minimize_memory=False).fit(fmri_img, events)
+    fmri_glm = FirstLevelModel(t_r=7, minimize_memory=False).fit(
+        fmri_img, events
+    )
     mean_img = mean_img(fmri_img)
     img = fmri_glm.compute_contrast("active - rest")
     affine = np.linalg.inv(img.affine)
@@ -247,7 +249,6 @@ if SERVE_CUTS:
         print(f"Serving images for `{contrast}` at t-threshold {threshold}")
         img = fmri_glm.compute_contrast(contrast)
         return brainsprite_wrapper.generate_bs(img, mean_img, threshold)
-
 
     @eel.expose
     def get_t_at_coordinate(coord):
@@ -270,7 +271,9 @@ if SERVE_CUTS:
 
     n_elem = len(fmri_img.dataobj[0, 0, 0])
     df_events = pd.DataFrame({"x": [], "trial_type": []})
-    base_df = pd.DataFrame({"x": list(np.arange(0, fmri_glm.t_r * n_elem, 0.1))})
+    base_df = pd.DataFrame(
+        {"x": list(np.arange(0, fmri_glm.t_r * n_elem, 0.1))}
+    )
 
     for trial_type in list(set(events["trial_type"])):
         this_df = base_df.copy()
@@ -289,7 +292,9 @@ if SERVE_CUTS:
         base_fig.add_trace(
             go.Scatter(
                 x=list(np.arange(0, fmri_glm.t_r * n_elem, 0.1)),
-                y=df_events.loc[df_events["trial_type"] == trial_type, "value"],
+                y=df_events.loc[
+                    df_events["trial_type"] == trial_type, "value"
+                ],
                 mode="lines",
                 name=trial_type,
                 line=dict(width=250),
@@ -297,7 +302,7 @@ if SERVE_CUTS:
         )
 
     def plot_activation(mni):
-        if (mni[0] is None):
+        if mni[0] is None:
             return None
         x, y, z = coord_transform(mni[0], mni[1], mni[2], affine)
         x, y, z = round(x) + 1, round(y) - 1, round(z) - 1
@@ -323,7 +328,7 @@ if SERVE_CUTS:
         return {"engine": "plotly", "content_raw": to_json(fig)}
 
     def plot_beta(mni):
-        if (mni[0] is None):
+        if mni[0] is None:
             return None
         x, y, z = coord_transform(mni[0], mni[1], mni[2], affine)
         x, y, z = round(x) + 1, round(y) - 1, round(z) - 1
@@ -332,20 +337,20 @@ if SERVE_CUTS:
         df = df[~df.name.str.contains("trans|rot|drift|constant", regex=True)]
 
         fig = plt.figure()
-        plt.rcParams['axes.facecolor'] = 'black'
-        values = list(df['value'])
-        names = list(df['name'])
+        plt.rcParams["axes.facecolor"] = "black"
+        values = list(df["value"])
+        names = list(df["name"])
         plt.bar(range(len(values)), values, figure=fig)
         plt.xticks(range(len(values)), names, figure=fig)
         fig_json = mpld3.fig_to_dict(fig)
-        plt.close('all')
+        plt.close("all")
 
         return {"engine": "mpld3", "content_raw": fig_json}
-
 
     @eel.expose
     def get_callbacks(mni):
         return [plot_activation(mni), plot_beta(mni)]
+
 
 # These functions are exposed for specific experiments
 # whose data might not be publicly available
