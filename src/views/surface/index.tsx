@@ -37,7 +37,7 @@ const SurfaceExplorer = () => {
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [wireframe, setWireframe] = useState(false);
   const [meshType, setMeshType] = useState(MeshType.PIAL);
-  const [hemi, setHemi] = useState(HemisphereSide.RIGHT);
+  const [hemi, setHemi] = useState(HemisphereSide.LEFT);
 
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
