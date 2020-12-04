@@ -3,6 +3,8 @@ import { ItemRenderer, Select } from "@blueprintjs/select";
 import React from "react";
 
 import {
+  HemisphereSide,
+  HemisphereSideString,
   MeshType,
   MeshTypeString,
   Metric,
@@ -22,7 +24,7 @@ interface IProps {
   meanSurfaceMap?: boolean;
   meanChangeCallback?: () => void;
   meshType?: MeshType;
-  meshTypes?: MeshTypeString[];
+  meshTypeLabels?: MeshTypeString[];
   meshTypeChangeCallback?: (meshType: MeshType) => void;
   metric?: Metric;
   metricLabels?: MetricString[];
@@ -30,6 +32,9 @@ interface IProps {
   surfaceMapType?: SurfaceMapType;
   surfaceMapTypeLabels?: SurfaceMapTypeString[];
   surfaceMapTypeChangeCallback?: (surfaceMapType: SurfaceMapType) => void;
+  hemi?: HemisphereSide;
+  hemiLabels?: HemisphereSideString[];
+  hemiChangeCallback?: (hemi: HemisphereSide) => void;
 }
 
 const InfoPanel = ({
@@ -42,8 +47,11 @@ const InfoPanel = ({
   meanSurfaceMap,
   meanChangeCallback = () => {},
   meshType,
-  meshTypes,
+  meshTypeLabels,
   meshTypeChangeCallback = () => {},
+  hemi,
+  hemiLabels,
+  hemiChangeCallback = () => {},
   metric,
   metricLabels,
   metricChangeCallback = () => {},
@@ -64,6 +72,7 @@ const InfoPanel = ({
   };
 
   const MeshTypeSelect = Select.ofType<MeshTypeString>();
+  const HemiSelect = Select.ofType<HemisphereSideString>();
   const SelectSubject = Select.ofType<string>();
   const MetricSelect = Select.ofType<MetricString>();
   const SurfaceMapTypeSelect = Select.ofType<SurfaceMapTypeString>();
@@ -74,11 +83,11 @@ const InfoPanel = ({
         <>
           <div className="header-item-label">Mesh type</div>
           <div className="header-item-value">
-            {meshTypes ? (
+            {meshTypeLabels ? (
               <ButtonGroup>
                 <MeshTypeSelect
                   filterable={false}
-                  items={meshTypes}
+                  items={meshTypeLabels}
                   itemRenderer={stringRenderer}
                   onItemSelect={(meshTypeString: MeshTypeString) => {
                     meshTypeChangeCallback(MeshType[meshTypeString]);
@@ -89,6 +98,29 @@ const InfoPanel = ({
               </ButtonGroup>
             ) : (
               <>{meshType}</>
+            )}
+          </div>
+        </>
+      ) : null}
+      {hemi ? (
+        <>
+          <div className="header-item-label">Hemisphere</div>
+          <div className="header-item-value">
+            {hemiLabels ? (
+              <ButtonGroup>
+                <HemiSelect
+                  filterable={false}
+                  items={hemiLabels}
+                  itemRenderer={stringRenderer}
+                  onItemSelect={(hemiString: HemisphereSideString) => {
+                    hemiChangeCallback(HemisphereSide[hemiString]);
+                  }}
+                >
+                  <Button rightIcon="double-caret-vertical" text={hemi} />
+                </HemiSelect>
+              </ButtonGroup>
+            ) : (
+              <>{hemi}</>
             )}
           </div>
         </>

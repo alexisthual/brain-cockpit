@@ -3,8 +3,9 @@ import React, { Component } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
-import { MeshType } from "constants/index";
+import { MeshType, HemisphereSide } from "constants/index";
 import "./style.scss";
 
 interface ISceneProps {
@@ -15,7 +16,8 @@ interface ISceneProps {
   selectedVoxel?: number;
   wireframe?: boolean;
   regressedCoordinates?: number[];
-  meshType?: MeshType;
+  meshType: MeshType;
+  hemi: HemisphereSide;
 }
 
 class Scene extends Component<ISceneProps, {}> {
@@ -35,6 +37,7 @@ class Scene extends Component<ISceneProps, {}> {
 
   static defaultProps = {
     meshType: MeshType.PIAL,
+    hemi: HemisphereSide.LEFT,
   };
 
   constructor(props: ISceneProps) {
@@ -51,64 +54,106 @@ class Scene extends Component<ISceneProps, {}> {
     this.updateHotspot = this.updateHotspot.bind(this);
   }
 
-  componentDidMount() {
+  // Turn THREE.js loader into Promise
+  static load(url: string) {
+    const loader = new GLTFLoader();
+
+    return new Promise((resolve, reject) => {
+      loader.load(url, (data) => resolve(data), undefined, reject);
+    });
+  }
+
+  static loadMesh(
+    meshType: MeshType = MeshType.PIAL,
+    hemisphereSide: HemisphereSide = HemisphereSide.LEFT
+  ) {
+    switch (hemisphereSide) {
+      case HemisphereSide.LEFT:
+        return Scene.load(`/assets/fsaverage_${meshType}_left.gltf`).then(
+          (gltf: any) => {
+            return gltf.scene.children[0] as any;
+          }
+        );
+      case HemisphereSide.RIGHT:
+        return Scene.load(`/assets/fsaverage_${meshType}_right.gltf`).then(
+          (gltf: any) => {
+            return gltf.scene.children[0] as any;
+          }
+        );
+      case HemisphereSide.BOTH:
+        // Load both meshes
+        const loadLeft = Scene.load(`/assets/fsaverage_${meshType}_left.gltf`);
+        const loadRight = Scene.load(
+          `/assets/fsaverage_${meshType}_right.gltf`
+        );
+
+        // Merge them in a common Mesh
+        return Promise.all([loadLeft, loadRight]).then((values: any) => {
+          const mergedBufferGeometries = BufferGeometryUtils.mergeBufferGeometries(
+            [
+              values[0].scene.children[0].geometry,
+              values[1].scene.children[0].geometry,
+            ]
+          );
+
+          const mesh = new THREE.Mesh(mergedBufferGeometries);
+
+          return mesh;
+        });
+    }
+  }
+
+  static initialiseMesh(object: any, wireframe: boolean = false) {
+    // Set a random color to each vertex
+    const count = object.geometry.attributes.position.count;
+    object.geometry.setAttribute(
+      "color",
+      new THREE.BufferAttribute(new Float32Array(count * 3), 3)
+    );
+
+    const color = new THREE.Color();
+    let colors = object.geometry.attributes.color;
+    for (let i = 0; i < count; i++) {
+      color.setRGB(
+        0.5 + 0.2 * Math.random(),
+        0.5 + 0.2 * Math.random(),
+        0.5 + 0.2 * Math.random()
+      );
+      colors.setXYZ(i, color.r, color.g, color.b);
+    }
+
+    const material = new THREE.MeshPhongMaterial({
+      color: Colors.LIGHT_GRAY1,
+      flatShading: true,
+      vertexColors: true,
+      shininess: 0,
+      wireframe: wireframe,
+      wireframeLinewidth: 0.3,
+    });
+
+    // Create mesh
+    const mesh = new THREE.Mesh(object.geometry, material);
+
+    // Rotate mesh (in gaming, the y-axis typically goes from
+    // bottom to top, whereas engineers usually use the z-axis
+    // to describe this dimension).
+    mesh.rotateX(-Math.PI / 2);
+    mesh.rotateZ(Math.PI / 2);
+
+    return mesh;
+  }
+
+  async componentDidMount() {
     // Listen to events
     window.addEventListener("resize", this.handleWindowResize);
 
     // Load exteral meshes
-    const loader = new GLTFLoader();
-
-    loader.load(
-      `/assets/fsaverage_${this.props.meshType}_left.gltf`,
-      (gltf: any) => {
-        let object = gltf.scene.children[0] as any;
-
-        // Set each vertex a color
-        const count = object.geometry.attributes.position.count;
-        object.geometry.setAttribute(
-          "color",
-          new THREE.BufferAttribute(new Float32Array(count * 3), 3)
-        );
-
-        const color = new THREE.Color();
-        let colors = object.geometry.attributes.color;
-        for (let i = 0; i < count; i++) {
-          color.setRGB(
-            0.5 + 0.2 * Math.random(),
-            0.5 + 0.2 * Math.random(),
-            0.5 + 0.2 * Math.random()
-          );
-          colors.setXYZ(i, color.r, color.g, color.b);
-        }
-
-        const material = new THREE.MeshPhongMaterial({
-          // const material = new THREE.MeshBasicMaterial({
-          color: Colors.LIGHT_GRAY1,
-          flatShading: true,
-          vertexColors: true,
-          shininess: 0,
-          wireframe: this.props.wireframe,
-          wireframeLinewidth: 0.3,
-        });
-
-        // Merge geometry and material into a mesh
-        object = new THREE.Mesh(object.geometry, material);
-        // Rotate mesh (in gaming, the y-axis typically goes from
-        // bottom to top, whereas engineers usually use the z-axis
-        // to describe this dimension).
-        object.rotateX(-Math.PI / 2);
-        object.rotateZ(Math.PI / 2);
-
-        this.setupScene(object);
-      },
-      undefined,
-      (error) => {
-        console.error(error);
-      }
-    );
+    let object = await Scene.loadMesh(this.props.meshType, this.props.hemi);
+    object = Scene.initialiseMesh(object, this.props.wireframe);
+    this.setupScene(object as THREE.Object3D);
   }
 
-  componentDidUpdate(prevProps: ISceneProps) {
+  async componentDidUpdate(prevProps: ISceneProps) {
     // Update height and width
     if (
       prevProps.width !== this.props.width ||
@@ -117,29 +162,37 @@ class Scene extends Component<ISceneProps, {}> {
       this.handleWindowResize();
     }
 
-    // Update object geometry position in accordance with meshType
-    if (prevProps.meshType !== this.props.meshType) {
-      const loader = new GLTFLoader();
-      loader.load(
-        `/assets/fsaverage_${this.props.meshType}_left.gltf`,
-        (gltf: any) => {
-          let newObject = gltf.scene.children[0] as any;
-          this.object.geometry.setAttribute(
-            "position",
-            newObject.geometry.attributes.position
-          );
-        },
-        undefined,
-        (error) => {
-          console.error(error);
-        }
-      );
+    // Update displayed mesh when meshType or hemi change
+    if (
+      prevProps.meshType !== this.props.meshType ||
+      prevProps.hemi !== this.props.hemi
+    ) {
+      let newObject = (await Scene.loadMesh(
+        this.props.meshType,
+        this.props.hemi
+      )) as any;
+
+      // In case hemi changes, we remove the old object
+      // and add a fresh one.
+      // Otherwise (when only meshType changed), we simply
+      // update the current object's geometry.
+      if (prevProps.hemi !== this.props.hemi) {
+        this.scene.remove(this.object);
+        this.object = Scene.initialiseMesh(newObject, this.props.wireframe);
+        this.scene.add(this.object);
+      } else {
+        this.object.geometry.setAttribute(
+          "position",
+          newObject.geometry.attributes.position
+        );
+      }
     }
 
-    // Update object color
+    // Update object color to display surface map
     if (
-      this.props.surfaceMap !== prevProps.surfaceMap &&
-      this.props.surfaceMap
+      this.props.surfaceMap &&
+      (this.props.surfaceMap !== prevProps.surfaceMap ||
+        prevProps.hemi !== this.props.hemi)
     ) {
       if (
         this.props.surfaceMap.length ===

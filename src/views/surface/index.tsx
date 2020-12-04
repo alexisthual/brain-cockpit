@@ -8,6 +8,8 @@ import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
 import {
   Contrast,
+  HemisphereSide,
+  HemisphereSideString,
   MeshType,
   MeshTypeString,
   Orientation,
@@ -35,6 +37,7 @@ const SurfaceExplorer = () => {
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [wireframe, setWireframe] = useState(false);
   const [meshType, setMeshType] = useState(MeshType.PIAL);
+  const [hemi, setHemi] = useState(HemisphereSide.RIGHT);
 
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
@@ -172,14 +175,18 @@ const SurfaceExplorer = () => {
     if (contrast.index !== undefined) {
       setLoadingContrastMap(true);
       if (meanContrastMap) {
-        eel.get_left_contrast_mean(contrast.index)((contrastMap: number[]) => {
+        eel.get_contrast_mean(
+          contrast.index,
+          hemi
+        )((contrastMap: number[]) => {
           setContrastMap(contrastMap);
           setLoadingContrastMap(false);
         });
       } else if (subject.index !== undefined) {
-        eel.get_left_contrast(
+        eel.get_contrast(
           subject.index,
-          contrast.index
+          contrast.index,
+          hemi
         )((contrastMap: number[]) => {
           setContrastMap(contrastMap);
           setLoadingContrastMap(false);
@@ -188,7 +195,7 @@ const SurfaceExplorer = () => {
         setLoadingContrastMap(false);
       }
     }
-  }, [subject, contrast, meanContrastMap]);
+  }, [subject, contrast, meanContrastMap, hemi]);
 
   // Update fingerprint when voxelIndex or subjectIndex change
   useEffect(() => {
@@ -234,9 +241,14 @@ const SurfaceExplorer = () => {
           setMeanContrastMap(!meanContrastMap);
         }}
         meshType={meshType}
-        meshTypes={Object.keys(MeshType) as MeshTypeString[]}
+        meshTypeLabels={Object.keys(MeshType) as MeshTypeString[]}
         meshTypeChangeCallback={(meshType: MeshType) => {
           setMeshType(meshType);
+        }}
+        hemi={hemi}
+        hemiLabels={Object.keys(HemisphereSide) as HemisphereSideString[]}
+        hemiChangeCallback={(hemi: HemisphereSide) => {
+          setHemi(hemi);
         }}
       />
       {loadingContrastMap ? (
@@ -252,6 +264,7 @@ const SurfaceExplorer = () => {
               selectedVoxel={voxelIndex}
               surfaceMap={contrastMap}
               meshType={meshType}
+              hemi={hemi}
               wireframe={wireframe}
               width={sceneWidth}
               height={sceneHeight}

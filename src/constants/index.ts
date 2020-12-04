@@ -13,6 +13,14 @@ export interface Subject {
   label?: string;
 }
 
+export enum HemisphereSide {
+  LEFT = "left",
+  RIGHT = "right",
+  BOTH = "both",
+}
+
+export type HemisphereSideString = keyof typeof HemisphereSide;
+
 export enum MeshType {
   PIAL = "pial",
   WHITE = "white",
