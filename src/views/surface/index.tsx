@@ -5,6 +5,7 @@ import ContrastFingerprint from "components/contrastFingerprint";
 import InfoPanel from "components/infoPanel";
 import PanelButtons from "components/infoPanel/buttons";
 import Scene from "components/scene";
+import TextualLoader from "components/textualLoader";
 import {
   Contrast,
   MeshType,
@@ -26,8 +27,10 @@ const SurfaceExplorer = () => {
   const [taskCounts, setTaskCounts] = useState<number[]>([]);
   const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
   const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
+  const [loadingFingerprint, setLoadingFingerprint] = useState(false);
   const [meanFingerprint, setMeanFingerprint] = useState(false);
   const [contrastMap, setContrastMap] = useState<number[] | undefined>();
+  const [loadingContrastMap, setLoadingContrastMap] = useState(false);
   const [meanContrastMap, setMeanContrastMap] = useState(false);
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [wireframe, setWireframe] = useState(false);
@@ -167,9 +170,11 @@ const SurfaceExplorer = () => {
   // Update contrast map when subject or contrast change
   useEffect(() => {
     if (contrast.index !== undefined) {
+      setLoadingContrastMap(true);
       if (meanContrastMap) {
         eel.get_left_contrast_mean(contrast.index)((contrastMap: number[]) => {
           setContrastMap(contrastMap);
+          setLoadingContrastMap(false);
         });
       } else if (subject.index !== undefined) {
         eel.get_left_contrast(
@@ -177,7 +182,10 @@ const SurfaceExplorer = () => {
           contrast.index
         )((contrastMap: number[]) => {
           setContrastMap(contrastMap);
+          setLoadingContrastMap(false);
         });
+      } else {
+        setLoadingContrastMap(false);
       }
     }
   }, [subject, contrast, meanContrastMap]);
@@ -185,9 +193,11 @@ const SurfaceExplorer = () => {
   // Update fingerprint when voxelIndex or subjectIndex change
   useEffect(() => {
     if (voxelIndex !== undefined) {
+      setLoadingFingerprint(true);
       if (meanFingerprint) {
         eel.get_voxel_fingerprint_mean(voxelIndex)((fingerprint: number[]) => {
           setContrastFingerprint(fingerprint);
+          setLoadingFingerprint(false);
         });
       } else if (subject.index !== undefined) {
         eel.get_voxel_fingerprint(
@@ -195,7 +205,10 @@ const SurfaceExplorer = () => {
           voxelIndex
         )((contrastFingerprint: number[]) => {
           setContrastFingerprint(contrastFingerprint);
+          setLoadingFingerprint(false);
         });
+      } else {
+        setLoadingFingerprint(false);
       }
     }
   }, [voxelIndex, subject, meanFingerprint]);
@@ -226,6 +239,9 @@ const SurfaceExplorer = () => {
           setMeshType(meshType);
         }}
       />
+      {loadingContrastMap ? (
+        <TextualLoader text="Loading surface map..." />
+      ) : null}
       <div id="scene">
         <ParentSize className="scene-container" debounceTime={10}>
           {({ width: sceneWidth, height: sceneHeight }) => (
@@ -272,6 +288,7 @@ const SurfaceExplorer = () => {
           <ParentSize className="fingerprint-container" debounceTime={10}>
             {({ width: fingerprintWidth, height: fingerprintHeight }) => (
               <ContrastFingerprint
+                loading={loadingFingerprint}
                 clickedLabelCallback={(contrastIndex: number) => {
                   setContrast({ payload: contrastIndex });
                 }}
