@@ -6,6 +6,8 @@ interface IBSCutsProps {
   clickedVoxelCallback?: any;
   contrast: string;
   tThreshold: number;
+  subject: string;
+  task: string;
 }
 
 interface BrainSpriteParams {
@@ -36,6 +38,8 @@ class BSCuts extends Component<IBSCutsProps, {}> {
   brainsprite_json: BrainSpriteJson;
   contrast: string;
   tThreshold: number;
+  task: string;
+  subject: string;
 
   constructor(props: IBSCutsProps) {
     super(props);
@@ -44,19 +48,26 @@ class BSCuts extends Component<IBSCutsProps, {}> {
     this.brainsprite_object = {};
     this.contrast = this.props.contrast;
     this.tThreshold = this.props.tThreshold;
+    this.task = this.props.task;
+    this.subject = this.props.subject;
     this.onMouseClick = this.onMouseClick.bind(this);
   }
 
   componentDidMount() {
-    this.updateBrainsprite();
     const canvas = document.getElementById("3Dviewer") as HTMLCanvasElement;
     if (canvas !== undefined) {
       canvas.addEventListener("click", this.onMouseClick, false);
     }
+    eel.update_glm(this.subject, this.task)((success: string) => {
+      if (success === "Loaded") {
+        this.updateBrainsprite();
+      }
+    });
   }
 
   updateBrainsprite() {
     eel.get_brainsprite(this.contrast, this.tThreshold)((bs_json: BrainSpriteJson) => {
+      console.log("got bs");
       const bg = document.getElementById("spriteImg") as HTMLImageElement;
       const cm = document.getElementById("colorMap") as HTMLImageElement;
       const stat_map = document.getElementById("overlayImg") as HTMLImageElement;
@@ -76,6 +87,15 @@ class BSCuts extends Component<IBSCutsProps, {}> {
       this.contrast = this.props.contrast;
       this.tThreshold = this.props.tThreshold;
       this.updateBrainsprite();
+    } else if (this.props.subject !== prevProps.subject ||
+                  this.props.task !== prevProps.task) {
+      this.subject = this.props.subject;
+      this.task = this.props.task;
+      eel.update_glm(this.subject, this.task)((success: string) => {
+        if (success === "Loaded") {
+          this.updateBrainsprite();
+        }
+      });
     }
   }
 
