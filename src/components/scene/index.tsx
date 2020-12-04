@@ -34,7 +34,7 @@ class Scene extends Component<ISceneProps, {}> {
   gridHelper?: THREE.GridHelper;
 
   static defaultProps = {
-    meshType: MeshType.INFL,
+    meshType: MeshType.PIAL,
   };
 
   constructor(props: ISceneProps) {
