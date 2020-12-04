@@ -183,36 +183,85 @@ def get_voxel_fingerprint_mean(voxel_index):
 
 
 @eel.expose
-def get_left_contrast(subject_index, contrast_index):
+def get_contrast(subject_index, contrast_index, hemi="both"):
     if DEBUG:
         print(
-            f"get_left_contrast {contrasts[contrast_index]} ({contrast_index}) for {subjects[subject_index]} ({subject_index})"
+            f"get_contrast {contrasts[contrast_index]} ({contrast_index}) for {subjects[subject_index]} ({subject_index})"
         )
+
     start_index = n_voxels * subject_index
-    return X[
-        start_index : start_index + n_voxels // 2, contrast_index
-    ].tolist()
+
+    if hemi == "left":
+        return X[
+            start_index : start_index + n_voxels // 2, contrast_index
+        ].tolist()
+    elif hemi == "right":
+        return X[
+            start_index + n_voxels // 2 : start_index + n_voxels,
+            contrast_index,
+        ].tolist()
+    elif hemi == "both":
+        return X[start_index : start_index + n_voxels, contrast_index].tolist()
+    else:
+        print(f"Unknown value for hemi: ${hemi}")
+        return []
 
 
 @eel.expose
-def get_left_contrast_mean(contrast_index):
+def get_contrast_mean(contrast_index, hemi="both"):
     if DEBUG:
         print(
-            f"get_left_contrast_mean {contrasts[contrast_index]} ({contrast_index})"
+            f"get_contrast_mean {contrasts[contrast_index]} ({contrast_index})"
         )
-    mean = np.mean(
-        np.vstack(
-            [
-                X[
-                    n_voxels * subject_index : n_voxels * subject_index
-                    + n_voxels // 2,
-                    contrast_index,
+
+    mean = []
+
+    if hemi == "left":
+        mean = np.mean(
+            np.vstack(
+                [
+                    X[
+                        n_voxels * subject_index : n_voxels * subject_index
+                        + n_voxels // 2,
+                        contrast_index,
+                    ]
+                    for subject_index in range(n_subjects)
                 ]
-                for subject_index in range(n_subjects)
-            ]
-        ),
-        axis=0,
-    )
+            ),
+            axis=0,
+        )
+    elif hemi == "right":
+        mean = np.mean(
+            np.vstack(
+                [
+                    X[
+                        n_voxels * subject_index
+                        + n_voxels // 2 : n_voxels * subject_index
+                        + n_voxels,
+                        contrast_index,
+                    ]
+                    for subject_index in range(n_subjects)
+                ]
+            ),
+            axis=0,
+        )
+    elif hemi == "both":
+        mean = np.mean(
+            np.vstack(
+                [
+                    X[
+                        n_voxels * subject_index : n_voxels * subject_index
+                        + n_voxels,
+                        contrast_index,
+                    ]
+                    for subject_index in range(n_subjects)
+                ]
+            ),
+            axis=0,
+        )
+    else:
+        print(f"Unknown value for hemi: ${hemi}")
+
     return mean.tolist()
 
 
