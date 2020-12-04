@@ -46,7 +46,14 @@ def read_gii(gii_file):
 
 # %%
 fsaverage = datasets.fetch_surf_fsaverage()
-for dataset in ["infl_left", "infl_right", "pial_left", "pial_right"]:
+for dataset in [
+    "infl_left",
+    "infl_right",
+    "pial_left",
+    "pial_right",
+    "white_left",
+    "white_right",
+]:
     vertices, triangles = read_gii(fsaverage[dataset])
     vertices = vertices.tolist()
     triangles = triangles.tolist()

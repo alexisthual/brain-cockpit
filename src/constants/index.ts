@@ -15,6 +15,7 @@ export interface Subject {
 
 export enum MeshType {
   PIAL = "pial",
+  WHITE = "white",
   INFL = "infl",
 }
 
