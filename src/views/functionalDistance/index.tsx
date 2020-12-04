@@ -3,11 +3,18 @@ import React, { useEffect, useReducer, useState } from "react";
 
 import ContrastFingerprint from "components/contrastFingerprint";
 import DistanceBars from "./distanceBars";
-import InfoPanel from "./infoPanel";
+import InfoPanel from "components/infoPanel";
 import PanelButtons from "components/infoPanel/buttons";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
-import { Orientation, Subject } from "constants/index";
+import {
+  Metric,
+  MetricString,
+  Orientation,
+  Subject,
+  SurfaceMapType,
+  SurfaceMapTypeString,
+} from "constants/index";
 import { eel } from "App";
 import "./style.scss";
 
@@ -15,19 +22,6 @@ type ActionLabel = {
   type?: "increment" | "decrement";
   payload?: number;
 };
-
-export enum SurfaceMapType {
-  SEED_BASED = "seed-based",
-  M_DISTANCE = "m-distance",
-}
-
-export type SurfaceMapTypeString = keyof typeof SurfaceMapType;
-
-export enum Metric {
-  COSINE = "cosine",
-}
-
-export type MetricString = keyof typeof Metric;
 
 const FunctionalDistanceExplorer = () => {
   const [subjectLabels, setSubjectLabels] = useState<string[]>([]);

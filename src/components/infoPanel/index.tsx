@@ -2,7 +2,14 @@ import { Button, ButtonGroup, MenuItem } from "@blueprintjs/core";
 import { ItemRenderer, Select } from "@blueprintjs/select";
 import React from "react";
 
-import { MeshType, MeshTypeString } from "constants/index";
+import {
+  MeshType,
+  MeshTypeString,
+  Metric,
+  MetricString,
+  SurfaceMapType,
+  SurfaceMapTypeString,
+} from "constants/index";
 import "./style.scss";
 
 interface IProps {
@@ -12,11 +19,17 @@ interface IProps {
   contrast?: string;
   contrastIndex?: number;
   voxelIndex?: number;
-  meanContrastMap?: boolean;
+  meanSurfaceMap?: boolean;
   meanChangeCallback?: () => void;
   meshType?: MeshType;
   meshTypes?: MeshTypeString[];
   meshTypeChangeCallback?: (meshType: MeshType) => void;
+  metric?: Metric;
+  metricLabels?: MetricString[];
+  metricChangeCallback?: (metric: Metric) => void;
+  surfaceMapType?: SurfaceMapType;
+  surfaceMapTypeLabels?: SurfaceMapTypeString[];
+  surfaceMapTypeChangeCallback?: (surfaceMapType: SurfaceMapType) => void;
 }
 
 const InfoPanel = ({
@@ -26,11 +39,17 @@ const InfoPanel = ({
   contrast,
   contrastIndex,
   voxelIndex,
-  meanContrastMap,
+  meanSurfaceMap,
   meanChangeCallback = () => {},
   meshType,
   meshTypes,
   meshTypeChangeCallback = () => {},
+  metric,
+  metricLabels,
+  metricChangeCallback = () => {},
+  surfaceMapType,
+  surfaceMapTypeLabels,
+  surfaceMapTypeChangeCallback = () => {},
 }: IProps) => {
   const stringRenderer: ItemRenderer<string> = (
     str,
@@ -44,8 +63,10 @@ const InfoPanel = ({
     );
   };
 
-  const SelectSubject = Select.ofType<string>();
   const MeshTypeSelect = Select.ofType<MeshTypeString>();
+  const SelectSubject = Select.ofType<string>();
+  const MetricSelect = Select.ofType<MetricString>();
+  const SurfaceMapTypeSelect = Select.ofType<SurfaceMapTypeString>();
 
   return (
     <div id="header">
@@ -79,7 +100,7 @@ const InfoPanel = ({
             {subjectLabels ? (
               <ButtonGroup>
                 <SelectSubject
-                  disabled={meanContrastMap}
+                  disabled={meanSurfaceMap}
                   filterable={false}
                   items={subjectLabels}
                   itemRenderer={stringRenderer}
@@ -88,14 +109,14 @@ const InfoPanel = ({
                   }}
                 >
                   <Button
-                    disabled={meanContrastMap}
+                    disabled={meanSurfaceMap}
                     rightIcon="double-caret-vertical"
                     text={subject}
                   />
                 </SelectSubject>
                 <Button
-                  active={meanContrastMap}
-                  icon={meanContrastMap ? "ungroup-objects" : "group-objects"}
+                  active={meanSurfaceMap}
+                  icon={meanSurfaceMap ? "ungroup-objects" : "group-objects"}
                   onClick={meanChangeCallback}
                   outlined
                   title={"Take subjects' mean"}
@@ -112,6 +133,51 @@ const InfoPanel = ({
           <div className="header-item-label">Contrast</div>
           <div className="header-item-value">
             {contrast} ({contrastIndex})
+          </div>
+        </>
+      ) : null}
+      {metricLabels || metric ? (
+        <>
+          <div className="header-item-label">Metric</div>
+          <div className="header-item-value">
+            {metricLabels ? (
+              <MetricSelect
+                filterable={false}
+                items={metricLabels}
+                itemRenderer={stringRenderer}
+                onItemSelect={(metric: MetricString) => {
+                  metricChangeCallback(Metric[metric]);
+                }}
+              >
+                <Button rightIcon="double-caret-vertical" text={metric} />
+              </MetricSelect>
+            ) : (
+              <>{metric}</>
+            )}
+          </div>
+        </>
+      ) : null}
+      {surfaceMapTypeLabels || surfaceMapType ? (
+        <>
+          <div className="header-item-label">Type</div>
+          <div className="header-item-value">
+            {surfaceMapTypeLabels ? (
+              <SurfaceMapTypeSelect
+                filterable={false}
+                items={surfaceMapTypeLabels}
+                itemRenderer={stringRenderer}
+                onItemSelect={(surfaceMapType: SurfaceMapTypeString) => {
+                  surfaceMapTypeChangeCallback(SurfaceMapType[surfaceMapType]);
+                }}
+              >
+                <Button
+                  rightIcon="double-caret-vertical"
+                  text={surfaceMapType}
+                />
+              </SurfaceMapTypeSelect>
+            ) : (
+              <>{surfaceMapType}</>
+            )}
           </div>
         </>
       ) : null}

@@ -216,7 +216,7 @@ const SurfaceExplorer = () => {
         subjectChangeCallback={(subjectIndex: number) => {
           setSubject({ payload: subjectIndex });
         }}
-        meanContrastMap={meanContrastMap}
+        meanSurfaceMap={meanContrastMap}
         meanChangeCallback={() => {
           setMeanContrastMap(!meanContrastMap);
         }}

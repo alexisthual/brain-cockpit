@@ -19,3 +19,16 @@ export enum MeshType {
 }
 
 export type MeshTypeString = keyof typeof MeshType;
+
+export enum SurfaceMapType {
+  SEED_BASED = "seed-based",
+  M_DISTANCE = "m-distance",
+}
+
+export type SurfaceMapTypeString = keyof typeof SurfaceMapType;
+
+export enum Metric {
+  COSINE = "cosine",
+}
+
+export type MetricString = keyof typeof Metric;
