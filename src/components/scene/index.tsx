@@ -47,7 +47,7 @@ class Scene extends Component<ISceneProps, {}> {
     this.start = this.start.bind(this);
     this.animate = this.animate.bind(this);
     this.renderScene = this.renderScene.bind(this);
-    this.computeBoundingBox = this.computeBoundingBox.bind(this);
+    this.focusOnMainObject = this.focusOnMainObject.bind(this);
     this.setupScene = this.setupScene.bind(this);
     this.handleWindowResize = this.handleWindowResize.bind(this);
     this.onMouseClick = this.onMouseClick.bind(this);
@@ -186,6 +186,9 @@ class Scene extends Component<ISceneProps, {}> {
           newObject.geometry.attributes.position
         );
       }
+
+      // Update camera and controls focus
+      this.focusOnMainObject();
     }
 
     // Update object color to display surface map
@@ -286,25 +289,8 @@ class Scene extends Component<ISceneProps, {}> {
     sphere.visible = false;
     scene.add(sphere);
 
-    // Add loaded object to scene
+    // Add main object to scene
     scene.add(object);
-
-    // Update class instance attributes
-    this.renderer = renderer;
-    this.scene = scene;
-    this.camera = camera;
-    this.object = object;
-    this.spotLight = spotLight;
-    this.regressedSphere = sphere;
-
-    this.computeBoundingBox();
-  }
-
-  computeBoundingBox() {
-    // Compute BoundingBox
-    const boundingBox = new THREE.Box3().setFromObject(this.object);
-    const center = boundingBox.getCenter(new THREE.Vector3());
-    const size = boundingBox.getSize(new THREE.Vector3());
 
     // Add grid helper
     const gridHelper = new THREE.GridHelper(
@@ -314,8 +300,45 @@ class Scene extends Component<ISceneProps, {}> {
       Colors.LIGHT_GRAY1
     );
     gridHelper.translateY(-70);
-    this.scene.add(gridHelper);
+    scene.add(gridHelper);
+
+    // Orbit controls setup
+    let controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.2;
+    controls.enableZoom = true;
+    controls.zoomSpeed = 0.3;
+    controls.enableKeys = true;
+    controls.enableRotate = true;
+    controls.enablePan = true;
+    controls.screenSpacePanning = true;
+    controls.update();
+
+    renderer.setSize(this.props.width, this.props.height);
+    this.container.appendChild(renderer.domElement);
+
+    // Update class instance attributes
+    this.renderer = renderer;
+    this.scene = scene;
+    this.camera = camera;
+    this.object = object;
+    this.spotLight = spotLight;
+    this.regressedSphere = sphere;
     this.gridHelper = gridHelper;
+    this.controls = controls;
+
+    this.focusOnMainObject();
+
+    this.start();
+  }
+
+  // This functions focuses controls and camera
+  // on the main object
+  focusOnMainObject() {
+    // Compute BoundingBox
+    const boundingBox = new THREE.Box3().setFromObject(this.object);
+    const center = boundingBox.getCenter(new THREE.Vector3());
+    const size = boundingBox.getSize(new THREE.Vector3());
 
     // Camera setup
     let offset = 1.5;
@@ -331,24 +354,11 @@ class Scene extends Component<ISceneProps, {}> {
     this.camera.lookAt(center);
     this.camera.updateProjectionMatrix();
 
-    // Orbit controls setup
-    let controls = new OrbitControls(this.camera, this.renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.2;
-    controls.enableZoom = true;
-    controls.zoomSpeed = 0.3;
-    controls.enableKeys = true;
-    controls.enableRotate = true;
-    controls.enablePan = true;
-    controls.screenSpacePanning = true;
-    controls.target.set(center.x, center.y, center.z);
-    controls.update();
-
-    this.controls = controls;
-    this.renderer.setSize(this.props.width, this.props.height);
-    this.container.appendChild(this.renderer.domElement);
-    this.start();
+    // Set controls target
+    this.controls.target.set(center.x, center.y, center.z);
   }
+
+  computeBoundingBox() {}
 
   onMouseClick(event: MouseEvent) {
     const raycaster = new THREE.Raycaster();
