@@ -5,6 +5,7 @@ import ContrastFingerprint from "components/contrastFingerprint";
 import InfoPanel from "components/infoPanel";
 import PanelButtons from "components/infoPanel/buttons";
 import Scene from "components/scene";
+import TextualLoader from "components/textualLoader";
 import { Orientation, Subject } from "constants/index";
 import { eel } from "App";
 
@@ -16,8 +17,10 @@ const RegressionExplorer = () => {
   const [taskCounts, setTaskCounts] = useState<number[]>([]);
   const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
   const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
+  const [loadingFingerprint, setLoadingFingerprint] = useState(false);
   const [meanFingerprint, setMeanFingerprint] = useState(false);
   const [errorMap, setErrorMap] = useState<number[] | undefined>();
+  const [loadingContrastMap, setLoadingErrorMap] = useState(false);
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [wireframe, setWireframe] = useState(true);
   const [regressedCoordinates, setRegressedCoordinates] = useState<
@@ -31,6 +34,7 @@ const RegressionExplorer = () => {
       const contrastLabels = eel.get_contrast_labels()();
       const tasks = eel.get_tasks()();
       const errorMap = eel.get_regressed_coordinates_error()();
+      setLoadingErrorMap(true);
 
       // Wait for all data to be loaded before setting app state
       Promise.all([contrastLabels, tasks, errorMap]).then((values) => {
@@ -39,6 +43,7 @@ const RegressionExplorer = () => {
         setTaskLabels(values[1].map((x: any) => x[0]));
         setTaskCounts(values[1].map((x: any) => x[1]));
         setErrorMap(values[2]);
+        setLoadingErrorMap(false);
       });
     };
 
@@ -88,9 +93,11 @@ const RegressionExplorer = () => {
     }
 
     // Get activation fingerprint for this voxel
+    setLoadingFingerprint(true);
     if (meanFingerprint) {
       eel.get_voxel_fingerprint_mean(voxelIndex)((fingerprint: number[]) => {
         setContrastFingerprint(fingerprint);
+        setLoadingFingerprint(false);
       });
     } else if (subject.index !== undefined) {
       eel.get_voxel_fingerprint(
@@ -98,7 +105,10 @@ const RegressionExplorer = () => {
         voxelIndex
       )((contrastFingerprint: number[]) => {
         setContrastFingerprint(contrastFingerprint);
+        setLoadingFingerprint(false);
       });
+    } else {
+      setLoadingFingerprint(false);
     }
   }, [voxelIndex, subject, meanFingerprint]);
 
@@ -110,6 +120,9 @@ const RegressionExplorer = () => {
       }`}
     >
       <InfoPanel subject={subject.label} voxelIndex={voxelIndex} />
+      {loadingContrastMap ? (
+        <TextualLoader text="Loading error map..." />
+      ) : null}
       <div id="scene">
         <ParentSize className="scene-container" debounceTime={10}>
           {({ width: sceneWidth, height: sceneHeight }) => (
@@ -156,6 +169,7 @@ const RegressionExplorer = () => {
           <ParentSize className="fingerprint-container" debounceTime={10}>
             {({ width: fingerprintWidth, height: fingerprintHeight }) => (
               <ContrastFingerprint
+                loading={loadingFingerprint}
                 orientation={
                   orientation === Orientation.VERTICAL
                     ? Orientation.HORIZONTAL
