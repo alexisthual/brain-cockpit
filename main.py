@@ -14,219 +14,223 @@ DATA_PATH = os.getenv("DATA_PATH")
 AVAILABLE_CONTRASTS_PATH = os.getenv("AVAILABLE_CONTRASTS_PATH")
 DEBUG = os.getenv("DEBUG")
 EXPERIMENT_DATA_PATH = os.getenv("EXPERIMENT_DATA_PATH")
-SERVE_CUTS = os.getenv("SERVE_CUTS")
+MOCK_CUTS = os.getenv("MOCK_CUTS")
+CUTS_DATA_PATH = os.getenv("CUTS_DATA_PATH")
 
 
-def select_subjects_and_contrasts(
-    df, available_contrasts_path=AVAILABLE_CONTRASTS_PATH
-):
-    """
-    Preselects subjects having enough contrasts
-    before filtering out contrasts which exists for all these subjects
-    and returns all these as python lists.
-    """
+if DATA_PATH is not None:
+    def select_subjects_and_contrasts(
+        df, available_contrasts_path=AVAILABLE_CONTRASTS_PATH
+    ):
+        """
+        Preselects subjects having enough contrasts
+        before filtering out contrasts which exists for all these subjects
+        and returns all these as python lists.
+        """
 
-    df = pd.read_csv(available_contrasts_path)
+        df = pd.read_csv(available_contrasts_path)
 
-    grouped_by_subject = df.groupby(["subject"])["contrast"].nunique()
-    selected_subjects = grouped_by_subject[
-        grouped_by_subject > 100
-    ].index.values
+        grouped_by_subject = df.groupby(["subject"])["contrast"].nunique()
+        selected_subjects = grouped_by_subject[
+            grouped_by_subject > 100
+        ].index.values
 
-    grouped_by_contrast = df.groupby(["contrast", "task"])["subject"].unique()
-    grouped_by_contrast = grouped_by_contrast.sort_index(
-        level=["task", "contrast"]
-    )
-    grouped_by_contrast = grouped_by_contrast.reset_index()
-
-    mask = [
-        np.array_equal(
-            np.intersect1d(subjects, selected_subjects), selected_subjects
+        grouped_by_contrast = df.groupby(["contrast", "task"])["subject"].unique()
+        grouped_by_contrast = grouped_by_contrast.sort_index(
+            level=["task", "contrast"]
         )
-        for subjects in grouped_by_contrast.subject
-    ]
-    selected_contrasts = grouped_by_contrast[mask]
-    selected_contrasts = selected_contrasts.reset_index()
+        grouped_by_contrast = grouped_by_contrast.reset_index()
 
-    selected_tasks = (
-        selected_contrasts.groupby(["task"])["contrast"]
-        .nunique()
-        .reset_index()
-    )
+        mask = [
+            np.array_equal(
+                np.intersect1d(subjects, selected_subjects), selected_subjects
+            )
+            for subjects in grouped_by_contrast.subject
+        ]
+        selected_contrasts = grouped_by_contrast[mask]
+        selected_contrasts = selected_contrasts.reset_index()
 
-    return (
-        selected_subjects,
-        selected_contrasts.contrast.values,
-        selected_tasks.values,
-    )
+        selected_tasks = (
+            selected_contrasts.groupby(["task"])["contrast"]
+            .nunique()
+            .reset_index()
+        )
+
+        return (
+            selected_subjects,
+            selected_contrasts.contrast.values,
+            selected_tasks.values,
+        )
 
 
 # Load FMRI data
-def load_subject_fmri(df, subject, unique_contrasts):
-    """
-    Read functional data corresponding to contrast list and provided subject
+    def load_subject_fmri(df, subject, unique_contrasts):
+        """
+        Read functional data corresponding to contrast list and provided subject
 
-    Inputs:
-    df: Pandas DataFrame,
-        Database descriptor
-    subject: string,
-             subject identifier
-    unique_contrasts: list of strings,
-                      Contrasts wanted
+        Inputs:
+        df: Pandas DataFrame,
+            Database descriptor
+        subject: string,
+                 subject identifier
+        unique_contrasts: list of strings,
+                          Contrasts wanted
 
-    Outputs:
-    Xl: array of shape (n_vertices, n_contrasts),
-        functional data read from left-hemisphere textures
-    Xr: array of shape (n_vertices, n_contrasts),
-        functional data read from right-hemisphere textures
-    """
+        Outputs:
+        Xl: array of shape (n_vertices, n_contrasts),
+            functional data read from left-hemisphere textures
+        Xr: array of shape (n_vertices, n_contrasts),
+            functional data read from right-hemisphere textures
+        """
 
-    paths_lh = []
-    paths_rh = []
+        paths_lh = []
+        paths_rh = []
 
-    for contrast in unique_contrasts:
-        mask = (df.contrast == contrast).values * (
-            df.subject == subject
-        ).values
-        paths_lh.append(
-            os.path.join(
-                DATA_PATH, df.loc[mask].loc[df.side == "lh"].path.values[-1]
+        for contrast in unique_contrasts:
+            mask = (df.contrast == contrast).values * (
+                df.subject == subject
+            ).values
+            paths_lh.append(
+                os.path.join(
+                    DATA_PATH, df.loc[mask].loc[df.side == "lh"].path.values[-1]
+                )
             )
-        )
-        paths_rh.append(
-            os.path.join(
-                DATA_PATH, df.loc[mask].loc[df.side == "rh"].path.values[-1]
+            paths_rh.append(
+                os.path.join(
+                    DATA_PATH, df.loc[mask].loc[df.side == "rh"].path.values[-1]
+                )
             )
+
+        Xr = np.array(
+            [nib.load(texture).darrays[0].data for texture in list(paths_rh)]
         )
+        Xl = np.array(
+            [nib.load(texture).darrays[0].data for texture in list(paths_lh)]
+        )
+        # impute Nans by 0
+        Xl[np.isnan(Xl)] = 0
+        Xr[np.isnan(Xr)] = 0
 
-    Xr = np.array(
-        [nib.load(texture).darrays[0].data for texture in list(paths_rh)]
-    )
-    Xl = np.array(
-        [nib.load(texture).darrays[0].data for texture in list(paths_lh)]
-    )
-    # impute Nans by 0
-    Xl[np.isnan(Xl)] = 0
-    Xr[np.isnan(Xr)] = 0
-
-    return Xl, Xr
+        return Xl, Xr
 
 
-def load_fmri(df, subjects, unique_contrasts):
-    """
-    Load data for a given list of subjects and contrasts.
+    def load_fmri(df, subjects, unique_contrasts):
+        """
+        Load data for a given list of subjects and contrasts.
 
-    Outputs:
-    X: array of size (2*n_voxels_hemi * n_subjects, n_contrasts)
-    """
+        Outputs:
+        X: array of size (2*n_voxels_hemi * n_subjects, n_contrasts)
+        """
 
-    X = np.empty((0, len(unique_contrasts)))
+        X = np.empty((0, len(unique_contrasts)))
 
-    for subject in subjects:
-        X_left, X_right = load_subject_fmri(df, subject, unique_contrasts)
-        X = np.append(X, np.concatenate([X_left.T, X_right.T]), axis=0)
+        for subject in subjects:
+            X_left, X_right = load_subject_fmri(df, subject, unique_contrasts)
+            X = np.append(X, np.concatenate([X_left.T, X_right.T]), axis=0)
 
-    return X
+        return X
 
 
 ## Load selected subjects and contrasts
-df = pd.read_csv(AVAILABLE_CONTRASTS_PATH)
-subjects, contrasts, n_contrasts_by_task = select_subjects_and_contrasts(
-    df, available_contrasts_path=AVAILABLE_CONTRASTS_PATH
-)
-n_subjects, n_contrasts = len(subjects), len(contrasts)
+    df = pd.read_csv(AVAILABLE_CONTRASTS_PATH)
+    subjects, contrasts, n_contrasts_by_task = select_subjects_and_contrasts(
+        df, available_contrasts_path=AVAILABLE_CONTRASTS_PATH
+    )
+    n_subjects, n_contrasts = len(subjects), len(contrasts)
 
 ## Load functional data for all subjects
-print("Loading contrasts...")
-X = load_fmri(df, subjects, contrasts)
-n_voxels = X.shape[0] // n_subjects
+    print("Loading contrasts...")
+    X = load_fmri(df, subjects, contrasts)
+    n_voxels = X.shape[0] // n_subjects
 
 # Util function for exploring contrasts
-@eel.expose
-def get_subjects():
-    return subjects.tolist()
+    @eel.expose
+    def get_subjects():
+        return subjects.tolist()
 
 
-@eel.expose
-def get_contrast_labels():
-    return contrasts.tolist()
+    @eel.expose
+    def get_contrast_labels():
+        return contrasts.tolist()
 
 
-@eel.expose
-def get_tasks():
-    return n_contrasts_by_task.tolist()
+    @eel.expose
+    def get_tasks():
+        return n_contrasts_by_task.tolist()
 
 
-@eel.expose
-def get_voxel_fingerprint(subject_index, voxel_index):
-    if DEBUG:
-        print(
-            f"get_voxel_fingerprint {voxel_index} for {subjects[subject_index]} ({subject_index})"
-        )
-    return X[n_voxels * subject_index + voxel_index, :].tolist()
+    @eel.expose
+    def get_voxel_fingerprint(subject_index, voxel_index):
+        if DEBUG:
+            print(
+                f"get_voxel_fingerprint {voxel_index} for {subjects[subject_index]} ({subject_index})"
+            )
+        return X[n_voxels * subject_index + voxel_index, :].tolist()
 
 
-@eel.expose
-def get_voxel_fingerprint_mean(voxel_index):
-    if DEBUG:
-        print(f"get_voxel_mean_fingerprint {voxel_index}")
-    mean = np.mean(
-        X[
-            [
-                n_voxels * subject_index + voxel_index
-                for subject_index in range(n_subjects)
+    @eel.expose
+    def get_voxel_fingerprint_mean(voxel_index):
+        if DEBUG:
+            print(f"get_voxel_mean_fingerprint {voxel_index}")
+        mean = np.mean(
+            X[
+                [
+                    n_voxels * subject_index + voxel_index
+                    for subject_index in range(n_subjects)
+                ],
+                :,
             ],
-            :,
-        ],
-        axis=0,
-    )
-    return mean.tolist()
-
-
-@eel.expose
-def get_left_contrast(subject_index, contrast_index):
-    if DEBUG:
-        print(
-            f"get_left_contrast {contrasts[contrast_index]} ({contrast_index}) for {subjects[subject_index]} ({subject_index})"
+            axis=0,
         )
-    start_index = n_voxels * subject_index
-    return X[
-        start_index : start_index + n_voxels // 2, contrast_index
-    ].tolist()
+        return mean.tolist()
 
 
-@eel.expose
-def get_left_contrast_mean(contrast_index):
-    if DEBUG:
-        print(
-            f"get_left_contrast_mean {contrasts[contrast_index]} ({contrast_index})"
-        )
-    mean = np.mean(
-        np.vstack(
-            [
-                X[
-                    n_voxels * subject_index : n_voxels * subject_index
-                    + n_voxels // 2,
-                    contrast_index,
+    @eel.expose
+    def get_left_contrast(subject_index, contrast_index):
+        if DEBUG:
+            print(
+                f"get_left_contrast {contrasts[contrast_index]} ({contrast_index}) for {subjects[subject_index]} ({subject_index})"
+            )
+        start_index = n_voxels * subject_index
+        return X[
+            start_index : start_index + n_voxels // 2, contrast_index
+        ].tolist()
+
+
+    @eel.expose
+    def get_left_contrast_mean(contrast_index):
+        if DEBUG:
+            print(
+                f"get_left_contrast_mean {contrasts[contrast_index]} ({contrast_index})"
+            )
+        mean = np.mean(
+            np.vstack(
+                [
+                    X[
+                        n_voxels * subject_index : n_voxels * subject_index
+                        + n_voxels // 2,
+                        contrast_index,
+                    ]
+                    for subject_index in range(n_subjects)
                 ]
-                for subject_index in range(n_subjects)
-            ]
-        ),
-        axis=0,
-    )
-    return mean.tolist()
+            ),
+            axis=0,
+        )
+        return mean.tolist()
 
 
-if SERVE_CUTS:
+if CUTS_DATA_PATH is not None or MOCK_CUTS is not None:
+    import nilearn.image
+    from nilearn.image.resampling import coord_transform
     from nilearn.datasets import fetch_spm_auditory
     from nilearn.image import concat_imgs, mean_img
-    from nilearn.image.resampling import coord_transform
     from nilearn.glm.first_level import FirstLevelModel
     import brainsprite_wrapper
     import plotly.graph_objects as go
     import plotly.express as px
     from plotly.io import to_json
     from scipy.stats import zscore
+    import pickle
 
     import matplotlib
     matplotlib.use('Agg') # Make it headless
@@ -234,118 +238,83 @@ if SERVE_CUTS:
     import mpld3
 
     print("Loading fMRI SPM data...")
-    subject_data = fetch_spm_auditory()
-    fmri_img = concat_imgs(subject_data.func)
-    events = pd.read_table(subject_data["events"])
-    fmri_glm = FirstLevelModel(t_r=7, minimize_memory=False).fit(fmri_img, events)
-    mean_img = mean_img(fmri_img)
-    img = fmri_glm.compute_contrast("active - rest")
-    affine = np.linalg.inv(img.affine)
+
+    class LoadedSubject:
+        subject = None
+        task = None
+        anat = None
+        fmri_glm = None
+        contrast = None
+        bs_json = None
+        img = None
+        threshold = None
+
+        def __init__(self):
+            return None
+
+    currentSub = LoadedSubject()
+
+    @eel.expose
+    def get_available_subject_tasks():
+        print("Sending tasklist")
+        # This should read directly from the BIDS format
+        if MOCK_CUTS is None or not MOCK_CUTS:
+            subjects = [f"sub-100{i+1}" for i in range(5)]
+            tasks = ["geomloc", "passivestatic", "passiveseq"]
+            return {"subList": subjects, "taskList": tasks, "contrastList": ["NA"]}
+        else:
+            return {"subList": ["NA"], "taskList": ["NA"], "contrastList": ["active - rest"]}
+
+    @eel.expose
+    def update_glm(sub, task):
+        if (sub == "" or task == ""):
+            print(f"Not loading glm for subject='{sub}' and task='{task}'")
+            return "Won't load"
+        if (currentSub.subject == sub and currentSub.task == task):
+            print(f"Already loaded glm for subject='{sub}' and task='{task}'")
+            return "Loaded"
+        print(f"Loading glm for subject='{sub}' and task='{task}'")
+        currentSub.subject = sub
+        currentSub.task = task
+        if MOCK_CUTS is None or not MOCK_CUTS:
+            currentSub.anat = nilearn.image.load_img(f"{CUTS_DATA_PATH}/derivatives/fmriprep/{sub}/ses-01/anat/{sub}_ses-01_space-MNI152NLin2009cAsym_desc-preproc_T1w.nii.gz")
+            modelname = f"{CUTS_DATA_PATH}/derivatives/nilearn/{sub}/ses-01/func/{sub}_ses-01_task-{task}"
+            currentSub.fmri_glm = pickle.load(open(f"{modelname}_model-spm.pkl", "rb"))
+        else:
+            subject_data = fetch_spm_auditory()
+            fmri_img = concat_imgs(subject_data.func)
+            events = pd.read_table(subject_data["events"])
+            currentSub.fmri_glm = FirstLevelModel(t_r=7, minimize_memory=False).fit(fmri_img, events)
+            currentSub.anat = mean_img(fmri_img)
+        return "Loaded"  # What is the unit type in python? None?
 
     @eel.expose
     def get_brainsprite(contrast, threshold):
         print(f"Serving images for `{contrast}` at t-threshold {threshold}")
-        img = fmri_glm.compute_contrast(contrast)
-        return brainsprite_wrapper.generate_bs(img, mean_img, threshold)
+        if (threshold != currentSub.threshold or contrast != currentSub.contrast):
+            print("\tThis requires an update, performing")
+            currentSub.threshold = threshold
+            currentSub.contrast = contrast
+            currentSub.img = currentSub.fmri_glm.compute_contrast(currentSub.contrast)
+            currentSub.bs_json = brainsprite_wrapper.generate_bs(currentSub.img, currentSub.anat, currentSub.threshold)
+        return currentSub.bs_json
 
 
     @eel.expose
     def get_t_at_coordinate(coord):
-        if coord[0] is not None:
-            return img.dataobj[63 - coord[0], coord[1], coord[2]]
+        print(f"Sending t-value at {coord}")
+        if currentSub.img is not None:
+            if coord[0] is not None:
+                return currentSub.img.dataobj[63 - coord[0], coord[1], coord[2]]
+            else:
+                return currentSub.img.dataobj[63 - 32, 32, 32]
         else:
-            return img.dataobj[63 - 32, 32, 32]
-
-    # Prepares the structure for the beta plot
-    effect = np.zeros(
-        (len(fmri_glm.design_matrices_[0].columns), fmri_glm.labels_[0].size)
-    )
-    for label_ in fmri_glm.results_[0]:
-        label_mask = fmri_glm.labels_[0] == label_
-        resl = fmri_glm.results_[0][label_].theta
-        effect[:, label_mask] = resl
-
-    effect = fmri_glm.masker_.inverse_transform(effect).get_fdata()
-    labels = fmri_glm.design_matrices_[0].columns
-
-    n_elem = len(fmri_img.dataobj[0, 0, 0])
-    df_events = pd.DataFrame({"x": [], "trial_type": []})
-    base_df = pd.DataFrame({"x": list(np.arange(0, fmri_glm.t_r * n_elem, 0.1))})
-
-    for trial_type in list(set(events["trial_type"])):
-        this_df = base_df.copy()
-        this_df["trial_type"] = trial_type
-        this_df["value"] = None
-        df_events = df_events.append(this_df)
-
-    for idx, row in events.iterrows():
-        l1 = df_events["trial_type"] == row["trial_type"]
-        l2 = df_events["x"] >= row["onset"]
-        l3 = df_events["x"] < row["onset"] + row["duration"]
-        df_events.loc[l1 & l2 & l3, "value"] = 0
-
-    base_fig = go.Figure()
-    for trial_type in list(set(events["trial_type"])):
-        base_fig.add_trace(
-            go.Scatter(
-                x=list(np.arange(0, fmri_glm.t_r * n_elem, 0.1)),
-                y=df_events.loc[df_events["trial_type"] == trial_type, "value"],
-                mode="lines",
-                name=trial_type,
-                line=dict(width=250),
-            )
-        )
-
-    def plot_activation(mni):
-        if (mni[0] is None):
-            return None
-        x, y, z = coord_transform(mni[0], mni[1], mni[2], affine)
-        x, y, z = round(x) + 1, round(y) - 1, round(z) - 1
-        d1 = zscore(fmri_img.dataobj[x, y, z])
-        d2 = zscore(fmri_glm.predicted[0].dataobj[x, y, z])
-        fig = go.Figure(base_fig)
-        fig.add_trace(
-            go.Scatter(
-                x=list(range(0, fmri_glm.t_r * len(d1), fmri_glm.t_r)),
-                y=d1,
-                mode="lines",
-                name="raw",
-            )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=list(range(0, fmri_glm.t_r * len(d2), fmri_glm.t_r)),
-                y=d2,
-                mode="lines",
-                name="predicted",
-            )
-        )
-        return {"engine": "plotly", "content_raw": to_json(fig)}
-
-    def plot_beta(mni):
-        if (mni[0] is None):
-            return None
-        x, y, z = coord_transform(mni[0], mni[1], mni[2], affine)
-        x, y, z = round(x) + 1, round(y) - 1, round(z) - 1
-        filtered_effect = effect[x, y, z]
-        df = pd.DataFrame({"value": filtered_effect, "name": labels})
-        df = df[~df.name.str.contains("trans|rot|drift|constant", regex=True)]
-
-        fig = plt.figure()
-        plt.rcParams['axes.facecolor'] = 'black'
-        values = list(df['value'])
-        names = list(df['name'])
-        plt.bar(range(len(values)), values, figure=fig)
-        plt.xticks(range(len(values)), names, figure=fig)
-        fig_json = mpld3.fig_to_dict(fig)
-        plt.close('all')
-
-        return {"engine": "mpld3", "content_raw": fig_json}
-
+            return float('NaN')
 
     @eel.expose
     def get_callbacks(mni):
-        return [plot_activation(mni), plot_beta(mni)]
+        print("Sending callbacks")
+        return []
 
 # These functions are exposed for specific experiments
 # whose data might not be publicly available

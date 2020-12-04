@@ -71,7 +71,6 @@ class GenericPlottable extends Component<IGenericPlottableProps, {}> {
 
   render() {
     const plots = this.plottableList.map((e,i) => {
-      console.log(e);
       if (e.engine === "plotly") {
         const content = JSON.parse(e.content_raw);
         content.layout.plot_bgcolor="rgba(0, 0, 0, 0)";
