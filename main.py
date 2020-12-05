@@ -5,6 +5,7 @@ import numpy as np
 import os
 import pandas as pd
 
+import pandas as pd
 from tqdm import tqdm
 
 # Load contrasts
@@ -18,7 +19,6 @@ CUTS_DATA_PATH = os.getenv("CUTS_DATA_PATH")
 
 
 if DATA_PATH is not None:
-
     def select_subjects_and_contrasts(
         df, available_contrasts_path=AVAILABLE_CONTRASTS_PATH
     ):
@@ -35,9 +35,7 @@ if DATA_PATH is not None:
             grouped_by_subject > 100
         ].index.values
 
-        grouped_by_contrast = df.groupby(["contrast", "task"])[
-            "subject"
-        ].unique()
+        grouped_by_contrast = df.groupby(["contrast", "task"])["subject"].unique()
         grouped_by_contrast = grouped_by_contrast.sort_index(
             level=["task", "contrast"]
         )
@@ -64,7 +62,8 @@ if DATA_PATH is not None:
             selected_tasks.values,
         )
 
-    # Load FMRI data
+
+# Load FMRI data
     def load_subject_fmri(df, subject, unique_contrasts):
         """
         Read functional data corresponding to contrast list and provided subject
@@ -93,14 +92,12 @@ if DATA_PATH is not None:
             ).values
             paths_lh.append(
                 os.path.join(
-                    DATA_PATH,
-                    df.loc[mask].loc[df.side == "lh"].path.values[-1],
+                    DATA_PATH, df.loc[mask].loc[df.side == "lh"].path.values[-1]
                 )
             )
             paths_rh.append(
                 os.path.join(
-                    DATA_PATH,
-                    df.loc[mask].loc[df.side == "rh"].path.values[-1],
+                    DATA_PATH, df.loc[mask].loc[df.side == "rh"].path.values[-1]
                 )
             )
 
@@ -115,6 +112,7 @@ if DATA_PATH is not None:
         Xr[np.isnan(Xr)] = 0
 
         return Xl, Xr
+
 
     def load_fmri(df, subjects, unique_contrasts):
         """
@@ -132,30 +130,34 @@ if DATA_PATH is not None:
 
         return X
 
-    ## Load selected subjects and contrasts
+
+## Load selected subjects and contrasts
     df = pd.read_csv(AVAILABLE_CONTRASTS_PATH)
     subjects, contrasts, n_contrasts_by_task = select_subjects_and_contrasts(
         df, available_contrasts_path=AVAILABLE_CONTRASTS_PATH
     )
     n_subjects, n_contrasts = len(subjects), len(contrasts)
 
-    ## Load functional data for all subjects
+## Load functional data for all subjects
     print("Loading contrasts...")
     X = load_fmri(df, subjects, contrasts)
     n_voxels = X.shape[0] // n_subjects
 
-    # Util function for exploring contrasts
+# Util function for exploring contrasts
     @eel.expose
     def get_subjects():
         return subjects.tolist()
+
 
     @eel.expose
     def get_contrast_labels():
         return contrasts.tolist()
 
+
     @eel.expose
     def get_tasks():
         return n_contrasts_by_task.tolist()
+
 
     @eel.expose
     def get_voxel_fingerprint(subject_index, voxel_index):
@@ -164,6 +166,7 @@ if DATA_PATH is not None:
                 f"get_voxel_fingerprint {voxel_index} for {subjects[subject_index]} ({subject_index})"
             )
         return X[n_voxels * subject_index + voxel_index, :].tolist()
+
 
     @eel.expose
     def get_voxel_fingerprint_mean(voxel_index):
@@ -182,41 +185,24 @@ if DATA_PATH is not None:
         return mean.tolist()
 
 
-@eel.expose
-def get_contrast(subject_index, contrast_index, hemi="both"):
-    if DEBUG:
-        print(
-            f"get_contrast {contrasts[contrast_index]} ({contrast_index}) for {subjects[subject_index]} ({subject_index})"
-        )
-
-    start_index = n_voxels * subject_index
-
-    if hemi == "left":
+    @eel.expose
+    def get_left_contrast(subject_index, contrast_index):
+        if DEBUG:
+            print(
+                f"get_left_contrast {contrasts[contrast_index]} ({contrast_index}) for {subjects[subject_index]} ({subject_index})"
+            )
+        start_index = n_voxels * subject_index
         return X[
             start_index : start_index + n_voxels // 2, contrast_index
         ].tolist()
-    elif hemi == "right":
-        return X[
-            start_index + n_voxels // 2 : start_index + n_voxels,
-            contrast_index,
-        ].tolist()
-    elif hemi == "both":
-        return X[start_index : start_index + n_voxels, contrast_index].tolist()
-    else:
-        print(f"Unknown value for hemi: ${hemi}")
-        return []
 
 
-@eel.expose
-def get_contrast_mean(contrast_index, hemi="both"):
-    if DEBUG:
-        print(
-            f"get_contrast_mean {contrasts[contrast_index]} ({contrast_index})"
-        )
-
-    mean = []
-
-    if hemi == "left":
+    @eel.expose
+    def get_left_contrast_mean(contrast_index):
+        if DEBUG:
+            print(
+                f"get_left_contrast_mean {contrasts[contrast_index]} ({contrast_index})"
+            )
         mean = np.mean(
             np.vstack(
                 [
@@ -230,39 +216,7 @@ def get_contrast_mean(contrast_index, hemi="both"):
             ),
             axis=0,
         )
-    elif hemi == "right":
-        mean = np.mean(
-            np.vstack(
-                [
-                    X[
-                        n_voxels * subject_index
-                        + n_voxels // 2 : n_voxels * subject_index
-                        + n_voxels,
-                        contrast_index,
-                    ]
-                    for subject_index in range(n_subjects)
-                ]
-            ),
-            axis=0,
-        )
-    elif hemi == "both":
-        mean = np.mean(
-            np.vstack(
-                [
-                    X[
-                        n_voxels * subject_index : n_voxels * subject_index
-                        + n_voxels,
-                        contrast_index,
-                    ]
-                    for subject_index in range(n_subjects)
-                ]
-            ),
-            axis=0,
-        )
-    else:
-        print(f"Unknown value for hemi: ${hemi}")
-
-    return mean.tolist()
+        return mean.tolist()
 
 
 if CUTS_DATA_PATH is not None or MOCK_CUTS is not None:
@@ -271,7 +225,7 @@ if CUTS_DATA_PATH is not None or MOCK_CUTS is not None:
     from nilearn.datasets import fetch_spm_auditory
     from nilearn.image import concat_imgs, mean_img
     from nilearn.glm.first_level import FirstLevelModel
-    import brainsprite_wrapper
+    from nilearn._utils.niimg import _safe_get_data
     import plotly.graph_objects as go
     import plotly.express as px
     from plotly.io import to_json
@@ -279,8 +233,7 @@ if CUTS_DATA_PATH is not None or MOCK_CUTS is not None:
     import pickle
 
     import matplotlib
-
-    matplotlib.use("Agg")  # Make it headless
+    matplotlib.use('Agg') # Make it headless
     import matplotlib.pyplot as plt
     import mpld3
 
@@ -308,45 +261,33 @@ if CUTS_DATA_PATH is not None or MOCK_CUTS is not None:
         if MOCK_CUTS is None or not MOCK_CUTS:
             subjects = [f"sub-100{i+1}" for i in range(5)]
             tasks = ["geomloc", "passivestatic", "passiveseq"]
-            return {
-                "subList": subjects,
-                "taskList": tasks,
-                "contrastList": ["press_right"],
-            }
+            return {"subList": subjects, "taskList": tasks, "contrastList": ["press_right"]}
         else:
-            return {
-                "subList": ["NA"],
-                "taskList": ["NA"],
-                "contrastList": ["active - rest"],
-            }
+            return {"subList": ["NA"], "taskList": ["NA"], "contrastList": ["active - rest"]}
 
     @eel.expose
     def update_glm(sub, task):
-        if sub == "" or task == "":
+        if (sub == "" or task == ""):
             print(f"Not loading glm for subject='{sub}' and task='{task}'")
             return "Won't load"
-        if currentSub.subject == sub and currentSub.task == task:
+        if (currentSub.subject == sub and currentSub.task == task):
             print(f"Already loaded glm for subject='{sub}' and task='{task}'")
             return "Loaded"
         print(f"Loading glm for subject='{sub}' and task='{task}'")
         currentSub.subject = sub
         currentSub.task = task
         if MOCK_CUTS is None or not MOCK_CUTS:
-            currentSub.anat = nilearn.image.load_img(
-                f"{CUTS_DATA_PATH}/derivatives/fmriprep/{sub}/ses-01/anat/{sub}_ses-01_space-MNI152NLin2009cAsym_desc-preproc_T1w.nii.gz"
-            )
+            anat = nilearn.image.load_img(f"{CUTS_DATA_PATH}/derivatives/fmriprep/{sub}/ses-01/anat/{sub}_ses-01_space-MNI152NLin2009cAsym_desc-preproc_T1w.nii.gz")
+            currentSub.anat = _safe_get_data(anat, ensure_finite=True)
             modelname = f"{CUTS_DATA_PATH}/derivatives/nilearn/{sub}/ses-01/func/{sub}_ses-01_task-{task}"
-            currentSub.fmri_glm = pickle.load(
-                open(f"{modelname}_model-spm.pkl", "rb")
-            )
+            currentSub.fmri_glm = pickle.load(open(f"{modelname}_model-spm.pkl", "rb"))
         else:
             subject_data = fetch_spm_auditory()
             fmri_img = concat_imgs(subject_data.func)
             events = pd.read_table(subject_data["events"])
-            currentSub.fmri_glm = FirstLevelModel(
-                t_r=7, minimize_memory=False
-            ).fit(fmri_img, events)
-            currentSub.anat = mean_img(fmri_img)
+            currentSub.fmri_glm = FirstLevelModel(t_r=7, minimize_memory=False).fit(fmri_img, events)
+            anat = mean_img(fmri_img)
+            currentSub.anat = _safe_get_data(anat, ensure_finite=True)
         return "Loaded"  # What is the unit type in python? None?
 
     @eel.expose
@@ -356,26 +297,16 @@ if CUTS_DATA_PATH is not None or MOCK_CUTS is not None:
             print("\tThis requires an update, performing")
             currentSub.threshold = threshold
             currentSub.contrast = contrast
-            currentSub.img = currentSub.fmri_glm.compute_contrast(currentSub.contrast)
-            currentSub.bs_json = brainsprite_wrapper.generate_bs(currentSub.img, currentSub.anat, currentSub.threshold)
+            img = currentSub.fmri_glm.compute_contrast(currentSub.contrast)
+            currentSub.img = _safe_get_data(img, ensure_finite=True)
         return "Updated"
 
     @eel.expose
-    def get_brainsprite_anat():
-        return currentSub.bs_json["bg_base64"]
-
-    @eel.expose
-    def get_brainsprite_cmap():
-        return currentSub.bs_json["cm_base64"]
-
-    @eel.expose
-    def get_brainsprite_tmap():
-        return currentSub.bs_json["stat_map_base64"]
-
-    @eel.expose
-    def get_brainsprite_params():
-        return currentSub.bs_json["params"]
-
+    def get_slices(slices):
+        sagital = currentSub.anat[slices[0], :, :].tolist()
+        coronal = currentSub.anat[:, slices[1], :].tolist()
+        horizontal = currentSub.anat[:, :, slices[2]].tolist()
+        return {"sagital": sagital, "coronal": coronal, "horizontal": horizontal}
 
     @eel.expose
     def get_t_at_coordinate(coord):
@@ -383,9 +314,9 @@ if CUTS_DATA_PATH is not None or MOCK_CUTS is not None:
         if currentSub.img is not None:
             shape = currentSub.img.shape
             if coord[0] is not None:
-                return currentSub.img.dataobj[shape[0] - 1 - coord[0], coord[1], coord[2]]
+                return currentSub.img[shape[0] - 1 - coord[0], coord[1], coord[2]]
             else:
-                return currentSub.img.dataobj[shape[0] - 1 - (shape[0]/2), shape[1]/2, shape[2]/2]
+                return currentSub.img[shape[0] - 1 - (shape[0]/2), shape[1]/2, shape[2]/2]
         else:
             return 0
 
@@ -393,7 +324,6 @@ if CUTS_DATA_PATH is not None or MOCK_CUTS is not None:
     def get_callbacks(mni):
         print("Sending callbacks")
         return []
-
 
 # These functions are exposed for specific experiments
 # whose data might not be publicly available

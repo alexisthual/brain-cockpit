@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import BSCuts from "components/brainspriteCuts";
+import Slices from "components/slices";
 import GenericPlottable from "components/genericPlottable";
 
 import type { BrainSpriteObject } from "components/brainspriteCuts";
@@ -22,10 +22,10 @@ const CutsExplorer = () => {
   const [slicecoordinates, setSlicecoordinates] = useState<[number, number, number]>([NaN, NaN, NaN]);
   const [tAtCoordinate, setTAtCoordinate] = useState<number>(NaN);
   const [tThreshold, setTThreshold] = useState<number>(3);
-  const [contrast, setContrast] = useState<string>("");
+  const [contrast, setContrast] = useState<string>("active - rest");
   const [plottableList, setPlottableList] = useState<Plottable[]>([]);
-  const [subject, setSubject] = useState<string>("");
-  const [task, setTask] = useState<string>("");
+  const [subject, setSubject] = useState<string>("NA");
+  const [task, setTask] = useState<string>("NA");
   const [subList, setSubList] = useState<string[]>([]);
   const [taskList, setTaskList] = useState<string[]>([]);
   const [contrastList, setContrastList] = useState<string[]>([]);
@@ -44,8 +44,8 @@ const CutsExplorer = () => {
       setSubList(defaults.subList);
       setTaskList(defaults.taskList);
       setContrastList(defaults.contrastList);
-      setSubject(defaults.subList[0])
-      setTask(defaults.taskList[0])
+      setSubject("NA")
+      setTask("NA")
       setContrast(defaults.contrastList[0])
     });
   }, []);
@@ -107,7 +107,7 @@ const CutsExplorer = () => {
     </div>
     </div>
     <div id="cutsviewer" >
-      <BSCuts
+      <Slices
         clickedVoxelCallback={(brain: BrainSpriteObject) => {
           if (brain.coordinatesSlice !== undefined && brain.numSlice !== undefined) {
             // TODO There seem to be a lag of one click :-(
@@ -123,6 +123,8 @@ const CutsExplorer = () => {
         tThreshold={tThreshold}
         subject={subject}
         task={task}
+        mni={[0,0,0]}
+        slices={[31,32,32]}
       />
     </div>
     <div id="derivatives">
