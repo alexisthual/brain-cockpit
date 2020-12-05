@@ -289,27 +289,46 @@ if CUTS_DATA_PATH is not None or MOCK_CUTS is not None:
         return "Loaded"  # What is the unit type in python? None?
 
     @eel.expose
-    def get_brainsprite(contrast, threshold):
-        print(f"Serving images for `{contrast}` at t-threshold {threshold}")
+    def update_contrast(contrast, threshold):
+        print(f"Updateing images for `{contrast}` at t-threshold {threshold}")
         if (threshold != currentSub.threshold or contrast != currentSub.contrast):
             print("\tThis requires an update, performing")
             currentSub.threshold = threshold
             currentSub.contrast = contrast
             currentSub.img = currentSub.fmri_glm.compute_contrast(currentSub.contrast)
             currentSub.bs_json = brainsprite_wrapper.generate_bs(currentSub.img, currentSub.anat, currentSub.threshold)
-        return currentSub.bs_json
+        return "Updated"
 
+    @eel.expose
+    def get_brainsprite_anat():
+        return currentSub.bs_json["bg_base64"]
+
+    @eel.expose
+    def get_brainsprite_cmap():
+        return currentSub.bs_json["cm_base64"]
+
+    @eel.expose
+    def get_brainsprite_tmap():
+        return currentSub.bs_json["stat_map_base64"]
+
+    @eel.expose
+    def get_brainsprite_params():
+        if currentSub.bs_json["params"] is not None:
+            return currentSub.bs_json["params"]
+        else:
+            return {}
 
     @eel.expose
     def get_t_at_coordinate(coord):
         print(f"Sending t-value at {coord}")
         if currentSub.img is not None:
+            shape = currentSub.img.shape
             if coord[0] is not None:
-                return currentSub.img.dataobj[63 - coord[0], coord[1], coord[2]]
+                return currentSub.img.dataobj[shape[0] - 1 - coord[0], coord[1], coord[2]]
             else:
-                return currentSub.img.dataobj[63 - 32, 32, 32]
+                return currentSub.img.dataobj[shape[0] - 1 - (shape[0]/2), shape[1]/2, shape[2]/2]
         else:
-            return float('NaN')
+            return 0
 
     @eel.expose
     def get_callbacks(mni):

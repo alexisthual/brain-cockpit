@@ -14,13 +14,6 @@ interface BrainSpriteParams {
   canvas: string;
 }
 
-interface BrainSpriteJson {
-  bg_base64?: string;
-  cm_base64?: string;
-  stat_map_base64?: string;
-  params?: BrainSpriteParams;
-}
-
 interface BrainCoordinates {
   X: number;
   Y: number;
@@ -35,7 +28,6 @@ interface BrainSpriteObject {
 class BSCuts extends Component<IBSCutsProps, {}> {
   container?: any;
   brainsprite_object: BrainSpriteObject;
-  brainsprite_json: BrainSpriteJson;
   contrast: string;
   tThreshold: number;
   task: string;
@@ -44,7 +36,6 @@ class BSCuts extends Component<IBSCutsProps, {}> {
   constructor(props: IBSCutsProps) {
     super(props);
     this.state = {};
-    this.brainsprite_json = {};
     this.brainsprite_object = {};
     this.contrast = this.props.contrast;
     this.tThreshold = this.props.tThreshold;
@@ -60,23 +51,36 @@ class BSCuts extends Component<IBSCutsProps, {}> {
     }
     eel.update_glm(this.subject, this.task)((success: string) => {
       if (success === "Loaded") {
+        this.updateAnat();
+        this.updateTMap();
+        this.updateCMap();
         this.updateBrainsprite();
       }
     });
   }
 
-  updateBrainsprite() {
-    eel.get_brainsprite(this.contrast, this.tThreshold)((bs_json: BrainSpriteJson) => {
-      console.log("got bs");
+  updateAnat() {
+    console.log("updating anat");
+    eel.get_brainsprite_anat()((bg_base64: string) => {
       const bg = document.getElementById("spriteImg") as HTMLImageElement;
+      bg.src = "data:image/png;base64," + bg_base64
+    });
+  }
+  updateCMap() {
+    eel.get_brainsprite_cmap()((cm_base64: string) => {
       const cm = document.getElementById("colorMap") as HTMLImageElement;
+      cm.src = "data:image/png;base64," + cm_base64
+    });
+  }
+  updateTMap() {
+    eel.get_brainsprite_tmap()((stat_map_base64: string) => {
       const stat_map = document.getElementById("overlayImg") as HTMLImageElement;
-      bg.src = "data:image/png;base64," + (bs_json.bg_base64)
-      cm.src = "data:image/png;base64," + (bs_json.cm_base64)
-      stat_map.src = "data:image/png;base64," + (bs_json.stat_map_base64)
-      this.brainsprite_json = bs_json;
-      // This is a hack around a proper event that images are loaded:
-      setTimeout(() => this.brainsprite_object = brainsprite(bs_json.params), 100);
+      stat_map.src = "data:image/png;base64," + stat_map_base64
+    });
+  }
+  updateBrainsprite() {
+    eel.get_brainsprite_params()((params: BrainSpriteParams) => {
+      setTimeout(() => this.brainsprite_object = brainsprite(params), 100);
     });
 
   }
@@ -86,13 +90,22 @@ class BSCuts extends Component<IBSCutsProps, {}> {
       this.props.tThreshold !== prevProps.tThreshold) {
       this.contrast = this.props.contrast;
       this.tThreshold = this.props.tThreshold;
-      this.updateBrainsprite();
+      eel.update_contrast(this.contrast, this.tThreshold)((success: string) => {
+        if (success === "Updated") {
+          this.updateTMap();
+          this.updateCMap();
+          this.updateBrainsprite();
+        }
+      });
     } else if (this.props.subject !== prevProps.subject ||
                   this.props.task !== prevProps.task) {
       this.subject = this.props.subject;
       this.task = this.props.task;
       eel.update_glm(this.subject, this.task)((success: string) => {
         if (success === "Loaded") {
+          this.updateAnat();
+          this.updateTMap();
+          this.updateCMap();
           this.updateBrainsprite();
         }
       });
