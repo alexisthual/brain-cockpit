@@ -78,7 +78,7 @@ const InfoPanel = ({
   const SurfaceMapTypeSelect = Select.ofType<SurfaceMapTypeString>();
 
   return (
-    <div id="header">
+    <div className="info-panel">
       {meshType ? (
         <>
           <div className="header-item-label">Mesh type</div>

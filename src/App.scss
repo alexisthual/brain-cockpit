@@ -97,10 +97,17 @@
   }
 }
 
-#scene {
-  min-height: 0px;
+#scene,
+#scenes,
+.scene {
+  position: relative;
+  min-height: 1px;
   background-color: $light-gray5;
   overflow: hidden;
+}
+
+.scene {
+  height: 100%;
 }
 
 #fingerprint {

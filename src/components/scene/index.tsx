@@ -18,6 +18,7 @@ interface ISceneProps {
   regressedCoordinates?: number[];
   meshType: MeshType;
   hemi: HemisphereSide;
+  uniqueKey: string;
 }
 
 class Scene extends Component<ISceneProps, {}> {
@@ -38,6 +39,7 @@ class Scene extends Component<ISceneProps, {}> {
   static defaultProps = {
     meshType: MeshType.PIAL,
     hemi: HemisphereSide.LEFT,
+    uniqueKey: Math.trunc(1e6 * Math.random()).toString(),
   };
 
   constructor(props: ISceneProps) {
@@ -103,23 +105,23 @@ class Scene extends Component<ISceneProps, {}> {
     }
   }
 
-  static initialiseMesh(object: any, wireframe: boolean = false) {
+  static initialiseMesh(
+    object: any,
+    wireframe: boolean = false,
+    surfaceMap: number[] | undefined = undefined
+  ) {
     // Set a random color to each vertex
-    const count = object.geometry.attributes.position.count;
-    object.geometry.setAttribute(
-      "color",
-      new THREE.BufferAttribute(new Float32Array(count * 3), 3)
-    );
-
-    const color = new THREE.Color();
-    let colors = object.geometry.attributes.color;
-    for (let i = 0; i < count; i++) {
-      color.setRGB(
-        0.5 + 0.2 * Math.random(),
-        0.5 + 0.2 * Math.random(),
-        0.5 + 0.2 * Math.random()
+    if (object.geometry.attributes.color === undefined) {
+      const count = object.geometry.attributes.position.count;
+      object.geometry.setAttribute(
+        "color",
+        new THREE.BufferAttribute(new Float32Array(count * 3), 3)
       );
-      colors.setXYZ(i, color.r, color.g, color.b);
+    }
+    if (surfaceMap) {
+      object = Scene.coloriseFromSurfaceMap(object, surfaceMap);
+    } else {
+      object = Scene.coloriseFromRandomMap(object);
     }
 
     const material = new THREE.MeshPhongMaterial({
@@ -143,13 +145,55 @@ class Scene extends Component<ISceneProps, {}> {
     return mesh;
   }
 
+  static coloriseFromRandomMap(object: any) {
+    const color = new THREE.Color();
+    const count = object.geometry.attributes.position.count;
+    const colors = object.geometry.attributes.color;
+
+    for (let i = 0; i < count; i++) {
+      color.setRGB(
+        0.5 + 0.2 * Math.random(),
+        0.5 + 0.2 * Math.random(),
+        0.5 + 0.2 * Math.random()
+      );
+      colors.setXYZ(i, color.r, color.g, color.b);
+    }
+
+    return object;
+  }
+
+  static coloriseFromSurfaceMap(object: any, surfaceMap: number[]) {
+    const color = new THREE.Color();
+    const count = object.geometry.attributes.position.count;
+    const colors = object.geometry.attributes.color;
+    const min = Math.min(...surfaceMap);
+    const max = Math.max(...surfaceMap);
+    const light = 0.2;
+    for (let i = 0; i < count; i++) {
+      const a = (surfaceMap[i] - min) / (max - min);
+      color.setRGB(
+        light + (1 - light) * Math.exp(-0.5 * ((a - 0.75) / 0.15) ** 2),
+        light + (1 - light) * Math.exp(-0.5 * ((a - 0.5) / 0.15) ** 2),
+        light + (1 - light) * Math.exp(-0.5 * ((a - 0.25) / 0.15) ** 2)
+      );
+      colors.setXYZ(i, color.r, color.g, color.b);
+    }
+    object.geometry.attributes.color.needsUpdate = true;
+
+    return object;
+  }
+
   async componentDidMount() {
     // Listen to events
     window.addEventListener("resize", this.handleWindowResize);
 
     // Load exteral meshes
     let object = await Scene.loadMesh(this.props.meshType, this.props.hemi);
-    object = Scene.initialiseMesh(object, this.props.wireframe);
+    object = Scene.initialiseMesh(
+      object,
+      this.props.wireframe,
+      this.props.surfaceMap
+    );
     this.setupScene(object as THREE.Object3D);
   }
 
@@ -201,22 +245,10 @@ class Scene extends Component<ISceneProps, {}> {
         this.props.surfaceMap.length ===
         this.object.geometry.attributes.position.count
       ) {
-        const color = new THREE.Color();
-        const count = this.object.geometry.attributes.position.count;
-        const colors = this.object.geometry.attributes.color;
-        const min = Math.min(...this.props.surfaceMap);
-        const max = Math.max(...this.props.surfaceMap);
-        const light = 0.2;
-        for (let i = 0; i < count; i++) {
-          const a = (this.props.surfaceMap[i] - min) / (max - min);
-          color.setRGB(
-            light + (1 - light) * Math.exp(-0.5 * ((a - 0.75) / 0.15) ** 2),
-            light + (1 - light) * Math.exp(-0.5 * ((a - 0.5) / 0.15) ** 2),
-            light + (1 - light) * Math.exp(-0.5 * ((a - 0.25) / 0.15) ** 2)
-          );
-          colors.setXYZ(i, color.r, color.g, color.b);
-        }
-        this.object.geometry.attributes.color.needsUpdate = true;
+        this.object = Scene.coloriseFromSurfaceMap(
+          this.object,
+          this.props.surfaceMap
+        );
       }
     }
 
@@ -280,7 +312,7 @@ class Scene extends Component<ISceneProps, {}> {
     camera.add(ambLight);
 
     // Add hotspot to track selected vertex
-    this.hotspot = document.getElementById("hotspot");
+    this.hotspot = document.getElementById(`hotspot-${this.props.uniqueKey}`);
 
     // Add sphere with coordinates coming from a regression model
     const geometry = new THREE.SphereGeometry(2);
@@ -358,8 +390,6 @@ class Scene extends Component<ISceneProps, {}> {
     this.controls.target.set(center.x, center.y, center.z);
   }
 
-  computeBoundingBox() {}
-
   onMouseClick(event: MouseEvent) {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
@@ -413,7 +443,7 @@ class Scene extends Component<ISceneProps, {}> {
   }
 
   start() {
-    window.addEventListener("click", this.onMouseClick, false);
+    this.container.addEventListener("click", this.onMouseClick, false);
 
     if (!this.frameId) {
       this.frameId = requestAnimationFrame(this.animate);
@@ -520,7 +550,8 @@ class Scene extends Component<ISceneProps, {}> {
         }}
       >
         <div
-          id="hotspot"
+          id={`hotspot-${this.props.uniqueKey}`}
+          className="hotspot"
           style={{
             visibility:
               this.props.selectedVoxel !== undefined ? "visible" : "hidden",

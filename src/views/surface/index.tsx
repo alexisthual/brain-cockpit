@@ -1,9 +1,11 @@
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import React, { useEffect, useReducer, useState } from "react";
+import SplitPane from "react-split-pane";
 
 import ContrastFingerprint from "components/contrastFingerprint";
 import InfoPanel from "components/infoPanel";
 import PanelButtons from "components/infoPanel/buttons";
+import PanesButtons from "./panesButtons";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
 import {
@@ -38,6 +40,7 @@ const SurfaceExplorer = () => {
   const [wireframe, setWireframe] = useState(false);
   const [meshType, setMeshType] = useState(MeshType.PIAL);
   const [hemi, setHemi] = useState(HemisphereSide.LEFT);
+  const [nPanes, setNPanes] = useState(1);
 
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
@@ -227,50 +230,64 @@ const SurfaceExplorer = () => {
         voxelIndex !== undefined ? `${orientation}-orientation` : ""
       }`}
     >
-      <InfoPanel
-        subjectLabels={subjectLabels}
-        subject={subject.label}
-        contrast={contrast.label}
-        contrastIndex={contrast.index}
-        voxelIndex={voxelIndex}
-        subjectChangeCallback={(subjectIndex: number) => {
-          setSubject({ payload: subjectIndex });
-        }}
-        meanSurfaceMap={meanContrastMap}
-        meanChangeCallback={() => {
-          setMeanContrastMap(!meanContrastMap);
-        }}
-        meshType={meshType}
-        meshTypeLabels={Object.keys(MeshType) as MeshTypeString[]}
-        meshTypeChangeCallback={(meshType: MeshType) => {
-          setMeshType(meshType);
-        }}
-        hemi={hemi}
-        hemiLabels={Object.keys(HemisphereSide) as HemisphereSideString[]}
-        hemiChangeCallback={(hemi: HemisphereSide) => {
-          setHemi(hemi);
-        }}
-      />
-      {loadingContrastMap ? (
-        <TextualLoader text="Loading surface map..." />
-      ) : null}
-      <div id="scene">
-        <ParentSize className="scene-container" debounceTime={10}>
-          {({ width: sceneWidth, height: sceneHeight }) => (
-            <Scene
-              clickedVoxelCallback={(voxelIndex: number) => {
-                setVoxelIndex(voxelIndex);
-              }}
-              selectedVoxel={voxelIndex}
-              surfaceMap={contrastMap}
-              meshType={meshType}
-              hemi={hemi}
-              wireframe={wireframe}
-              width={sceneWidth}
-              height={sceneHeight}
-            />
-          )}
-        </ParentSize>
+      <div id="scenes">
+        <PanesButtons
+          addPaneCallback={() => {
+            setNPanes(nPanes + 1);
+          }}
+        />
+        <InfoPanel
+          subjectLabels={subjectLabels}
+          subject={subject.label}
+          contrast={contrast.label}
+          contrastIndex={contrast.index}
+          voxelIndex={voxelIndex}
+          subjectChangeCallback={(subjectIndex: number) => {
+            setSubject({ payload: subjectIndex });
+          }}
+          meanSurfaceMap={meanContrastMap}
+          meanChangeCallback={() => {
+            setMeanContrastMap(!meanContrastMap);
+          }}
+          meshType={meshType}
+          meshTypeLabels={Object.keys(MeshType) as MeshTypeString[]}
+          meshTypeChangeCallback={(meshType: MeshType) => {
+            setMeshType(meshType);
+          }}
+          hemi={hemi}
+          hemiLabels={Object.keys(HemisphereSide) as HemisphereSideString[]}
+          hemiChangeCallback={(hemi: HemisphereSide) => {
+            setHemi(hemi);
+          }}
+        />
+        <SplitPane split="vertical">
+          {[...Array(nPanes).keys()].map((i: number) => {
+            return (
+              <div className="scene" key={`scene-${i}`}>
+                {loadingContrastMap ? (
+                  <TextualLoader text="Loading surface map..." />
+                ) : null}
+                <ParentSize className="scene-container" debounceTime={10}>
+                  {({ width: sceneWidth, height: sceneHeight }) => (
+                    <Scene
+                      clickedVoxelCallback={(voxelIndex: number) => {
+                        setVoxelIndex(voxelIndex);
+                      }}
+                      selectedVoxel={voxelIndex}
+                      surfaceMap={contrastMap}
+                      meshType={meshType}
+                      hemi={hemi}
+                      wireframe={wireframe}
+                      width={sceneWidth}
+                      height={sceneHeight}
+                      uniqueKey={i.toString()}
+                    />
+                  )}
+                </ParentSize>
+              </div>
+            );
+          })}
+        </SplitPane>
       </div>
       {voxelIndex !== undefined ? (
         <div id="fingerprint">
