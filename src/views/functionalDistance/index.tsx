@@ -280,7 +280,7 @@ const FunctionalDistanceExplorer = () => {
               clickedVoxelCallback={(voxelIndex: number) => {
                 setVoxelIndex(voxelIndex);
               }}
-              selectedVoxel={voxelIndex}
+              voxelIndex={voxelIndex}
               surfaceMap={surfaceMap}
               wireframe={wireframe}
               width={sceneWidth}

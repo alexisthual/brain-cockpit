@@ -130,7 +130,7 @@ const RegressionExplorer = () => {
               clickedVoxelCallback={(voxelIndex: number) => {
                 setVoxelIndex(voxelIndex);
               }}
-              selectedVoxel={voxelIndex}
+              voxelIndex={voxelIndex}
               surfaceMap={errorMap}
               wireframe={wireframe}
               regressedCoordinates={regressedCoordinates}

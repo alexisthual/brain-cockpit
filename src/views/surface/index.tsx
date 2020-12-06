@@ -273,7 +273,7 @@ const SurfaceExplorer = () => {
                       clickedVoxelCallback={(voxelIndex: number) => {
                         setVoxelIndex(voxelIndex);
                       }}
-                      selectedVoxel={voxelIndex}
+                      voxelIndex={voxelIndex}
                       surfaceMap={contrastMap}
                       meshType={meshType}
                       hemi={hemi}

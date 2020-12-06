@@ -13,7 +13,7 @@ interface ISceneProps {
   surfaceMap?: number[];
   width: number;
   height: number;
-  selectedVoxel?: number;
+  voxelIndex?: number;
   wireframe?: boolean;
   regressedCoordinates?: number[];
   meshType: MeshType;
@@ -30,8 +30,7 @@ class Scene extends Component<ISceneProps, {}> {
   spotLight?: any;
   controls?: any;
   frameId?: any;
-  selectedVertexIndex?: number;
-  selectedVertexPosition: THREE.Vector3;
+  voxelPosition: THREE.Vector3;
   hotspot: any;
   regressedSphere?: THREE.Mesh;
   gridHelper?: THREE.GridHelper;
@@ -45,7 +44,7 @@ class Scene extends Component<ISceneProps, {}> {
   constructor(props: ISceneProps) {
     super(props);
     this.state = {};
-    this.selectedVertexPosition = new THREE.Vector3();
+    this.voxelPosition = new THREE.Vector3();
     this.start = this.start.bind(this);
     this.animate = this.animate.bind(this);
     this.renderScene = this.renderScene.bind(this);
@@ -233,6 +232,11 @@ class Scene extends Component<ISceneProps, {}> {
 
       // Update camera and controls focus
       this.focusOnMainObject();
+    }
+
+    // Update hotspot if voxelIndex changed
+    if (prevProps.voxelIndex !== this.props.voxelIndex) {
+      this.updateHotspot();
     }
 
     // Update object color to display surface map
@@ -426,17 +430,6 @@ class Scene extends Component<ISceneProps, {}> {
         }
       }
 
-      // Update selected vertex position
-      const vertex = new THREE.Vector3();
-      vertex.fromBufferAttribute(
-        this.object.geometry.getAttribute("position"),
-        selectedVertexIndex
-      );
-      this.object.localToWorld(vertex);
-      this.selectedVertexPosition.copy(vertex);
-
-      // Update selectedFaceIndex
-      this.selectedVertexIndex = selectedVertexIndex;
       // Callback
       this.props.clickedVoxelCallback(selectedVertexIndex);
     }
@@ -456,31 +449,42 @@ class Scene extends Component<ISceneProps, {}> {
   }
 
   updateHotspot() {
-    // Update opacity
-    if (this.selectedVertexIndex !== undefined) {
-      const meshDistance = this.camera.position.distanceTo(
-        this.object.position
+    if (this.props.voxelIndex) {
+      // Compute selected voxel's position
+      const vertex = new THREE.Vector3();
+      vertex.fromBufferAttribute(
+        this.object.geometry.getAttribute("position"),
+        this.props.voxelIndex
       );
-      const spriteDistance = this.camera.position.distanceTo(
-        this.selectedVertexPosition
-      );
-      this.hotspot.style.opacity = spriteDistance > meshDistance ? 0.25 : 1;
-    } else {
-      this.hotspot.style.opacity = 0;
-    }
+      this.object.localToWorld(vertex);
+      this.voxelPosition.copy(vertex);
 
-    // Update position
-    const vector = this.selectedVertexPosition.clone();
-    const canvas = this.renderer.domElement;
-    vector.project(this.camera);
-    vector.x = Math.round(
-      (0.5 + vector.x / 2) * (canvas.width / window.devicePixelRatio)
-    );
-    vector.y = Math.round(
-      (0.5 - vector.y / 2) * (canvas.height / window.devicePixelRatio)
-    );
-    this.hotspot.style.top = `${vector.y}px`;
-    this.hotspot.style.left = `${vector.x}px`;
+      // Update opacity
+      if (this.props.voxelIndex !== undefined) {
+        const meshDistance = this.camera.position.distanceTo(
+          this.object.position
+        );
+        const spriteDistance = this.camera.position.distanceTo(
+          this.voxelPosition
+        );
+        this.hotspot.style.opacity = spriteDistance > meshDistance ? 0.25 : 1;
+      } else {
+        this.hotspot.style.opacity = 0;
+      }
+
+      // Update hotspot position
+      const vector = this.voxelPosition.clone();
+      const canvas = this.renderer.domElement;
+      vector.project(this.camera);
+      vector.x = Math.round(
+        (0.5 + vector.x / 2) * (canvas.width / window.devicePixelRatio)
+      );
+      vector.y = Math.round(
+        (0.5 - vector.y / 2) * (canvas.height / window.devicePixelRatio)
+      );
+      this.hotspot.style.top = `${vector.y}px`;
+      this.hotspot.style.left = `${vector.x}px`;
+    }
   }
 
   animate() {
@@ -554,16 +558,16 @@ class Scene extends Component<ISceneProps, {}> {
           className="hotspot"
           style={{
             visibility:
-              this.props.selectedVoxel !== undefined ? "visible" : "hidden",
+              this.props.voxelIndex !== undefined ? "visible" : "hidden",
           }}
         >
           <p>
-            <strong>Voxel {this.selectedVertexIndex}</strong>
+            <strong>Voxel {this.props.voxelIndex}</strong>
           </p>
           <p>
-            ({this.selectedVertexPosition.x.toFixed(1)},{" "}
-            {this.selectedVertexPosition.y.toFixed(1)},{" "}
-            {this.selectedVertexPosition.z.toFixed(1)})
+            ({this.voxelPosition.x.toFixed(1)},{" "}
+            {this.voxelPosition.y.toFixed(1)}, {this.voxelPosition.z.toFixed(1)}
+            )
           </p>
         </div>
       </div>
