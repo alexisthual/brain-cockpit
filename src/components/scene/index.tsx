@@ -162,6 +162,7 @@ class Scene extends Component<ISceneProps, {}> {
   }
 
   static coloriseFromSurfaceMap(object: any, surfaceMap: number[]) {
+    console.log("coloriseFromSurfaceMap");
     const color = new THREE.Color();
     const count = object.geometry.attributes.position.count;
     const colors = object.geometry.attributes.color;
@@ -253,6 +254,8 @@ class Scene extends Component<ISceneProps, {}> {
           this.object,
           this.props.surfaceMap
         );
+      } else {
+        console.warn("surfacemap and current mesh have different lengths");
       }
     }
 
