@@ -40,7 +40,7 @@ conda env update --file environment.yml
 This command generates `fsaverage` meshes from `nilearn` and stores them in `./public/assets`
 
 ```
-python3 gifty_to_gltf.py
+python utils/gifty_to_gltf.py
 ```
 
 ### Download IBC contrasts
@@ -67,7 +67,7 @@ and edit it such that the variable `DATA_PATH` now points to your unzipped folde
 In separate prompts:
 
 - start the frontend with `yarn start`
-- start the backend with `python3 main.py` (using your `brain-cockpit` conda env)
+- start the backend with `python main.py` (using your `brain-cockpit` conda env)
 
 ## Contributing
 
