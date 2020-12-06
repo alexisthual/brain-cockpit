@@ -20,6 +20,7 @@
     "react-plotly.js": "^2.5.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.1",
+    "react-split-pane": "^2.0.3",
     "sass": "^1.29.0",
     "sass-loader": "^10.1.0",
     "three": "^0.122.0",
