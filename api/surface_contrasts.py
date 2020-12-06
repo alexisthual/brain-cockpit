@@ -136,6 +136,8 @@ def load_fmri(df, subjects, unique_contrasts):
 df = pd.DataFrame()
 subjects, contrasts, n_contrasts_by_task = [], [], 0
 n_subjects, n_contrasts = 0, 0
+X = np.empty((0, 0))
+n_voxels = 0
 
 if DATA_PATH is not None:
     ## Load selected subjects and contrasts
