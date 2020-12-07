@@ -109,6 +109,9 @@ const FunctionalDistanceExplorer = () => {
         keyCode: 85, // U
         callback: () => {
           setMeanSurfaceMap((prevMeanSurfaceMap) => !prevMeanSurfaceMap);
+          setMeanFunctionalDistance(
+            (prevMeanFunctionalDistance) => !prevMeanFunctionalDistance
+          );
         },
       },
       {
@@ -216,9 +219,12 @@ const FunctionalDistanceExplorer = () => {
 
   // Update functional distances when voxelIndex or subject change
   useEffect(() => {
+    console.log("useeffect");
     if (voxelIndex !== undefined) {
+      console.log("voxel ok");
       setLoadingFunctionalDistances(true);
       if (meanFunctionalDistance) {
+        console.log("meanFunctionalDistance true");
         eel.get_mean_across_subjects_mean_functional_distance(voxelIndex)(
           (distances: number[]) => {
             setFunctionalDistances(distances);
@@ -226,6 +232,7 @@ const FunctionalDistanceExplorer = () => {
           }
         );
       } else if (subject.index !== undefined) {
+        console.log("meanFunctionalDistance false and subject.index ok");
         eel.get_mean_functional_distance(
           subject.index,
           voxelIndex
@@ -234,6 +241,7 @@ const FunctionalDistanceExplorer = () => {
           setLoadingFunctionalDistances(false);
         });
       } else {
+        console.log("meanFunctionalDistance false and subject.index not ok");
         setLoadingFunctionalDistances(false);
       }
     }
@@ -255,6 +263,7 @@ const FunctionalDistanceExplorer = () => {
         meanSurfaceMap={meanSurfaceMap}
         meanChangeCallback={() => {
           setMeanSurfaceMap(!meanSurfaceMap);
+          setMeanFunctionalDistance(!meanFunctionalDistance);
         }}
         voxelIndex={voxelIndex}
         metric={metric}
@@ -312,7 +321,6 @@ const FunctionalDistanceExplorer = () => {
             meanFingerprint={meanFingerprint}
             meanChangeCallback={() => {
               setMeanFingerprint(!meanFingerprint);
-              setMeanFunctionalDistance(!meanFunctionalDistance);
             }}
             clickCloseCallback={() => {
               setVoxelIndex(undefined);
