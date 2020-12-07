@@ -1,11 +1,16 @@
-import React, { Component, RefObject, createRef } from "react";
+import React, { Component } from "react";
 
 import { eel } from "App";
 
-import * as d3 from "d3";
 import Plot from "react-plotly.js";
 
 import "./style.scss";
+
+enum Cuts {
+  Sagital,
+  Coronal,
+  Horizontal,
+}
 
 interface ISlicesProps {
   contrast: string;
@@ -23,123 +28,6 @@ interface ISlicesState {
   index_sagital: number;
   index_coronal: number;
   index_horizontal: number;
-}
-
-interface ISliceProps {
-  clickedVoxelCallback?: any;
-  data: number[][];
-  id: string;
-}
-
-class Slice extends Component<ISliceProps, {}> {
-  data: number[][];
-  id: string;
-  svgRef: RefObject<SVGSVGElement>;
-  // This is poorly typed. We want : ((number * nuber) -> unit) option
-  clickedVoxelCallback?: any;
-
-  constructor(props: ISliceProps) {
-    super(props);
-    this.data = this.props.data;
-    this.id = this.props.id;
-    this.clickedVoxelCallback = this.props.clickedVoxelCallback;
-    this.svgRef = createRef<SVGSVGElement>();
-    this.onMouseClick = this.onMouseClick.bind(this);
-  }
-
-  componentDidMount() {
-    this.renderHeatmap(this.props.data);
-  }
-
-  renderHeatmap(data: number[][]) {
-    if (this.svgRef.current) {
-      const tic = performance.now();
-      // Surely we can do better?
-      this.svgRef.current.innerHTML = "";
-      this.svgRef.current.addEventListener("click", this.onMouseClick, false);
-      const height = this.svgRef.current.clientHeight;
-      const width = this.svgRef.current.clientWidth;
-      const size = Math.min(width, height);
-      let range_min = Number.MAX_VALUE;
-      let range_max = Number.MIN_VALUE;
-      for (let i = 0; i < data.length; i++) {
-        for (let j = 0; j < data[i].length; j++) {
-          if (data[i][j] < range_min) {
-            range_min = data[i][j];
-          }
-          if (data[i][j] > range_max) {
-            range_max = data[i][j];
-          }
-        }
-      }
-      const toc = performance.now();
-      let x = d3.scale
-        .linear()
-        .range([0, size]) // 200 should change for the width/height
-        .domain([0, data[0].length]);
-
-      let y = d3.scale.linear().range([0, size]).domain([0, data.length]);
-
-      let colorScale = d3.scale
-        .linear<string>()
-        .domain([range_min, range_max])
-        .range(["#000000", "#ffffff"]);
-
-      let row = d3
-        .select(this.svgRef.current)
-        .selectAll(".row")
-        .data(data)
-        .enter()
-        .append("svg:g")
-        .attr("class", "row");
-
-      row
-        .selectAll(".cell")
-        .data(function (d, i) {
-          return d.map(function (a: number) {
-            return { value: a, row: i };
-          });
-        })
-        .enter()
-        .append("svg:rect")
-        .attr("class", "cell")
-        .attr("y", (d, i) => size - x(i))
-        // @ts-ignore but I don't know what I can do here...?
-        .attr("x", (d, i) => y(d.row))
-        // @ts-ignore but I don't know what I can do here...?
-        .attr("data-slicex", (d, i) => d.row)
-        .attr("data-slicey", (d, i) => i)
-        .attr("width", x(1))
-        .attr("height", y(1))
-        // @ts-ignore
-        .style("fill", function (d) {
-          return colorScale(d.value);
-        });
-      console.log("Delta from call to d3:", toc - tic);
-      console.log("d3 render time", performance.now() - toc);
-    }
-  }
-
-  componentDidUpdate(prevProps: ISliceProps) {
-    this.renderHeatmap(this.props.data);
-  }
-
-  onMouseClick(event: MouseEvent) {
-    if (event.target) {
-      const data = (event.target as HTMLElement).dataset;
-      const slice_x = data.slicex;
-      const slice_y = data.slicey;
-      if (slice_x && slice_y) {
-        this.clickedVoxelCallback(parseInt(slice_x), parseInt(slice_y));
-      } else {
-        console.warn("Where did the user click then?", event.target);
-      }
-    }
-  }
-
-  render() {
-    return <svg ref={this.svgRef} id={this.id}></svg>;
-  }
 }
 
 class Slices extends Component<ISlicesProps, ISlicesState> {
@@ -171,6 +59,7 @@ class Slices extends Component<ISlicesProps, ISlicesState> {
     this.defaultLayout = {
       margin: { l: 0, r: 0, b: 0, t: 0 },
       yaxis: { scaleanchor: "x", scaleratio: 1 },
+      plot_bgcolor: "#000000",
     };
   }
 
@@ -203,11 +92,6 @@ class Slices extends Component<ISlicesProps, ISlicesState> {
     eel.get_slice_coronal(slice)((slices_values: number[][]) => {
       const toc = performance.now();
       this.setState({ coronal: slices_values });
-      console.log("Delta to get data from python:", toc - tic);
-      console.log(
-        "Delta to setState (and presumably render?) id:",
-        performance.now() - toc
-      );
     });
   }
 
@@ -223,9 +107,33 @@ class Slices extends Component<ISlicesProps, ISlicesState> {
     });
   }
   update_all() {
-    this.update_coronal(this.slices[0]);
-    this.update_sagital(this.slices[1]);
+    this.update_sagital(this.slices[0]);
+    this.update_coronal(this.slices[1]);
     this.update_horizontal(this.slices[2]);
+  }
+
+  handle_click(who: Cuts, event: any) {
+    const [clicked_y, clicked_x] = event.points[0].pointIndex;
+    if (who === Cuts.Sagital) {
+      console.log("sagital");
+      this.slices[1] = clicked_x;
+      this.slices[2] = clicked_y;
+      this.update_coronal(clicked_x);
+      this.update_horizontal(clicked_y);
+    }
+    if (who === Cuts.Coronal) {
+      this.slices[0] = clicked_x;
+      this.slices[2] = clicked_y;
+      this.update_sagital(clicked_x);
+      this.update_horizontal(clicked_y);
+    }
+    if (who === Cuts.Horizontal) {
+      this.slices[0] = clicked_x;
+      this.slices[1] = clicked_y;
+      this.update_sagital(clicked_x);
+      this.update_coronal(clicked_y);
+    }
+    this.update_all();
   }
 
   componentDidUpdate(prevProps: ISlicesProps) {
@@ -271,18 +179,6 @@ class Slices extends Component<ISlicesProps, ISlicesState> {
       });
     }
   }
-  //<Slice id="sagital"
-  //data={this.state.sagital}
-  //clickedVoxelCallback={(x : number, y:number) => { this.update_coronal(x) ; this.update_horizontal(y) }}
-  ///>
-  //<Slice id="coronal"
-  //data={this.state.coronal}
-  //clickedVoxelCallback={(x : number, y:number) => { this.update_sagital(x) ; this.update_horizontal(y) }}
-  ///>
-  //<Slice id="horizontal"
-  //data={this.state.horizontal}
-  //clickedVoxelCallback={(x : number, y:number) => { this.update_coronal(x) ; this.update_sagital(y) }}
-  ///>
 
   render() {
     return (
@@ -290,15 +186,17 @@ class Slices extends Component<ISlicesProps, ISlicesState> {
         <Plot
           data={this.plotlyDataFromData(this.state.sagital) as any}
           layout={this.defaultLayout as any}
+          onClick={(e) => this.handle_click(Cuts.Sagital, e)}
         />
         <Plot
           data={this.plotlyDataFromData(this.state.coronal) as any}
           layout={this.defaultLayout as any}
+          onClick={(e) => this.handle_click(Cuts.Coronal, e)}
         />
         <Plot
           data={this.plotlyDataFromData(this.state.horizontal) as any}
           layout={this.defaultLayout as any}
-          onClick={(e) => console.log(e)}
+          onClick={(e) => this.handle_click(Cuts.Horizontal, e)}
         />
       </>
     );
