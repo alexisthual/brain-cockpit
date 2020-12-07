@@ -162,7 +162,6 @@ class Scene extends Component<ISceneProps, {}> {
   }
 
   static coloriseFromSurfaceMap(object: any, surfaceMap: number[]) {
-    console.log("coloriseFromSurfaceMap");
     const color = new THREE.Color();
     const count = object.geometry.attributes.position.count;
     const colors = object.geometry.attributes.color;
