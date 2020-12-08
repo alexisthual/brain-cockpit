@@ -127,13 +127,13 @@ const SurfaceExplorer = () => {
       {
         keyCode: 73, // K
         callback: () => {
-          setSubject({ type: "decrement" });
+          setSubject({ type: "increment" });
         },
       },
       {
         keyCode: 75, // I
         callback: () => {
-          setSubject({ type: "increment" });
+          setSubject({ type: "decrement" });
         },
       },
       {
