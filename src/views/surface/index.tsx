@@ -109,49 +109,65 @@ const SurfaceExplorer = () => {
     };
 
     fetchAllData();
+  }, []);
 
+  useEffect(() => {
     // Set keybinding
     const keyPressEvents = [
       {
         keyCode: 76, // L
         callback: () => {
-          setContrast({ type: "increment" });
+          if (sharedState) {
+            setContrast({ type: "increment" });
+          }
         },
       },
       {
         keyCode: 74, // J
         callback: () => {
-          setContrast({ type: "decrement" });
+          if (sharedState) {
+            setContrast({ type: "decrement" });
+          }
         },
       },
       {
         keyCode: 73, // K
         callback: () => {
-          setSubject({ type: "increment" });
+          if (sharedState && !meanContrastMap) {
+            setSubject({ type: "increment" });
+          }
         },
       },
       {
         keyCode: 75, // I
         callback: () => {
-          setSubject({ type: "decrement" });
+          if (sharedState && !meanContrastMap) {
+            setSubject({ type: "decrement" });
+          }
         },
       },
       {
         keyCode: 85, // U
         callback: () => {
-          setMeanContrastMap((prevMeanContrastMap) => !prevMeanContrastMap);
+          if (sharedState) {
+            setMeanContrastMap((prevMeanContrastMap) => !prevMeanContrastMap);
+          }
         },
       },
       {
         keyCode: 79, // O
         callback: () => {
-          setMeanFingerprint((prevMeanFingerprint) => !prevMeanFingerprint);
+          if (sharedState) {
+            setMeanFingerprint((prevMeanFingerprint) => !prevMeanFingerprint);
+          }
         },
       },
       {
         keyCode: 87, // W
         callback: () => {
-          setWireframe((prevWireframe) => !prevWireframe);
+          if (sharedState) {
+            setWireframe((prevWireframe) => !prevWireframe);
+          }
         },
       },
     ];
@@ -172,7 +188,7 @@ const SurfaceExplorer = () => {
         });
       });
     };
-  }, []);
+  }, [sharedState, meanContrastMap]);
 
   // Update contrast map when subject or contrast change
   useEffect(() => {
@@ -280,8 +296,8 @@ const SurfaceExplorer = () => {
                 sharedState={sharedState}
                 sharedSubject={subject}
                 sharedContrast={contrast}
-                sharedContrastMap={contrastMap}
-                sharedMeanContrastMap={meanContrastMap}
+                sharedSurfaceMap={contrastMap}
+                sharedMeanSurfaceMap={meanContrastMap}
                 sharedVoxelIndex={voxelIndex}
                 setSharedVoxelIndex={(newVoxelIndex: number) => {
                   setVoxelIndex(newVoxelIndex);
