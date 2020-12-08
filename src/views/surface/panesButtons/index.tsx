@@ -5,12 +5,24 @@ import "./style.scss";
 
 interface Props {
   addPaneCallback: () => void;
+  sharedState: boolean;
+  sharedStateCallback: () => void;
 }
 
-const PanesButtons = ({ addPaneCallback = () => {} }: Props) => {
+const PanesButtons = ({
+  addPaneCallback = () => {},
+  sharedState,
+  sharedStateCallback = () => {},
+}: Props) => {
   return (
     <div className="panes-buttons">
-      <Button icon="plus" onClick={addPaneCallback} />
+      <Button
+        active={sharedState}
+        icon={sharedState ? "lock" : "unlock"}
+        onClick={sharedStateCallback}
+        outlined
+      />
+      <Button icon="plus" onClick={addPaneCallback} outlined />
     </div>
   );
 };

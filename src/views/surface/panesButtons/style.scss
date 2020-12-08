@@ -3,4 +3,8 @@
   z-index: 2;
   bottom: 15px;
   right: 15px;
+
+  & > *:not(:last-child) {
+    margin-right: 5px;
+  }
 }

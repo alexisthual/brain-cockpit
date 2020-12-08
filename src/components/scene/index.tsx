@@ -18,7 +18,7 @@ interface ISceneProps {
   regressedCoordinates?: number[];
   meshType: MeshType;
   hemi: HemisphereSide;
-  uniqueKey: string;
+  uniqueKey?: string;
 }
 
 class Scene extends Component<ISceneProps, {}> {
@@ -34,16 +34,19 @@ class Scene extends Component<ISceneProps, {}> {
   hotspot: any;
   regressedSphere?: THREE.Mesh;
   gridHelper?: THREE.GridHelper;
+  uniqueKey: string;
 
   static defaultProps = {
     meshType: MeshType.PIAL,
     hemi: HemisphereSide.LEFT,
-    uniqueKey: Math.trunc(1e6 * Math.random()).toString(),
   };
 
   constructor(props: ISceneProps) {
     super(props);
     this.state = {};
+
+    this.uniqueKey =
+      this.props.uniqueKey ?? Math.trunc(1e6 * Math.random()).toString();
     this.voxelPosition = new THREE.Vector3();
     this.start = this.start.bind(this);
     this.animate = this.animate.bind(this);
@@ -318,7 +321,7 @@ class Scene extends Component<ISceneProps, {}> {
     camera.add(ambLight);
 
     // Add hotspot to track selected vertex
-    this.hotspot = document.getElementById(`hotspot-${this.props.uniqueKey}`);
+    this.hotspot = document.getElementById(`hotspot-${this.uniqueKey}`);
 
     // Add sphere with coordinates coming from a regression model
     const geometry = new THREE.SphereGeometry(2);
@@ -556,7 +559,7 @@ class Scene extends Component<ISceneProps, {}> {
         }}
       >
         <div
-          id={`hotspot-${this.props.uniqueKey}`}
+          id={`hotspot-${this.uniqueKey}`}
           className="hotspot"
           style={{
             visibility:

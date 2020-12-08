@@ -2,11 +2,12 @@ import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import React, { useEffect, useReducer, useState } from "react";
 import SplitPane from "react-split-pane";
 
+import { eel } from "App";
 import ContrastFingerprint from "components/contrastFingerprint";
 import InfoPanel from "components/infoPanel";
 import PanelButtons from "components/infoPanel/buttons";
 import PanesButtons from "./panesButtons";
-import Scene from "components/scene";
+import ScenePane from "components/scenePane";
 import TextualLoader from "components/textualLoader";
 import {
   Contrast,
@@ -17,7 +18,6 @@ import {
   Orientation,
   Subject,
 } from "constants/index";
-import { eel } from "App";
 
 type ActionLabel = {
   type?: "increment" | "decrement";
@@ -41,6 +41,7 @@ const SurfaceExplorer = () => {
   const [meshType, setMeshType] = useState(MeshType.PIAL);
   const [hemi, setHemi] = useState(HemisphereSide.LEFT);
   const [nPanes, setNPanes] = useState(1);
+  const [sharedState, setSharedState] = useState(true);
 
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
@@ -84,7 +85,7 @@ const SurfaceExplorer = () => {
   };
   const [contrast, setContrast] = useReducer(contrastReducer, {} as Contrast);
 
-  // Initialise all app state variables
+  // Initialise all pane state variables
   useEffect(() => {
     const fetchAllData = async () => {
       // Load static data
@@ -235,56 +236,60 @@ const SurfaceExplorer = () => {
           addPaneCallback={() => {
             setNPanes(nPanes + 1);
           }}
-        />
-        <InfoPanel
-          subjectLabels={subjectLabels}
-          subject={subject.label}
-          contrast={contrast.label}
-          contrastIndex={contrast.index}
-          voxelIndex={voxelIndex}
-          subjectChangeCallback={(subjectIndex: number) => {
-            setSubject({ payload: subjectIndex });
-          }}
-          meanSurfaceMap={meanContrastMap}
-          meanChangeCallback={() => {
-            setMeanContrastMap(!meanContrastMap);
-          }}
-          meshType={meshType}
-          meshTypeLabels={Object.keys(MeshType) as MeshTypeString[]}
-          meshTypeChangeCallback={(meshType: MeshType) => {
-            setMeshType(meshType);
-          }}
-          hemi={hemi}
-          hemiLabels={Object.keys(HemisphereSide) as HemisphereSideString[]}
-          hemiChangeCallback={(hemi: HemisphereSide) => {
-            setHemi(hemi);
+          sharedState={sharedState}
+          sharedStateCallback={() => {
+            setSharedState(!sharedState);
           }}
         />
+        {sharedState && loadingContrastMap ? (
+          <TextualLoader text="Loading surface map..." />
+        ) : null}
+        {sharedState ? (
+          <InfoPanel
+            subjectLabels={subjectLabels}
+            subject={subject.label}
+            contrast={contrast.label}
+            contrastIndex={contrast.index}
+            voxelIndex={voxelIndex}
+            subjectChangeCallback={(subjectIndex: number) => {
+              setSubject({ payload: subjectIndex });
+            }}
+            meanSurfaceMap={meanContrastMap}
+            meanChangeCallback={() => {
+              setMeanContrastMap(!meanContrastMap);
+            }}
+            meshType={meshType}
+            meshTypeLabels={Object.keys(MeshType) as MeshTypeString[]}
+            meshTypeChangeCallback={(meshType: MeshType) => {
+              setMeshType(meshType);
+            }}
+            hemi={hemi}
+            hemiLabels={Object.keys(HemisphereSide) as HemisphereSideString[]}
+            hemiChangeCallback={(hemi: HemisphereSide) => {
+              setHemi(hemi);
+            }}
+          />
+        ) : null}
         <SplitPane split="vertical">
           {[...Array(nPanes).keys()].map((i: number) => {
             return (
-              <div className="scene" key={`scene-${i}`}>
-                {loadingContrastMap ? (
-                  <TextualLoader text="Loading surface map..." />
-                ) : null}
-                <ParentSize className="scene-container" debounceTime={10}>
-                  {({ width: sceneWidth, height: sceneHeight }) => (
-                    <Scene
-                      clickedVoxelCallback={(voxelIndex: number) => {
-                        setVoxelIndex(voxelIndex);
-                      }}
-                      voxelIndex={voxelIndex}
-                      surfaceMap={contrastMap}
-                      meshType={meshType}
-                      hemi={hemi}
-                      wireframe={wireframe}
-                      width={sceneWidth}
-                      height={sceneHeight}
-                      uniqueKey={i.toString()}
-                    />
-                  )}
-                </ParentSize>
-              </div>
+              <ScenePane
+                key={`scene-pane-${i}`}
+                subjectLabels={subjectLabels}
+                contrastLabels={contrastLabels}
+                sharedState={sharedState}
+                sharedSubject={subject}
+                sharedContrast={contrast}
+                sharedContrastMap={contrastMap}
+                sharedMeanContrastMap={meanContrastMap}
+                sharedVoxelIndex={voxelIndex}
+                setSharedVoxelIndex={(newVoxelIndex: number) => {
+                  setVoxelIndex(newVoxelIndex);
+                }}
+                sharedWireframe={wireframe}
+                sharedMeshType={meshType}
+                sharedHemi={hemi}
+              />
             );
           })}
         </SplitPane>
@@ -320,7 +325,9 @@ const SurfaceExplorer = () => {
               <ContrastFingerprint
                 loading={loadingFingerprint}
                 clickedLabelCallback={(contrastIndex: number) => {
-                  setContrast({ payload: contrastIndex });
+                  if (sharedState) {
+                    setContrast({ payload: contrastIndex });
+                  }
                 }}
                 selectedContrast={contrast}
                 orientation={
