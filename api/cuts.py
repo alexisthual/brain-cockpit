@@ -114,15 +114,17 @@ if CUTS_DATA_PATH is not None or MOCK_CUTS is not None:
         return "Updated"
 
     @eel.expose
-    def get_slices(slices):
-        sagital = currentSub.anat[slices[0], :, :].tolist()
-        coronal = currentSub.anat[:, slices[1], :].tolist()
-        horizontal = currentSub.anat[:, :, slices[2]].tolist()
-        return {
-            "sagital": sagital,
-            "coronal": coronal,
-            "horizontal": horizontal,
-        }
+    def get_slice_sagital(slices):
+        print(f"sending sag {slices}")
+        return currentSub.anat[slices, :, :].tolist()
+
+    @eel.expose
+    def get_slice_coronal(slices):
+        return currentSub.anat[:, slices, :].tolist()
+
+    @eel.expose
+    def get_slice_horizontal(slices):
+        return currentSub.anat[:, :, slices].tolist()
 
     @eel.expose
     def get_t_at_coordinate(coord):
