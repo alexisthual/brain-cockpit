@@ -5,3 +5,4 @@ public/assets/*
 .env
 __pycache__
 .sync-config.cson
+build
