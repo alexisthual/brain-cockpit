@@ -1,5 +1,5 @@
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
-import React, { useEffect, useReducer, useState } from "react";
+import React, { useCallback, useEffect, useReducer, useState } from "react";
 
 import { eel } from "App";
 import InfoPanel from "components/infoPanel";
@@ -107,76 +107,87 @@ const ScenePane = ({
     setContrast({ payload: 0 });
   }
 
-  useEffect(() => {
-    // Set keybinding
-    const keyPressEvents = [
-      {
-        keyCode: 76, // L
-        callback: () => {
-          if (!sharedState) {
-            setContrast({ type: "increment" });
-          }
-        },
-      },
-      {
-        keyCode: 74, // J
-        callback: () => {
-          if (!sharedState) {
-            setContrast({ type: "decrement" });
-          }
-        },
-      },
-      {
-        keyCode: 73, // K
-        callback: () => {
-          if (!sharedState && !meanSurfaceMap) {
-            setSubject({ type: "increment" });
-          }
-        },
-      },
-      {
-        keyCode: 75, // I
-        callback: () => {
-          if (!sharedState && !meanSurfaceMap) {
-            setSubject({ type: "decrement" });
-          }
-        },
-      },
-      {
-        keyCode: 85, // U
-        callback: () => {
-          if (!sharedState) {
-            setMeanSurfaceMap((prevMeanContrastMap) => !prevMeanContrastMap);
-          }
-        },
-      },
-      {
-        keyCode: 87, // W
-        callback: () => {
-          if (!sharedState) {
-            setWireframe((prevWireframe) => !prevWireframe);
-          }
-        },
-      },
-    ];
-    keyPressEvents.forEach((keyPressEvent: any) => {
-      window.addEventListener("keydown", (event) => {
-        if (event.isComposing || event.keyCode === keyPressEvent.keyCode) {
-          keyPressEvent.callback();
-        }
-      });
-    });
+  // Set key events
 
-    return () => {
-      keyPressEvents.forEach((keyPressEvent: any) => {
-        window.removeEventListener("keydown", (event) => {
-          if (event.isComposing || event.keyCode === keyPressEvent.keyCode) {
-            keyPressEvent.callback();
-          }
-        });
-      });
-    };
-  }, [sharedState, meanSurfaceMap]);
+  // L
+  const incrementContrast = useCallback(
+    (event: any) => {
+      if (event.isComposing || event.keyCode === 76) {
+        if (!sharedState) {
+          setContrast({ type: "increment" });
+        }
+      }
+    },
+    [sharedState]
+  );
+  useEffect(() => {
+    window.addEventListener("keydown", incrementContrast);
+    return () => window.removeEventListener("keydown", incrementContrast);
+  }, [incrementContrast]);
+
+  // J
+  const decrementContrast = useCallback(
+    (event: any) => {
+      if (event.isComposing || event.keyCode === 74) {
+        if (!sharedState) {
+          setContrast({ type: "decrement" });
+        }
+      }
+    },
+    [sharedState]
+  );
+  useEffect(() => {
+    window.addEventListener("keydown", decrementContrast);
+    return () => window.removeEventListener("keydown", decrementContrast);
+  }, [decrementContrast]);
+
+  // I
+  const incrementSubject = useCallback(
+    (event: any) => {
+      if (event.isComposing || event.keyCode === 75) {
+        if (!sharedState && !meanSurfaceMap) {
+          setSubject({ type: "increment" });
+        }
+      }
+    },
+    [sharedState, meanSurfaceMap]
+  );
+  useEffect(() => {
+    window.addEventListener("keydown", incrementSubject);
+    return () => window.removeEventListener("keydown", incrementSubject);
+  }, [incrementSubject]);
+
+  // K
+  const decrementSubject = useCallback(
+    (event: any) => {
+      if (event.isComposing || event.keyCode === 73) {
+        if (!sharedState && !meanSurfaceMap) {
+          setSubject({ type: "decrement" });
+        }
+      }
+    },
+    [sharedState, meanSurfaceMap]
+  );
+  useEffect(() => {
+    window.addEventListener("keydown", decrementSubject);
+    return () => window.removeEventListener("keydown", decrementSubject);
+  }, [decrementSubject]);
+
+  // U
+  const toggleMeanContrastMap = useCallback(
+    (event: any) => {
+      if (event.isComposing || event.keyCode === 85) {
+        if (!sharedState) {
+          setMeanSurfaceMap((prevMeanSurfaceMap) => !prevMeanSurfaceMap);
+        }
+      }
+    },
+    [sharedState]
+  );
+  useEffect(() => {
+    window.addEventListener("keydown", toggleMeanContrastMap);
+    return () => window.removeEventListener("keydown", toggleMeanContrastMap);
+  }, [toggleMeanContrastMap]);
 
   // Update contrast map when subject or contrast change
   useEffect(() => {

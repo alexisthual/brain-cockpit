@@ -1,5 +1,5 @@
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
-import React, { useEffect, useReducer, useState } from "react";
+import React, { useCallback, useEffect, useReducer, useState } from "react";
 import { nanoid } from "nanoid";
 
 import { eel } from "App";
@@ -138,84 +138,119 @@ const SurfaceExplorer = () => {
     fetchAllData();
   }, []);
 
-  useEffect(() => {
-    // Set keybinding
-    const keyPressEvents = [
-      {
-        keyCode: 76, // L
-        callback: () => {
-          if (sharedState) {
-            setContrast({ type: "increment" });
-          }
-        },
-      },
-      {
-        keyCode: 74, // J
-        callback: () => {
-          if (sharedState) {
-            setContrast({ type: "decrement" });
-          }
-        },
-      },
-      {
-        keyCode: 73, // K
-        callback: () => {
-          if (sharedState && !meanContrastMap) {
-            setSubject({ type: "increment" });
-          }
-        },
-      },
-      {
-        keyCode: 75, // I
-        callback: () => {
-          if (sharedState && !meanContrastMap) {
-            setSubject({ type: "decrement" });
-          }
-        },
-      },
-      {
-        keyCode: 85, // U
-        callback: () => {
-          if (sharedState) {
-            setMeanContrastMap((prevMeanContrastMap) => !prevMeanContrastMap);
-          }
-        },
-      },
-      {
-        keyCode: 79, // O
-        callback: () => {
-          if (sharedState) {
-            setMeanFingerprint((prevMeanFingerprint) => !prevMeanFingerprint);
-          }
-        },
-      },
-      {
-        keyCode: 87, // W
-        callback: () => {
-          if (sharedState) {
-            setWireframe((prevWireframe) => !prevWireframe);
-          }
-        },
-      },
-    ];
-    keyPressEvents.forEach((keyPressEvent: any) => {
-      window.addEventListener("keydown", (event) => {
-        if (event.isComposing || event.keyCode === keyPressEvent.keyCode) {
-          keyPressEvent.callback();
-        }
-      });
-    });
+  // Set key events
 
-    return () => {
-      keyPressEvents.forEach((keyPressEvent: any) => {
-        window.removeEventListener("keydown", (event) => {
-          if (event.isComposing || event.keyCode === keyPressEvent.keyCode) {
-            keyPressEvent.callback();
-          }
-        });
-      });
-    };
-  }, [sharedState, meanContrastMap]);
+  // L
+  const incrementContrast = useCallback(
+    (event: any) => {
+      if (event.isComposing || event.keyCode === 76) {
+        if (sharedState) {
+          setContrast({ type: "increment" });
+        }
+      }
+    },
+    [sharedState]
+  );
+  useEffect(() => {
+    window.addEventListener("keydown", incrementContrast);
+    return () => window.removeEventListener("keydown", incrementContrast);
+  }, [incrementContrast]);
+
+  // J
+  const decrementContrast = useCallback(
+    (event: any) => {
+      if (event.isComposing || event.keyCode === 74) {
+        if (sharedState) {
+          setContrast({ type: "decrement" });
+        }
+      }
+    },
+    [sharedState]
+  );
+  useEffect(() => {
+    window.addEventListener("keydown", decrementContrast);
+    return () => window.removeEventListener("keydown", decrementContrast);
+  }, [decrementContrast]);
+
+  // I
+  const incrementSubject = useCallback(
+    (event: any) => {
+      if (event.isComposing || event.keyCode === 75) {
+        if (sharedState && !meanContrastMap) {
+          setSubject({ type: "increment" });
+        }
+      }
+    },
+    [sharedState, meanContrastMap]
+  );
+  useEffect(() => {
+    window.addEventListener("keydown", incrementSubject);
+    return () => window.removeEventListener("keydown", incrementSubject);
+  }, [incrementSubject]);
+
+  // K
+  const decrementSubject = useCallback(
+    (event: any) => {
+      if (event.isComposing || event.keyCode === 73) {
+        if (sharedState && !meanContrastMap) {
+          setSubject({ type: "decrement" });
+        }
+      }
+    },
+    [sharedState, meanContrastMap]
+  );
+  useEffect(() => {
+    window.addEventListener("keydown", decrementSubject);
+    return () => window.removeEventListener("keydown", decrementSubject);
+  }, [decrementSubject]);
+
+  // U
+  const toggleMeanContrastMap = useCallback(
+    (event: any) => {
+      if (event.isComposing || event.keyCode === 85) {
+        if (sharedState) {
+          setMeanContrastMap((prevMeanContrastMap) => !prevMeanContrastMap);
+        }
+      }
+    },
+    [sharedState]
+  );
+  useEffect(() => {
+    window.addEventListener("keydown", toggleMeanContrastMap);
+    return () => window.removeEventListener("keydown", toggleMeanContrastMap);
+  }, [toggleMeanContrastMap]);
+
+  // O
+  const toggleMeanFingerprint = useCallback(
+    (event: any) => {
+      if (event.isComposing || event.keyCode === 79) {
+        if (sharedState) {
+          setMeanFingerprint((prevMeanFingerprint) => !prevMeanFingerprint);
+        }
+      }
+    },
+    [sharedState]
+  );
+  useEffect(() => {
+    window.addEventListener("keydown", toggleMeanFingerprint);
+    return () => window.removeEventListener("keydown", toggleMeanFingerprint);
+  }, [toggleMeanFingerprint]);
+
+  // W
+  const toggleWireframe = useCallback(
+    (event: any) => {
+      if (event.isComposing || event.keyCode === 87) {
+        if (sharedState) {
+          setWireframe((prevWireframe) => !prevWireframe);
+        }
+      }
+    },
+    [sharedState]
+  );
+  useEffect(() => {
+    window.addEventListener("keydown", toggleWireframe);
+    return () => window.removeEventListener("keydown", toggleWireframe);
+  }, [toggleWireframe]);
 
   // Update contrast map when subject or contrast change
   useEffect(() => {
