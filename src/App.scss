@@ -106,8 +106,20 @@
   overflow: hidden;
 }
 
-.scene {
+.scene-panes {
   height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+.scene,
+.scene-pane {
+  height: 100%;
+  width: 100%;
+
+  &:not(:last-child) {
+    border-right: 1px solid $light-gray3;
+  }
 }
 
 #fingerprint {

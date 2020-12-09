@@ -13,6 +13,7 @@ import {
   MeshTypeString,
   Subject,
 } from "constants/index";
+import PaneButtons from "./buttons";
 
 type ActionLabel = {
   type?: "increment" | "decrement";
@@ -20,6 +21,7 @@ type ActionLabel = {
 };
 
 interface Props {
+  closeCallback: () => void;
   subjectLabels: string[];
   contrastLabels: string[];
   sharedState: boolean;
@@ -35,12 +37,13 @@ interface Props {
 }
 
 const ScenePane = ({
+  closeCallback = () => {},
   subjectLabels = [],
   contrastLabels = [],
   sharedState = false,
   sharedSubject = {},
   sharedContrast = {},
-  sharedSurfaceMap = [],
+  sharedSurfaceMap,
   sharedMeanSurfaceMap = false,
   sharedVoxelIndex,
   setSharedVoxelIndex = () => {},
@@ -204,6 +207,7 @@ const ScenePane = ({
 
   return (
     <div className="scene">
+      <PaneButtons closeCallback={closeCallback} />
       {!sharedState ? (
         <InfoPanel
           subjectLabels={subjectLabels}

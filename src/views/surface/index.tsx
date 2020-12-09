@@ -1,6 +1,6 @@
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import React, { useEffect, useReducer, useState } from "react";
-import SplitPane from "react-split-pane";
+import { nanoid } from "nanoid";
 
 import { eel } from "App";
 import ContrastFingerprint from "components/contrastFingerprint";
@@ -24,6 +24,11 @@ type ActionLabel = {
   payload?: number;
 };
 
+type ActionPane = {
+  type?: "add" | "remove";
+  payload?: string;
+};
+
 const SurfaceExplorer = () => {
   const [subjectLabels, setSubjectLabels] = useState<string[]>([]);
   const [contrastLabels, setContrastLabels] = useState<string[]>([]);
@@ -40,7 +45,6 @@ const SurfaceExplorer = () => {
   const [wireframe, setWireframe] = useState(false);
   const [meshType, setMeshType] = useState(MeshType.PIAL);
   const [hemi, setHemi] = useState(HemisphereSide.LEFT);
-  const [nPanes, setNPanes] = useState(1);
   const [sharedState, setSharedState] = useState(true);
 
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
@@ -84,6 +88,29 @@ const SurfaceExplorer = () => {
     };
   };
   const [contrast, setContrast] = useReducer(contrastReducer, {} as Contrast);
+
+  const panesReducer = (state: string[], action: ActionPane): string[] => {
+    const newState = [...state];
+
+    switch (action.type) {
+      case "add":
+        newState.push(nanoid());
+        break;
+      case "remove":
+        if (action.payload !== undefined) {
+          const index = state.indexOf(action.payload);
+          if (index >= 0) {
+            newState.splice(index, 1);
+          }
+        }
+        break;
+      default:
+        break;
+    }
+
+    return newState;
+  };
+  const [panes, setPanes] = useReducer(panesReducer, [nanoid()]);
 
   // Initialise all pane state variables
   useEffect(() => {
@@ -250,7 +277,7 @@ const SurfaceExplorer = () => {
       <div id="scenes">
         <PanesButtons
           addPaneCallback={() => {
-            setNPanes(nPanes + 1);
+            setPanes({ type: "add" });
           }}
           sharedState={sharedState}
           sharedStateCallback={() => {
@@ -286,11 +313,14 @@ const SurfaceExplorer = () => {
             }}
           />
         ) : null}
-        <SplitPane split="vertical">
-          {[...Array(nPanes).keys()].map((i: number) => {
+        <div className="scene-panes">
+          {panes.map((paneId: string) => {
             return (
               <ScenePane
-                key={`scene-pane-${i}`}
+                key={`scene-pane-${paneId}`}
+                closeCallback={() => {
+                  setPanes({ type: "remove", payload: paneId });
+                }}
                 subjectLabels={subjectLabels}
                 contrastLabels={contrastLabels}
                 sharedState={sharedState}
@@ -308,7 +338,7 @@ const SurfaceExplorer = () => {
               />
             );
           })}
-        </SplitPane>
+        </div>
       </div>
       {voxelIndex !== undefined ? (
         <div id="fingerprint">
