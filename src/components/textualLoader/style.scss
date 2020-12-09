@@ -1,6 +1,6 @@
 @import "~@blueprintjs/core/lib/scss/variables";
 
-.textual-loader {
+.textual-loader-container {
   z-index: 2;
   position: absolute;
   left: 0;
@@ -13,7 +13,17 @@
 
   color: $dark-gray5;
 
-  .bp3-spinner {
-    margin-right: 10px;
+  .textual-loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 8px 15px;
+    border-radius: 3px;
+    background-color: rgba($gray4, 0.2);
+
+    .bp3-spinner {
+      margin-right: 10px;
+    }
   }
 }

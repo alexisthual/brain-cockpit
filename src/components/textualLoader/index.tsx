@@ -9,9 +9,11 @@ interface Props {
 
 const TextualLoader = ({ text }: Props) => {
   return (
-    <div className="textual-loader">
-      <Spinner size={Spinner.SIZE_SMALL} tagName={"span"} />
-      {text ?? "Loading..."}
+    <div className="textual-loader-container">
+      <div className="textual-loader">
+        <Spinner size={Spinner.SIZE_SMALL} tagName={"span"} />
+        {text ?? "Loading..."}
+      </div>
     </div>
   );
 };
