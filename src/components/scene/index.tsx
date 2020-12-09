@@ -256,7 +256,7 @@ class Scene extends Component<ISceneProps, {}> {
           this.object,
           this.props.surfaceMap
         );
-      } else {
+      } else if (this.props.surfaceMap.length > 0) {
         console.warn("surfacemap and current mesh have different lengths");
       }
     }
