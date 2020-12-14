@@ -8,6 +8,7 @@ import PanelButtons from "components/infoPanel/buttons";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
 import {
+  MeshType,
   Metric,
   MetricString,
   Orientation,
@@ -47,6 +48,7 @@ const FunctionalDistanceExplorer = () => {
   const [meanFunctionalDistance, setMeanFunctionalDistance] = useState(false);
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [wireframe, setWireframe] = useState(false);
+  const [meshType] = useState(MeshType.PIAL);
 
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
@@ -289,6 +291,7 @@ const FunctionalDistanceExplorer = () => {
               wireframe={wireframe}
               width={sceneWidth}
               height={sceneHeight}
+              meshType={meshType}
             />
           )}
         </ParentSize>

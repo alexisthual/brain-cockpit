@@ -55,7 +55,7 @@ const ScenePane = ({
   const [surfaceMap, setSurfaceMap] = useState<number[] | undefined>();
   const [loadingSurfaceMap, setLoadingSurfaceMap] = useState(false);
   const [meanSurfaceMap, setMeanSurfaceMap] = useState(false);
-  const [wireframe, setWireframe] = useState(false);
+  const [wireframe] = useState(false);
   const [meshType, setMeshType] = useState(MeshType.PIAL);
   const [hemi, setHemi] = useState(HemisphereSide.LEFT);
 
