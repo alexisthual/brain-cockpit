@@ -1,4 +1,6 @@
+import dotenv
 import eel
+import os
 
 # API logic is implemented in /api
 # We here load these files as independent pieces of logic
@@ -9,6 +11,9 @@ import api.cuts
 # whose data might not be publicly available
 import api.regressed_coordinates
 import api.correlation_maps
+
+dotenv.load_dotenv()
+API_PORT = os.getenv("PORT")
 
 
 @eel.expose
@@ -30,5 +35,5 @@ eel.start(
     mode=None,
     close_callback=no_stop,
     host="localhost",
-    port=9442,
+    port=API_PORT,
 )

@@ -40,12 +40,12 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
-    <script type="text/javascript" src="http://localhost:9442/eel.js"></script>
-    <!-- TODO : clean this up :-( -->
     <script
       type="text/javascript"
-      src="https://d3js.org/d3.v5.js"
+      src="%REACT_APP_API_HTTP_PROTOCOL%://%REACT_APP_API_URL%/eel.js"
     ></script>
+    <!-- TODO : clean this up :-( -->
+    <script type="text/javascript" src="https://d3js.org/d3.v5.js"></script>
     <script
       type="text/javascript"
       src="http://localhost:9442/brainsprite.js"
