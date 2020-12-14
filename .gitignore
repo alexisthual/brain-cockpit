@@ -2,7 +2,12 @@ node_modules
 .eslintcache
 yarn-error.log
 public/assets/*
-.env
+.env.local
+.env.development
+.env.development.local
+.env.production
+.env.production.local
+.env.test.local
 __pycache__
 .sync-config.cson
 build
