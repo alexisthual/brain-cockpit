@@ -52,13 +52,13 @@ scp username@drago2:/storage/store2/work/athual/data/ibc_surface_conditions_db.z
 unzip /path/to/ibc_surface_conditions_db.zip
 ```
 
-Finally, make a copy of the app's config file
+### Overwrite default environment varaibles
 
-```
-cp .env.example .env
-```
+Default environment variables are initiated in `.env`.
+You can overwrite these by creating a `.env.local` file suited to your needs.
+In particular, you most likely want to set `DATA_PATH` to point to downloaded IBC contrasts.
 
-and edit it such that the variable `DATA_PATH` now points to your unzipped folder containing IBC data.
+If you need a more custom `.env` files setup, check out [all other possibilities](https://create-react-app.dev/docs/adding-custom-environment-variables/#what-other-env-files-can-be-used) allowed by `create-react-app`.
 
 ## Run
 
