@@ -13,7 +13,7 @@ import api.regressed_coordinates
 import api.correlation_maps
 
 dotenv.load_dotenv()
-API_PORT = os.getenv("PORT")
+REACT_APP_API_PORT = os.getenv("REACT_APP_API_PORT")
 
 
 @eel.expose
@@ -35,5 +35,5 @@ eel.start(
     mode=None,
     close_callback=no_stop,
     host="localhost",
-    port=API_PORT,
+    port=REACT_APP_API_PORT,
 )
