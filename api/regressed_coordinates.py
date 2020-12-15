@@ -10,8 +10,17 @@ from tqdm import tqdm
 from api.surface_contrasts import subjects
 
 
-# Load environment dat
+# Load environment variables
 dotenv.load_dotenv()
+if os.path.exists(".env.development"):
+    dotenv.load_dotenv(dotenv_path=".env.development", override=True)
+if os.path.exists(".env.production"):
+    dotenv.load_dotenv(dotenv_path=".env.production", override=True)
+if os.path.exists(".env.development.local"):
+    dotenv.load_dotenv(dotenv_path=".env.development.local", override=True)
+if os.path.exists(".env.production.local"):
+    dotenv.load_dotenv(dotenv_path=".env.production.local", override=True)
+
 DEBUG = os.getenv("DEBUG")
 EXPERIMENT_DATA_PATH = os.getenv("EXPERIMENT_DATA_PATH")
 EXPERIMENT_REGRESSION = bool(strtobool(os.getenv("EXPERIMENT_REGRESSION")))
