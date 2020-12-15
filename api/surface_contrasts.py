@@ -139,7 +139,7 @@ n_subjects, n_contrasts = 0, 0
 X = np.empty((0, 0))
 n_voxels = 0
 
-if DATA_PATH is not None:
+if DATA_PATH is not None and os.path.exists(DATA_PATH):
     ## Load selected subjects and contrasts
     df = pd.read_csv(AVAILABLE_CONTRASTS_PATH)
     subjects, contrasts, n_contrasts_by_task = select_subjects_and_contrasts(
