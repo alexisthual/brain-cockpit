@@ -27,7 +27,7 @@ const CutsExplorer = () => {
   const [tThreshold, setTThreshold] = useState<number>(3);
   const [contrast, setContrast] = useState<string>("active - rest");
   const [plottableList, setPlottableList] = useState<Plottable[]>([]);
-  const [subject, setSubject] = useState<string>("NA");
+  const [subject, setSubject] = useState<string>("sub-1001");
   const [task, setTask] = useState<string>("NA");
   const [subList, setSubList] = useState<string[]>([]);
   const [taskList, setTaskList] = useState<string[]>([]);

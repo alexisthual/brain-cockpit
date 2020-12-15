@@ -37,92 +37,127 @@ class CanvasSlice extends Component<ICanvasSliceProps, {}> {
   clickCallback?: any;
   id: string;
   crosshair: [number, number];
+  divRef: RefObject<HTMLDivElement>;
   canvasRef: RefObject<HTMLCanvasElement>;
+  canvasCrossRef: RefObject<HTMLCanvasElement>;
+  currentlyClicked: boolean;
+  rectSize: [number, number];
 
   constructor(props: ICanvasSliceProps) {
     super(props);
     this.anat = this.props.anat;
     this.canvasRef = createRef<HTMLCanvasElement>();
+    this.divRef = createRef<HTMLDivElement>();
+    this.canvasCrossRef = createRef<HTMLCanvasElement>();
     this.clickCallback = this.props.clickCallback;
     this.id = this.props.id;
+    this.currentlyClicked = false;
     this.crosshair = this.props.crosshair;
+    this.rectSize = [NaN, NaN];
   }
 
   componentDidMount() {
-    this.updateHeatmap(this.props.anat, this.props.crosshair);
+    this.updateHeatmap(this.props.anat, this.props.crosshair, true);
+    this.anat = this.props.anat;
   }
   componentDidUpdate() {
-    this.updateHeatmap(this.props.anat, this.props.crosshair);
+    this.updateHeatmap(
+      this.props.anat,
+      this.props.crosshair,
+      this.props.anat !== this.anat
+    );
+    this.anat = this.props.anat;
   }
 
-  updateHeatmap(anat: number[][], crosshair: [number, number]) {
+  updateHeatmap(
+    anat: number[][],
+    crosshair: [number, number],
+    updateAnat: boolean
+  ) {
     const canvas = this.canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      const [height, width] = [canvas.clientHeight, canvas.clientWidth];
+    const canvasCross = this.canvasCrossRef.current;
+    const div = this.divRef.current;
+    if (canvas && canvasCross && div) {
+      const ctxCross = canvasCross.getContext("2d");
+
+      const [height, width] = [div.clientHeight, div.clientWidth];
       canvas.height = height;
       canvas.width = width;
+      canvasCross.height = height;
+      canvasCross.width = width;
       const size = Math.min(height, width);
-      if (ctx) {
-        ctx.clearRect(0, 0, width, height);
-        const numVox_x = anat.length;
-        const numVox_y = anat[0].length;
-        let range_min = Number.MAX_VALUE;
-        let range_max = Number.MIN_VALUE;
-        const rect_width = size / numVox_x;
-        const rect_height = size / numVox_y;
-        // Determine range for max contrast
-        for (let i = 0; i < numVox_x; i++) {
-          for (let j = 0; j < numVox_y; j++) {
-            if (anat[i][j] < range_min) {
-              range_min = anat[i][j];
-            }
-            if (anat[i][j] > range_max) {
-              range_max = anat[i][j];
+      if (updateAnat) {
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          const numVox_x = anat.length;
+          const numVox_y = anat[0].length;
+          this.rectSize = [size / numVox_x, size / numVox_y];
+
+          for (let i = 0; i < numVox_x; i++) {
+            for (let j = 0; j < numVox_y; j++) {
+              const color = anat[i][j];
+              ctx.fillStyle = "rgb(" + color + "," + color + "," + color + ")";
+              ctx.fillRect(
+                i * this.rectSize[0] - 0.5, // 0.5 to slightly overlap at borders
+                size - j * this.rectSize[1] - 0.5,
+                this.rectSize[0] + 0.5,
+                this.rectSize[1] + 0.5
+              );
             }
           }
         }
-        // Paint the brain
-        for (let i = 0; i < numVox_x; i++) {
-          for (let j = 0; j < numVox_y; j++) {
-            const color = Math.floor(
-              (255 * (anat[i][j] - range_min)) / (range_max - range_min)
-            );
-            ctx.fillStyle = "rgb(" + color + "," + color + "," + color + ")";
-            ctx.fillRect(
-              i * rect_width,
-              size - j * rect_height,
-              rect_width,
-              rect_height
-            );
-          }
-        }
+      }
+      if (ctxCross) {
         // Paint the crosshair
-        ctx.fillStyle = "rgba(50, 50, 255, 0.5";
-        ctx.fillRect(
-          crosshair[0] * rect_width + rect_width / 4,
+        ctxCross.clearRect(0, 0, width, height);
+        ctxCross.fillStyle = "rgba(50, 50, 255, 0.75)";
+        ctxCross.fillRect(
+          crosshair[0] * this.rectSize[0] + this.rectSize[0] / 4,
           0,
-          rect_width / 2,
+          this.rectSize[0] / 2,
           size
         );
-        ctx.fillRect(
+        ctxCross.fillRect(
           0,
-          size - crosshair[1] * rect_height + rect_height / 4,
+          size - crosshair[1] * this.rectSize[1] + this.rectSize[1] / 4,
           size,
-          rect_height / 2
+          this.rectSize[1] / 2
         );
-        canvas.onclick = (e) => {
+        canvasCross.onmousedown = (e) => {
+          this.currentlyClicked = true;
           this.clickCallback([
-            Math.floor(e.offsetX / rect_width),
-            Math.floor((size - e.offsetY) / rect_height),
+            Math.floor(e.offsetX / this.rectSize[0]),
+            Math.floor((size - e.offsetY) / this.rectSize[1]),
           ]);
+        };
+        canvasCross.onmouseup = (e) => {
+          this.currentlyClicked = false;
+        };
+        canvasCross.onmousemove = (e) => {
+          if (this.currentlyClicked) {
+            this.clickCallback([
+              Math.floor(e.offsetX / this.rectSize[0]),
+              Math.floor((size - e.offsetY) / this.rectSize[1]),
+            ]);
+          }
         };
       }
     }
   }
 
   render() {
-    return <canvas ref={this.canvasRef} id={this.id} />;
+    return (
+      <div id={this.id} ref={this.divRef} style={{ position: "relative" }}>
+        <canvas
+          ref={this.canvasRef}
+          style={{ position: "absolute", top: "0", left: "0" }}
+        />
+        <canvas
+          ref={this.canvasCrossRef}
+          style={{ position: "absolute", top: "0", left: "0" }}
+        />
+      </div>
+    );
   }
 }
 
@@ -164,18 +199,16 @@ class Slices extends Component<ISlicesProps, ISlicesState> {
     });
   }
 
-  update_coronal(slice: number) {
-    eel.get_slice_coronal(slice)((slices_values: number[][]) => {
-      this.setState({ coronal: slices_values });
-    });
-  }
-
   update_sagital(slice: number) {
     eel.get_slice_sagital(slice)((slices_values: number[][]) => {
       this.setState({ sagital: slices_values });
     });
   }
-
+  update_coronal(slice: number) {
+    eel.get_slice_coronal(slice)((slices_values: number[][]) => {
+      this.setState({ coronal: slices_values });
+    });
+  }
   update_horizontal(slice: number) {
     eel.get_slice_horizontal(slice)((slices_values: number[][]) => {
       this.setState({ horizontal: slices_values });
@@ -189,8 +222,13 @@ class Slices extends Component<ISlicesProps, ISlicesState> {
 
   handle_click(who: Cuts, event: [number, number]) {
     const [clicked_x, clicked_y] = event;
+    //Assess to what extent we could hope to send the whole brain
+    //const tic = performance.now();
+    //eel.get_brain()((slices_values: any) => {
+    //console.log(slices_values);
+    //console.log(performance.now() - tic)
+    //});
     if (who === Cuts.Sagital) {
-      console.log("sagital");
       this.slices[1] = clicked_x;
       this.slices[2] = clicked_y;
       this.update_coronal(clicked_x);
@@ -208,7 +246,6 @@ class Slices extends Component<ISlicesProps, ISlicesState> {
       this.update_sagital(clicked_x);
       this.update_coronal(clicked_y);
     }
-    this.update_all();
   }
 
   componentDidUpdate(prevProps: ISlicesProps) {

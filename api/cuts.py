@@ -5,7 +5,8 @@ import numpy as np
 import os
 import pandas as pd
 
-from tqdm import tqdm
+# import flatbuffers
+# import api.BrainCockpit.Volume
 
 # Load contrasts
 dotenv.load_dotenv()
@@ -13,7 +14,9 @@ DEBUG = os.getenv("DEBUG")
 MOCK_CUTS = os.getenv("MOCK_CUTS")
 CUTS_DATA_PATH = os.getenv("CUTS_DATA_PATH")
 
-if CUTS_DATA_PATH is not None or MOCK_CUTS is not None:
+ANY_DATA = (CUTS_DATA_PATH is not None) or (MOCK_CUTS is not None)
+
+if ANY_DATA:  # noqa: C901 <- it's absurd that I have to write this
     import nilearn.image
     from nilearn.image.resampling import coord_transform
     from nilearn.datasets import fetch_spm_auditory
@@ -25,6 +28,12 @@ if CUTS_DATA_PATH is not None or MOCK_CUTS is not None:
     from plotly.io import to_json
     from scipy.stats import zscore
     import pickle
+    import json
+
+    # import asyncio
+    # import websockets
+
+    # builder = flatbuffers.Builder(1024)
 
     import matplotlib
 
@@ -114,17 +123,42 @@ if CUTS_DATA_PATH is not None or MOCK_CUTS is not None:
         return "Updated"
 
     @eel.expose
+    def get_brain():
+        data = currentSub.anat
+        data = (255 * (data / np.max(data))).astype(np.uint8).tobytes()
+        # size = len(data)
+        # api.BrainCockpit.Volume.VolumeStartVoxelsVector(builder, size)
+        # builder.head = builder.head - (size)
+        # builder.Bytes[builder.head : (builder.head + size)] = data
+        # bdata = builder.EndVector(size)
+        # builder.Finish(bdata)
+        # bdata = builder.Output()
+        # with open("/tmp/bytes", "wb") as f:
+        # f.write(bdata)
+        # with open("/tmp/json", "w") as f:
+        # data = cast_to_uint_for_eel(currentSub.anat)
+        # print(data)
+        # json.dump(data, f)
+        # assert(False)
+        print(data)
+        return {"raw": data}
+
+    def cast_to_uint_for_eel(data):
+        # TODO : if this takes too long we should do it once and for all early
+        return (255 * (data / np.max(data))).astype(np.uint8).tolist()
+
+    @eel.expose
     def get_slice_sagital(slices):
-        print(f"sending sag {slices}")
-        return currentSub.anat[slices, :, :].tolist()
+        print("sending sagital")
+        return cast_to_uint_for_eel(currentSub.anat[slices, :, :])
 
     @eel.expose
     def get_slice_coronal(slices):
-        return currentSub.anat[:, slices, :].tolist()
+        return cast_to_uint_for_eel(currentSub.anat[:, slices, :])
 
     @eel.expose
     def get_slice_horizontal(slices):
-        return currentSub.anat[:, :, slices].tolist()
+        return cast_to_uint_for_eel(currentSub.anat[:, :, slices])
 
     @eel.expose
     def get_t_at_coordinate(coord):
@@ -146,3 +180,12 @@ if CUTS_DATA_PATH is not None or MOCK_CUTS is not None:
     def get_callbacks(mni):
         print("Sending callbacks")
         return []
+
+    # async def echo(websocket, path):
+    # async for message in websocket:
+    # if message == "get_brain":
+    # await websocket.send(get_brain())
+
+    # asyncio.get_event_loop().run_until_complete(
+    # websockets.serve(echo, 'localhost', 9443))
+    # asyncio.get_event_loop().run_forever()
