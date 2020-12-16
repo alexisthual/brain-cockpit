@@ -1,57 +1,35 @@
 @import "~@blueprintjs/core/lib/scss/variables";
 
-#grid-container {
-  background-color: black;
-  color: white;
+.slice-container {
+  width: 100vw;
+  height: 100vh;
+
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  width: 100%;
-  height: 100%;
-  font-size: 16px;
-  grid-template-areas:
-    "infoscontainer cutsviewer cutsviewer cutsviewer"
-    "derivatives derivatives derivatives derivatives";
-}
+  justify-content: stretch;
+  align-content: stretch;
+  grid-template-rows: auto;
+  grid-template-columns: auto;
+  overflow: hidden;
 
-#cutsviewer {
-  grid-area: cutsviewer;
-  border-left: solid 1px #fff;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: 1fr;
-  width: 100%;
-  height: 100%;
-  grid-template-areas:
-    "sagital coronal horizontal"
-}
+  .slices {
+    padding: 5px;
+    display: grid;
+    justify-content: stretch;
+    align-content: stretch;
+    grid-template-rows: 100%;
+    grid-template-columns: 1fr 1fr 1fr;
+    overflow: hidden;
+    column-gap: 5px;
 
-#infoscontainer {
-  grid-area: infoscontainer;
-  display: flex;
-  flex-direction: column;
-  padding-left: 2em;
-  justify-content: space-around;
-}
+    & > * {
+      position: relative;
+    }
 
-.form {
-  display: flex;
-  flex-direction: column;
-  padding-right: 2em;
-  padding-bottom: 1em;
-}
-.form > p {
-  font-weight: bold;
-}
-
-label {
-  display: block;
-}
-
-#derivatives {
-  grid-area: derivatives;
-  display: flex;
-  flex-flow: row nowrap;
-  justify-content: space-around;
-  border-top: solid 1px #fff;
+    .slice-label {
+      position: absolute;
+      top: 7px;
+      left: 10px;
+      color: white;
+    }
+  }
 }

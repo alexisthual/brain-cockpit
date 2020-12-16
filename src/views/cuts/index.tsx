@@ -1,152 +1,105 @@
+import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import React, { useEffect, useState } from "react";
 
-import Slices from "components/slices";
-import GenericPlottable from "components/genericPlottable";
-
-import type { BrainSpriteObject } from "components/brainspriteCuts";
-import type { Plottable } from "components/genericPlottable";
-
 import { eel } from "App";
+import CanvasSlice from "components/canvasSlice";
+import CanvasCrosshair from "components/canvasCrosshair";
 
 import "./style.scss";
 
-interface Defaults {
-  subList: string[];
-  taskList: string[];
-  contrastList: string[];
-}
-
 const CutsExplorer = () => {
-  const [mnicoordinates, setMnicoordinates] = useState<
-    [number, number, number]
-  >([NaN, NaN, NaN]);
-  const [slicecoordinates, setSlicecoordinates] = useState<
-    [number, number, number]
-  >([NaN, NaN, NaN]);
-  const [tAtCoordinate, setTAtCoordinate] = useState<number>(NaN);
-  const [tThreshold, setTThreshold] = useState<number>(3);
-  const [contrast, setContrast] = useState<string>("active - rest");
-  const [plottableList, setPlottableList] = useState<Plottable[]>([]);
-  const [subject, setSubject] = useState<string>("sub-1001");
-  const [task, setTask] = useState<string>("NA");
-  const [subList, setSubList] = useState<string[]>([]);
-  const [taskList, setTaskList] = useState<string[]>([]);
-  const [contrastList, setContrastList] = useState<string[]>([]);
+  const [x, setX] = useState(125);
+  const [y, setY] = useState(75);
+  const [z, setZ] = useState(100);
+  const [sagitalSlice, setSagitalSlice] = useState<number[][]>([]);
+  const [coronalSlice, setCoronalSlice] = useState<number[][]>([]);
+  const [horizontalSlice, setHorizontalSlice] = useState<number[][]>([]);
 
   useEffect(() => {
-    eel.get_t_at_coordinate(slicecoordinates)((returned_t: number) => {
-      setTAtCoordinate(returned_t);
+    eel.get_sagital(x)((sagitalSlice: number[][]) => {
+      setSagitalSlice(sagitalSlice);
     });
-    eel.get_callbacks(mnicoordinates)((plottables: Plottable[]) => {
-      setPlottableList(plottables);
-    });
-  }, [slicecoordinates, mnicoordinates]);
+  }, [x]);
 
   useEffect(() => {
-    eel.get_available_subject_tasks()((defaults: Defaults) => {
-      setSubList(defaults.subList);
-      setTaskList(defaults.taskList);
-      setContrastList(defaults.contrastList);
-      setSubject("NA");
-      setTask("NA");
-      setContrast(defaults.contrastList[0]);
+    eel.get_coronal(y)((coronalSlice: number[][]) => {
+      setCoronalSlice(coronalSlice);
     });
-  }, []);
+  }, [y]);
+
+  useEffect(() => {
+    eel.get_horizontal(z)((horizontalSlice: number[][]) => {
+      setHorizontalSlice(horizontalSlice);
+    });
+  }, [z]);
 
   return (
-    <div id="grid-container">
-      <div id="infoscontainer">
-        <div>
-          <label className="form">
-            <p>Subject </p>
-            <select
-              value={subject}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                setSubject((e.target as HTMLSelectElement).value);
-              }}
-            >
-              {subList.map((e, i) => {
-                return (
-                  <option value={e} key={i}>
-                    {e}
-                  </option>
-                );
-              })}
-            </select>
-          </label>
-          <label className="form">
-            <p>Task </p>
-            <select
-              value={task}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                setTask((e.target as HTMLSelectElement).value);
-              }}
-            >
-              {taskList.map((e, i) => {
-                return (
-                  <option value={e} key={i}>
-                    {e}
-                  </option>
-                );
-              })}
-            </select>
-          </label>
-          <label className="form">
-            <p>T-value threshold </p>
-            <input
-              type="number"
-              value={tThreshold}
-              // TODO: the type cast here looks abusive...?
-              onChange={(e: React.FormEvent<HTMLInputElement>) => {
-                setTThreshold(parseInt((e.target as HTMLInputElement).value));
-              }}
-            />
-          </label>
-          <label className="form">
-            <p>Contrast </p>
-            <input
-              type="string"
-              value={contrast}
-              onChange={(e: React.FormEvent<HTMLInputElement>) => {
-                setContrast((e.target as HTMLInputElement).value);
-              }}
-            />
-          </label>
-        </div>
-        <div id="infos">
-          <ul>
-            <li>
-              MNI ={" "}
-              {[
-                mnicoordinates[0],
-                mnicoordinates[1],
-                mnicoordinates[2],
-              ].toString()}
-            </li>
-            <li>
-              slices ={" "}
-              {[
-                slicecoordinates[0],
-                slicecoordinates[1],
-                slicecoordinates[2],
-              ].toString()}
-            </li>
-            <li>At that coordinate, t = {tAtCoordinate}</li>
-          </ul>
-        </div>
-      </div>
-      <div id="cutsviewer">
-        <Slices
-          contrast={contrast}
-          tThreshold={tThreshold}
-          subject={subject}
-          task={task}
-          mni={[0, 0, 0]}
-          slices={[31, 32, 32]}
-        />
-      </div>
-      <div id="derivatives">
-        <GenericPlottable plottableList={plottableList} />
+    <div className="slice-container">
+      <div className="slices">
+        <ParentSize>
+          {({ width, height }) => (
+            <>
+              <CanvasSlice image={sagitalSlice} height={height} width={width} />
+              {sagitalSlice.length > 0 ? (
+                <CanvasCrosshair
+                  height={height}
+                  width={width}
+                  x={z / sagitalSlice.length}
+                  y={y / sagitalSlice.length}
+                  changeCallback={(newX: number, newY: number) => {
+                    setZ(Math.floor(newX * sagitalSlice.length));
+                    setY(Math.floor(newY * sagitalSlice[0].length));
+                  }}
+                />
+              ) : null}
+              <div className="slice-label">x: {x}</div>
+            </>
+          )}
+        </ParentSize>
+        <ParentSize>
+          {({ width, height }) => (
+            <>
+              <CanvasSlice image={coronalSlice} height={height} width={width} />
+              {coronalSlice.length > 0 ? (
+                <CanvasCrosshair
+                  height={height}
+                  width={width}
+                  x={x / coronalSlice.length}
+                  y={z / coronalSlice.length}
+                  changeCallback={(newX: number, newY: number) => {
+                    setX(Math.floor(newX * coronalSlice.length));
+                    setZ(Math.floor(newY * coronalSlice.length));
+                  }}
+                />
+              ) : null}
+              <div className="slice-label">y: {y}</div>
+            </>
+          )}
+        </ParentSize>
+        <ParentSize>
+          {({ width, height }) => (
+            <>
+              <CanvasSlice
+                image={horizontalSlice}
+                height={height}
+                width={width}
+              />
+              {horizontalSlice.length > 0 ? (
+                <CanvasCrosshair
+                  height={height}
+                  width={width}
+                  x={x / horizontalSlice.length}
+                  y={y / horizontalSlice.length}
+                  changeCallback={(newX: number, newY: number) => {
+                    setX(Math.floor(newX * horizontalSlice.length));
+                    setY(Math.floor(newY * horizontalSlice[0].length));
+                  }}
+                />
+              ) : null}
+              <div className="slice-label">z: {z}</div>
+            </>
+          )}
+        </ParentSize>
       </div>
     </div>
   );

@@ -22,8 +22,6 @@ import SurfaceExplorer from "views/surface";
 import "./App.scss";
 
 export const eel = window.eel;
-export const brainsprite = window.brainsprite;
-export const mpld3: any = window.mpld3;
 
 eel.set_host(
   `${process.env.REACT_APP_API_WS_PROTOCOL}://${process.env.REACT_APP_API_URL}`

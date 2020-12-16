@@ -5,7 +5,9 @@ import os
 # API logic is implemented in /api
 # We here load these files as independent pieces of logic
 import api.surface_contrasts
-import api.cuts
+
+# import api.cuts
+import api.fmri_image
 
 # These functions are exposed for specific experiments
 # whose data might not be publicly available
