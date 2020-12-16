@@ -9,7 +9,7 @@ It comes as a React application making calls to Python functions through an [`ee
 For now, it consists of a sole view to help looking at IBC contrasts projected on `fsaverage`. Key features include selecting subject, selecting contrast, and clicking on voxel to display its functional fingerprint.
 Keys `J`, `L` allow one to switch between contrasts, `I`, `K` between subjects.
 
-![Screenshot](doc/screen.png)
+![Screenshot](https://mybox.inria.fr/thumbnail/192bdcc47f8c4decbac7/1024/Screenshot%20from%202020-12-07%2012-23-45.png)
 
 ## Install
 
