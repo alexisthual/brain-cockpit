@@ -12,7 +12,7 @@
   grid-template-columns: 100%;
 
   .slices {
-    padding: 5px;
+    background-color: $black;
     overflow: hidden;
 
     display: grid;
@@ -20,10 +20,13 @@
     align-content: stretch;
     grid-template-rows: 100%;
     grid-template-columns: 1fr 1fr 1fr;
-    column-gap: 5px;
 
     & > * {
       position: relative;
+    }
+
+    & > *:not(:last-child) {
+      border-right: 1px solid $dark-gray5;
     }
 
     .slice-label {

@@ -78,7 +78,7 @@ const Timeseries = ({
         {[...Array(timeseries.length).keys()].map((index: number) => (
           <Bar
             className={`timeseries-bar ${
-              selectedT && index === selectedT ? "active" : null
+              selectedT !== undefined && index === selectedT ? "active" : null
             }`}
             key={`bar-${timeseries.length}-${index}`}
             x={xScale(index)}

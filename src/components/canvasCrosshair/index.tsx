@@ -29,7 +29,7 @@ const CanvasCrosshair = ({
       canvas.height = height;
       canvas.width = width;
 
-      ctx.strokeStyle = Colors.BLUE5;
+      ctx.strokeStyle = Colors.GREEN5;
 
       // Draw vertical line
       ctx.beginPath();
