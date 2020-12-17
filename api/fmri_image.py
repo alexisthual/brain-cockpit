@@ -1,3 +1,4 @@
+from datetime import datetime
 import dotenv
 import eel
 import nibabel as nib
@@ -19,7 +20,7 @@ if os.path.exists(".env.production.local"):
     dotenv.load_dotenv(dotenv_path=".env.production.local", override=True)
 
 DEBUG = os.getenv("DEBUG")
-
+[{datetime.now()}]
 # Load nifti image
 print("Loading nifti image...")
 
@@ -45,61 +46,61 @@ anatomical_img_resampled = anatomical_img_resampled.get_fdata()
 @eel.expose
 def get_contrast_shape():
     if DEBUG:
-        print(f"get_contrast_shape")
+        print(f"[{datetime.now()}] get_contrast_shape")
     return list(contrast_img_resampled.shape)
 
 
 @eel.expose
 def get_voxel_timeseries(x, y, z):
     if DEBUG:
-        print(f"get_voxel_timeseries ({x}, {y}, {z})")
+        print(f"[{datetime.now()}] get_voxel_timeseries ({x}, {y}, {z})")
     return contrast_img_resampled[x, y, z, :].tolist()
 
 
 @eel.expose
 def get_contrast_sagital(x, t=0):
     if DEBUG:
-        print(f"get_contrast_sagital x={x}, t={t}")
+        print(f"[{datetime.now()}] get_contrast_sagital x={x}, t={t}")
     return contrast_img_resampled[x, :, :, t].tolist()
 
 
 @eel.expose
 def get_contrast_coronal(y, t=0):
     if DEBUG:
-        print(f"get_contrast_coronal y={y}, t={t}")
+        print(f"[{datetime.now()}] get_contrast_coronal y={y}, t={t}")
     return contrast_img_resampled[:, y, :, t].tolist()
 
 
 @eel.expose
 def get_contrast_horizontal(z, t=0):
     if DEBUG:
-        print(f"get_contrast_horizontal z={z}, t={t}")
+        print(f"[{datetime.now()}] get_contrast_horizontal z={z}, t={t}")
     return contrast_img_resampled[:, :, z, t].tolist()
 
 
 @eel.expose
 def get_anatomical_shape():
     if DEBUG:
-        print(f"get_anatomical_shape")
+        print(f"[{datetime.now()}] get_anatomical_shape")
     return list(anatomical_img_resampled.shape)
 
 
 @eel.expose
 def get_anatomical_sagital(x):
     if DEBUG:
-        print(f"get_anatomical_sagital x={x}")
+        print(f"[{datetime.now()}] get_anatomical_sagital x={x}")
     return anatomical_img_resampled[x, :, :].tolist()
 
 
 @eel.expose
 def get_anatomical_coronal(y):
     if DEBUG:
-        print(f"get_anatomical_coronal y={y}")
+        print(f"[{datetime.now()}] get_anatomical_coronal y={y}")
         return anatomical_img_resampled[:, y, :].tolist()
 
 
 @eel.expose
 def get_anatomical_horizontal(z):
     if DEBUG:
-        print(f"get_anatomical_horizontal z={z}")
+        print(f"[{datetime.now()}] get_anatomical_horizontal z={z}")
         return anatomical_img_resampled[:, :, z].tolist()

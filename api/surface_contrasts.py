@@ -1,10 +1,10 @@
+from datetime import datetime
 import dotenv
 import eel
 import nibabel as nib
 import numpy as np
 import os
 import pandas as pd
-
 from tqdm import tqdm
 
 
@@ -164,16 +164,22 @@ if DATA_PATH is not None and os.path.exists(DATA_PATH):
 # Expose functions for exploring contrasts
 @eel.expose
 def get_subjects():
+    if DEBUG:
+        print(f"[{datetime.now()}] get_subjects")
     return subjects.tolist()
 
 
 @eel.expose
 def get_contrast_labels():
+    if DEBUG:
+        print(f"[{datetime.now()}] get_contrast_labels")
     return contrasts.tolist()
 
 
 @eel.expose
 def get_tasks():
+    if DEBUG:
+        print(f"[{datetime.now()}] get_tasks")
     return n_contrasts_by_task.tolist()
 
 
@@ -181,7 +187,7 @@ def get_tasks():
 def get_voxel_fingerprint(subject_index, voxel_index):
     if DEBUG:
         print(
-            f"get_voxel_fingerprint {voxel_index} for {subjects[subject_index]} ({subject_index})"
+            f"[{datetime.now()}] get_voxel_fingerprint {voxel_index} for {subjects[subject_index]} ({subject_index})"
         )
     return X[n_voxels * subject_index + voxel_index, :].tolist()
 
@@ -189,7 +195,7 @@ def get_voxel_fingerprint(subject_index, voxel_index):
 @eel.expose
 def get_voxel_fingerprint_mean(voxel_index):
     if DEBUG:
-        print(f"get_voxel_mean_fingerprint {voxel_index}")
+        print(f"[{datetime.now()}] get_voxel_mean_fingerprint {voxel_index}")
     mean = np.mean(
         X[
             [
@@ -207,7 +213,7 @@ def get_voxel_fingerprint_mean(voxel_index):
 def get_contrast(subject_index, contrast_index, hemi="both"):
     if DEBUG:
         print(
-            f"get_contrast {contrasts[contrast_index]} ({contrast_index}) for {subjects[subject_index]} ({subject_index})"
+            f"[{datetime.now()}] get_contrast {contrasts[contrast_index]} ({contrast_index}) for {subjects[subject_index]} ({subject_index})"
         )
 
     start_index = n_voxels * subject_index
@@ -232,7 +238,7 @@ def get_contrast(subject_index, contrast_index, hemi="both"):
 def get_contrast_mean(contrast_index, hemi="both"):
     if DEBUG:
         print(
-            f"get_contrast_mean {contrasts[contrast_index]} ({contrast_index})"
+            f"[{datetime.now()}] get_contrast_mean {contrasts[contrast_index]} ({contrast_index})"
         )
 
     mean = []

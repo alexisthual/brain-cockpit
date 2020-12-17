@@ -1,14 +1,13 @@
+from datetime import datetime
+from distutils.util import strtobool
 import dotenv
 import eel
 import numpy as np
 import os
 import pandas as pd
-
-from distutils.util import strtobool
 from tqdm import tqdm
 
 from api.surface_contrasts import subjects
-
 
 # Load environment variables
 dotenv.load_dotenv()
@@ -47,7 +46,7 @@ if (
 def get_regressed_coordinates(voxel_index):
     if DEBUG:
         print(
-            f"get_regressed_coordinates for voxel {voxel_index} for subject {subjects[-1]}"
+            f"[{datetime.now()}] get_regressed_coordinates for voxel {voxel_index} for subject {subjects[-1]}"
         )
     return (regressed_coordinates[voxel_index, :]).tolist()
 
@@ -73,5 +72,5 @@ if (
 @eel.expose
 def get_regressed_coordinates_error():
     if DEBUG:
-        print(f"get_regressed_coordinates_error")
+        print(f"[{datetime.now()}] get_regressed_coordinates_error")
     return regressed_coordinates_error.tolist()

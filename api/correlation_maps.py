@@ -1,10 +1,10 @@
+from datetime import datetime
+from distutils.util import strtobool
 import dotenv
 import eel
 import numpy as np
 import os
 import pandas as pd
-
-from distutils.util import strtobool
 from tqdm import tqdm
 
 from api.surface_contrasts import subjects
@@ -57,7 +57,7 @@ def get_distance_map(subject_index, voxel_index):
 
     if DEBUG:
         print(
-            f"get_distance_map for voxel {voxel_index} for {subjects[subject_index]}"
+            f"[{datetime.now()}] get_distance_map for voxel {voxel_index} for {subjects[subject_index]}"
         )
 
     return distance_maps[subject_index][voxel_index, :].tolist()
@@ -68,7 +68,9 @@ def get_mean_distance_map(voxel_index):
     """Exports array of shape n_voxels * n_voxels"""
 
     if DEBUG:
-        print(f"get_mean_distance_map for voxel {voxel_index}")
+        print(
+            f"[{datetime.now()}] get_mean_distance_map for voxel {voxel_index}"
+        )
 
     return mean_distance_map[voxel_index, :].tolist()
 
@@ -79,7 +81,7 @@ def get_topographic_distance_to_m_functional_distance(subject_index, m):
 
     if DEBUG:
         print(
-            f"get_topographic_distance_to_m_functional_distance at distance {m} for {subjects[subject_index]}"
+            f"[{datetime.now()}] get_topographic_distance_to_m_functional_distance at distance {m} for {subjects[subject_index]}"
         )
     surface_map = np.min(
         np.where(
@@ -99,7 +101,7 @@ def get_mean_topographic_distance_to_m_functional_distance(m):
 
     if DEBUG:
         print(
-            f"get_mean_topographic_distance_to_m_functional_distance at distance {m}"
+            f"[{datetime.now()}] get_mean_topographic_distance_to_m_functional_distance at distance {m}"
         )
     surface_maps = [
         np.min(
@@ -147,7 +149,7 @@ def get_mean_functional_distance(subject_index, voxel_index):
 
     if DEBUG:
         print(
-            f"get_mean_functional_distance for voxel {voxel_index} for {subjects[subject_index]}"
+            f"[{datetime.now()}] get_mean_functional_distance for voxel {voxel_index} for {subjects[subject_index]}"
         )
 
     return mean_functional_distances[subject_index][voxel_index, :].tolist()
@@ -159,7 +161,7 @@ def get_mean_across_subjects_mean_functional_distance(voxel_index):
 
     if DEBUG:
         print(
-            f"get_mean_across_subjects_mean_functional_distance for voxel {voxel_index}"
+            f"[{datetime.now()}] get_mean_across_subjects_mean_functional_distance for voxel {voxel_index}"
         )
 
     return mean_across_subjects_mean_function_distances[
