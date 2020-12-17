@@ -20,27 +20,38 @@ if os.path.exists(".env.production.local"):
     dotenv.load_dotenv(dotenv_path=".env.production.local", override=True)
 
 DEBUG = os.getenv("DEBUG")
-[{datetime.now()}]
+SLICE_DATA_PATH = os.getenv("SLICE_DATA_PATH")
+
+anatomical_img_resampled = np.empty((0))
+contrast_img_resampled = np.empty((0))
+
 # Load nifti image
 print("Loading nifti image...")
 
-# The commented nifti path is rotated
-# I presume this can be solved with nilearn.image.reorder_img
-# anatomical_nifti = "/home/alexis/singbrain/data/debby_t1.nii"
-anatomical_nifti = "/home/alexis/singbrain/data/debby141209_gre3d_d004.nii"
-anatomical_img = load_img(anatomical_nifti)
-m = np.max(anatomical_img.shape)
-anatomical_img_resampled = resample_img(
-    anatomical_img, target_affine=anatomical_img.affine, target_shape=(m, m, m)
-)
+if SLICE_DATA_PATH and os.path.exists(SLICE_DATA_PATH):
+    # The commented nifti path is rotated
+    # I presume this can be solved with nilearn.image.reorder_img
+    # anatomical_nifti = os.path.join(SLICE_DATA_PATH, "anatomical/debby_t1.nii")
+    anatomical_nifti = os.path.join(
+        SLICE_DATA_PATH, "anatomical/debby141209_gre3d_d004.nii"
+    )
+    anatomical_img = load_img(anatomical_nifti)
+    m = np.max(anatomical_img.shape)
+    anatomical_img_resampled = resample_img(
+        anatomical_img,
+        target_affine=anatomical_img.affine,
+        target_shape=(m, m, m),
+    )
 
-contrast_nifti = "/home/alexis/singbrain/data/debby141209_run02_mm1_d007.nii"
-contrast_img = load_img(contrast_nifti)
+    contrast_nifti = os.path.join(
+        SLICE_DATA_PATH, "functional/debby141209_run02_mm1_d007.nii"
+    )
+    contrast_img = load_img(contrast_nifti)
 
-contrast_img_resampled = resample_to_img(
-    contrast_img, anatomical_img_resampled
-).get_fdata()
-anatomical_img_resampled = anatomical_img_resampled.get_fdata()
+    contrast_img_resampled = resample_to_img(
+        contrast_img, anatomical_img_resampled
+    ).get_fdata()
+    anatomical_img_resampled = anatomical_img_resampled.get_fdata()
 
 
 @eel.expose

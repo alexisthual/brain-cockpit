@@ -19,9 +19,9 @@ if os.path.exists(".env.development.local"):
 if os.path.exists(".env.production.local"):
     dotenv.load_dotenv(dotenv_path=".env.production.local", override=True)
 
-DATA_PATH = os.getenv("DATA_PATH")
-AVAILABLE_CONTRASTS_PATH = os.getenv("AVAILABLE_CONTRASTS_PATH")
 DEBUG = os.getenv("DEBUG")
+CONDITIONS_DATA_PATH = os.getenv("CONDITIONS_DATA_PATH")
+AVAILABLE_CONTRASTS_PATH = os.getenv("AVAILABLE_CONTRASTS_PATH")
 
 # IBC contrasts exploration
 
@@ -102,12 +102,14 @@ def load_subject_fmri(df, subject, unique_contrasts):
         ).values
         paths_lh.append(
             os.path.join(
-                DATA_PATH, df.loc[mask].loc[df.side == "lh"].path.values[-1]
+                CONDITIONS_DATA_PATH,
+                df.loc[mask].loc[df.side == "lh"].path.values[-1],
             )
         )
         paths_rh.append(
             os.path.join(
-                DATA_PATH, df.loc[mask].loc[df.side == "rh"].path.values[-1]
+                CONDITIONS_DATA_PATH,
+                df.loc[mask].loc[df.side == "rh"].path.values[-1],
             )
         )
 
@@ -148,7 +150,7 @@ n_subjects, n_contrasts = 0, 0
 X = np.empty((0, 0))
 n_voxels = 0
 
-if DATA_PATH is not None and os.path.exists(DATA_PATH):
+if CONDITIONS_DATA_PATH is not None and os.path.exists(CONDITIONS_DATA_PATH):
     ## Load selected subjects and contrasts
     df = pd.read_csv(AVAILABLE_CONTRASTS_PATH)
     subjects, contrasts, n_contrasts_by_task = select_subjects_and_contrasts(
