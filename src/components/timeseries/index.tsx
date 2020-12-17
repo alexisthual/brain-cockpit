@@ -3,7 +3,7 @@ import { AxisLeft, AxisBottom } from "@visx/axis";
 import { curveLinear } from "@visx/curve";
 import { Group } from "@visx/group";
 import { scaleLinear, scaleBand } from "@visx/scale";
-import { LinePath } from "@visx/shape";
+import { Bar, LinePath } from "@visx/shape";
 import React, { useEffect, useMemo, useState } from "react";
 
 import "./style.scss";
@@ -12,13 +12,21 @@ interface Props {
   timeseries: number[];
   height: number;
   width: number;
+  clickCallback?: (t: number) => void;
+  selectedT?: number;
 }
 
-const Timeseries = ({ timeseries, height, width }: Props) => {
+const Timeseries = ({
+  timeseries,
+  selectedT,
+  clickCallback = () => {},
+  height,
+  width,
+}: Props) => {
   const margin = {
     top: 20,
     bottom: 20,
-    left: 30,
+    left: 50,
     right: 30,
   };
 
@@ -41,7 +49,7 @@ const Timeseries = ({ timeseries, height, width }: Props) => {
   );
 
   return (
-    <svg height={height} width={width}>
+    <svg className="timeseries" height={height} width={width}>
       <AxisLeft
         axisClassName="axis"
         scale={yScale}
@@ -51,7 +59,7 @@ const Timeseries = ({ timeseries, height, width }: Props) => {
         tickStroke={Colors.GRAY3}
         tickClassName="tick"
         tickLabelProps={() => ({
-          textAnchor: "middle",
+          textAnchor: "end",
         })}
       />
       <AxisBottom
@@ -67,12 +75,30 @@ const Timeseries = ({ timeseries, height, width }: Props) => {
         })}
       />
       <Group left={margin.left} top={margin.top}>
+        {[...Array(timeseries.length).keys()].map((index: number) => (
+          <Bar
+            className={`timeseries-bar ${
+              selectedT && index === selectedT ? "active" : null
+            }`}
+            key={`bar-${timeseries.length}-${index}`}
+            x={xScale(index)}
+            y={0}
+            width={xScale.step()}
+            height={height - margin.top - margin.bottom}
+            fill={Colors.BLUE1}
+            onClick={() => {
+              clickCallback(index);
+            }}
+          />
+        ))}
         <LinePath<number>
           curve={curveLinear}
           data={timeseries}
-          x={(d: number, index: number) => xScale(index) || 0}
+          stroke={Colors.DARK_GRAY3}
+          x={(d: number, index: number) =>
+            (xScale(index) || 0) + xScale.step() / 2
+          }
           y={(d: number) => yScale(d)}
-          stroke={Colors.DARK_GRAY1}
         />
       </Group>
     </svg>

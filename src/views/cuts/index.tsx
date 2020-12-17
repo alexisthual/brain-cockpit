@@ -13,12 +13,14 @@ const CutsExplorer = () => {
   const [x, setX] = useState(0.5);
   const [y, setY] = useState(0.5);
   const [z, setZ] = useState(0.5);
+  const [t, setT] = useState(0);
   const [anatSize, setAnatSize] = useState<number[]>([0, 0, 0]);
   const [anatSagitalSlice, setAnatSagitalSlice] = useState<number[][]>([]);
   const [anatCoronalSlice, setAnatCoronalSlice] = useState<number[][]>([]);
   const [anatHorizontalSlice, setAnatHorizontalSlice] = useState<number[][]>(
     []
   );
+  const [contThreshold, setContThreshold] = useState(0.5);
   const [contSize, setContSize] = useState<number[]>([0, 0, 0]);
   const [contSagitalSlice, setContSagitalSlice] = useState<number[][]>([]);
   const [contCoronalSlice, setContCoronalSlice] = useState<number[][]>([]);
@@ -59,11 +61,11 @@ const CutsExplorer = () => {
     );
     eel.get_contrast_sagital(
       Math.floor(x * contSize[0]),
-      5
+      t
     )((slice: number[][]) => {
       setContSagitalSlice(slice);
     });
-  }, [x, anatSize, contSize]);
+  }, [x, t, anatSize, contSize]);
 
   useEffect(() => {
     eel.get_anatomical_coronal(Math.floor(y * anatSize[1]))(
@@ -73,11 +75,11 @@ const CutsExplorer = () => {
     );
     eel.get_contrast_coronal(
       Math.floor(y * contSize[1]),
-      5
+      t
     )((slice: number[][]) => {
       setContCoronalSlice(slice);
     });
-  }, [y, anatSize, contSize]);
+  }, [y, t, anatSize, contSize]);
 
   useEffect(() => {
     eel.get_anatomical_horizontal(Math.floor(z * anatSize[2]))(
@@ -87,11 +89,11 @@ const CutsExplorer = () => {
     );
     eel.get_contrast_horizontal(
       Math.floor(z * contSize[2]),
-      5
+      t
     )((slice: number[][]) => {
       setContHorizontalSlice(slice);
     });
-  }, [z, anatSize, contSize]);
+  }, [z, t, anatSize, contSize]);
 
   return (
     <div className="slice-container">
@@ -110,8 +112,8 @@ const CutsExplorer = () => {
                 width={Math.min(height, width)}
                 alpha={0.8}
                 color1={Colors.VERMILION1}
-                color2={Colors.LIGHT_GRAY5}
-                threshold={0.5}
+                color2={Colors.GOLD5}
+                threshold={contThreshold}
               />
               {anatSagitalSlice.length > 0 ? (
                 <CanvasCrosshair
@@ -148,8 +150,8 @@ const CutsExplorer = () => {
                 width={Math.min(height, width)}
                 alpha={0.8}
                 color1={Colors.VERMILION1}
-                color2={Colors.LIGHT_GRAY5}
-                threshold={0.5}
+                color2={Colors.GOLD5}
+                threshold={contThreshold}
               />
               {anatCoronalSlice.length > 0 ? (
                 <CanvasCrosshair
@@ -181,8 +183,8 @@ const CutsExplorer = () => {
                 width={Math.min(height, width)}
                 alpha={0.8}
                 color1={Colors.VERMILION1}
-                color2={Colors.LIGHT_GRAY5}
-                threshold={0.5}
+                color2={Colors.GOLD5}
+                threshold={contThreshold}
               />
               {anatHorizontalSlice.length > 0 ? (
                 <CanvasCrosshair
@@ -201,11 +203,13 @@ const CutsExplorer = () => {
           )}
         </ParentSize>
       </div>
-      <div className={"timeseries"}>
+      <div className={"slice-information"}>
         <ParentSize>
           {({ width, height }) => (
             <Timeseries
+              clickCallback={(t: number) => setT(t)}
               timeseries={voxelTimeseries}
+              selectedT={t}
               height={height}
               width={width}
             />
