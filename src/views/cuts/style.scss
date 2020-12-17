@@ -8,8 +8,43 @@
   display: grid;
   justify-content: stretch;
   align-content: stretch;
-  grid-template-rows: 66% 33%;
+  grid-template-rows: 70px minmax(0, 2fr) minmax(0, 1fr);
   grid-template-columns: 100%;
+
+  .controls {
+    padding: 0 30px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    .item {
+      position: relative;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+
+      &:not(:last-child) {
+        margin-right: 30px;
+      }
+
+      .item-label {
+        padding-right: 10px;
+        font-size: 16px;
+        font-weight: 400;
+        text-align: right;
+        color: $gray3;
+
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+      }
+
+      .bp3-slider {
+        position: relative;
+        top: 12px;
+      }
+    }
+  }
 
   .slices {
     background-color: $black;

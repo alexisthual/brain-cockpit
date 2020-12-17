@@ -24,10 +24,10 @@ const Timeseries = ({
   width,
 }: Props) => {
   const margin = {
-    top: 20,
-    bottom: 20,
-    left: 50,
-    right: 30,
+    top: 30,
+    bottom: 40,
+    left: 60,
+    right: 40,
   };
 
   const xScale = useMemo(

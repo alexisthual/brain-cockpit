@@ -1,4 +1,5 @@
-import { Colors } from "@blueprintjs/core";
+import { Button, Colors, FormGroup, Label, Slider } from "@blueprintjs/core";
+import { Select } from "@blueprintjs/select";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import React, { useEffect, useState } from "react";
 
@@ -6,10 +7,17 @@ import { eel } from "App";
 import CanvasSlice from "components/canvasSlice";
 import CanvasCrosshair from "components/canvasCrosshair";
 import Timeseries from "components/timeseries";
+import { stringRenderer } from "constants/index";
 
 import "./style.scss";
 
 const CutsExplorer = () => {
+  const [subjects] = useState(["debby"]);
+  const [subject, setSubject] = useState("debby");
+  const [sequences] = useState(["seq-01"]);
+  const [sequence, setSequence] = useState("seq-01");
+  const [runs] = useState(["run-01"]);
+  const [run, setRun] = useState("run-01");
   const [x, setX] = useState(0.5);
   const [y, setY] = useState(0.5);
   const [z, setZ] = useState(0.5);
@@ -95,8 +103,74 @@ const CutsExplorer = () => {
     });
   }, [z, t, anatSize, contSize]);
 
+  const SelectSubject = Select.ofType<string>();
+  const SelectSequence = Select.ofType<string>();
+  const SelectRun = Select.ofType<string>();
+
   return (
     <div className="slice-container">
+      <div className="controls">
+        <div className="item">
+          <div className="item-label">Subject</div>
+          <div className="item-value">
+            <SelectSubject
+              filterable={false}
+              items={subjects}
+              itemRenderer={stringRenderer}
+              onItemSelect={(item: string) => {
+                setSubject(item);
+              }}
+            >
+              <Button rightIcon="double-caret-vertical" text={subject} />
+            </SelectSubject>
+          </div>
+        </div>
+        <div className="item">
+          <div className="item-label">Sequance</div>
+          <div className="item-value">
+            <SelectSequence
+              filterable={false}
+              items={sequences}
+              itemRenderer={stringRenderer}
+              onItemSelect={(item: string) => {
+                setSequence(item);
+              }}
+            >
+              <Button rightIcon="double-caret-vertical" text={sequence} />
+            </SelectSequence>
+          </div>
+        </div>
+        <div className="item">
+          <div className="item-label">Run</div>
+          <div className="item-value">
+            <SelectRun
+              filterable={false}
+              items={runs}
+              itemRenderer={stringRenderer}
+              onItemSelect={(item: string) => {
+                setRun(item);
+              }}
+            >
+              <Button rightIcon="double-caret-vertical" text={run} />
+            </SelectRun>
+          </div>
+        </div>
+        <div className="item">
+          <div className="item-label">Threshold</div>
+          <div className="item-value">
+            <Slider
+              min={0}
+              max={1}
+              stepSize={0.1}
+              labelStepSize={10}
+              onChange={(newThreshold: number) => {
+                setContThreshold(newThreshold);
+              }}
+              value={contThreshold}
+            />
+          </div>
+        </div>
+      </div>
       <div className="slices">
         <ParentSize>
           {({ width, height }) => (
@@ -132,7 +206,7 @@ const CutsExplorer = () => {
                   }}
                 />
               ) : null}
-              <div className="slice-label">x: {x}</div>
+              <div className="slice-label">x: {x.toFixed(3)}</div>
             </>
           )}
         </ParentSize>
@@ -165,7 +239,7 @@ const CutsExplorer = () => {
                   }}
                 />
               ) : null}
-              <div className="slice-label">y: {y}</div>
+              <div className="slice-label">y: {y.toFixed(3)}</div>
             </>
           )}
         </ParentSize>
@@ -198,7 +272,7 @@ const CutsExplorer = () => {
                   }}
                 />
               ) : null}
-              <div className="slice-label">z: {z}</div>
+              <div className="slice-label">z: {z.toFixed(3)}</div>
             </>
           )}
         </ParentSize>

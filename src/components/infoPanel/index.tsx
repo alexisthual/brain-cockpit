@@ -1,5 +1,5 @@
-import { Button, ButtonGroup, MenuItem } from "@blueprintjs/core";
-import { ItemRenderer, Select } from "@blueprintjs/select";
+import { Button, ButtonGroup } from "@blueprintjs/core";
+import { Select } from "@blueprintjs/select";
 import React from "react";
 
 import {
@@ -11,6 +11,7 @@ import {
   MetricString,
   SurfaceMapType,
   SurfaceMapTypeString,
+  stringRenderer,
 } from "constants/index";
 import "./style.scss";
 
@@ -59,18 +60,6 @@ const InfoPanel = ({
   surfaceMapTypeLabels,
   surfaceMapTypeChangeCallback = () => {},
 }: IProps) => {
-  const stringRenderer: ItemRenderer<string> = (
-    str,
-    { handleClick, modifiers, query }
-  ) => {
-    if (!modifiers.matchesPredicate) {
-      return null;
-    }
-    return (
-      <MenuItem key={`menuitem-${str}`} onClick={handleClick} text={str} />
-    );
-  };
-
   const MeshTypeSelect = Select.ofType<MeshTypeString>();
   const HemiSelect = Select.ofType<HemisphereSideString>();
   const SelectSubject = Select.ofType<string>();

@@ -68,7 +68,7 @@ const CanvasSlice = ({
                   colorString.get
                     .rgb(colormap(normalizedIntensity || 0))
                     .slice(0, 3),
-                  alpha
+                  max - min > 0 ? alpha : 0
                 );
           ctx.fillRect(
             i * pixelWidth,

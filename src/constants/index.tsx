@@ -1,3 +1,6 @@
+import { MenuItem } from "@blueprintjs/core";
+import { ItemRenderer } from "@blueprintjs/select";
+
 export enum Orientation {
   HORIZONTAL = "horizontal",
   VERTICAL = "vertical",
@@ -41,3 +44,15 @@ export enum Metric {
 }
 
 export type MetricString = keyof typeof Metric;
+
+// Utils for Select ojects
+export function stringRenderer(
+  str: string,
+  { handleClick, modifiers, query }: any
+) {
+  if (!modifiers.matchesPredicate) {
+    return null;
+  }
+
+  return <MenuItem key={`menuitem-${str}`} onClick={handleClick} text={str} />;
+}
