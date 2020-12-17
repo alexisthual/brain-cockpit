@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { eel } from "App";
 import CanvasSlice from "components/canvasSlice";
 import CanvasCrosshair from "components/canvasCrosshair";
+import Timeseries from "components/timeseries";
 
 import "./style.scss";
 
@@ -24,8 +25,20 @@ const CutsExplorer = () => {
   const [contHorizontalSlice, setContHorizontalSlice] = useState<number[][]>(
     []
   );
+  const [voxelTimeseries, setVoxelTimeseries] = useState<number[]>([]);
   // Some nifti files are rotated
   const [rotatedSagital] = useState(false);
+
+  // Get voxel timeseries
+  useEffect(() => {
+    eel.get_voxel_timeseries(
+      Math.floor(x * contSize[0]),
+      Math.floor(y * contSize[1]),
+      Math.floor(z * contSize[2])
+    )((timeseries: number[]) => {
+      setVoxelTimeseries(timeseries);
+    });
+  }, [x, y, z]);
 
   // Get slice shapes
   useEffect(() => {
@@ -185,6 +198,17 @@ const CutsExplorer = () => {
               ) : null}
               <div className="slice-label">z: {z}</div>
             </>
+          )}
+        </ParentSize>
+      </div>
+      <div className={"timeseries"}>
+        <ParentSize>
+          {({ width, height }) => (
+            <Timeseries
+              timeseries={voxelTimeseries}
+              height={height}
+              width={width}
+            />
           )}
         </ParentSize>
       </div>

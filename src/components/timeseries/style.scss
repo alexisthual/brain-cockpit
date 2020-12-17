@@ -1,0 +1,9 @@
+@import "~@blueprintjs/core/lib/scss/variables";
+
+.axis {
+  position: absolute;
+  .tick {
+    fill: $gray3;
+    font-size: 11px;
+  }
+}

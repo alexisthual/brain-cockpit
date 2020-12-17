@@ -50,6 +50,13 @@ def get_contrast_shape():
 
 
 @eel.expose
+def get_voxel_timeseries(x, y, z):
+    if DEBUG:
+        print(f"get_voxel_timeseries ({x}, {y}, {z})")
+    return contrast_img_resampled[x, y, z, :].tolist()
+
+
+@eel.expose
 def get_contrast_sagital(x, t=0):
     if DEBUG:
         print(f"get_contrast_sagital x={x}, t={t}")
