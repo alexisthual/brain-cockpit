@@ -73,8 +73,8 @@ const CanvasSlice = ({
           ctx.fillRect(
             i * pixelWidth,
             j * pixelHeight,
-            pixelWidth + 0.5,
-            pixelHeight + 0.5
+            1.2 * pixelWidth,
+            1.2 * pixelHeight
           );
         }
       }
