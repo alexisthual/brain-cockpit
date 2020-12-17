@@ -1,6 +1,9 @@
 import dotenv
 import eel
 import nibabel as nib
+from nilearn.image import load_img
+from nilearn.image import resample_to_img
+import numpy as np
 import os
 
 # Load environment variables
@@ -18,26 +21,73 @@ DEBUG = os.getenv("DEBUG")
 
 # Load nifti image
 print("Loading nifti image...")
-nii_file = "/home/alexis/singbrain/data/debby_t1.nii"
-img = nib.load(nii_file).get_fdata()
+
+# The commented nifti path is rotated
+# I presume this can be solved with nilearn.image.reorder_img
+# anatomical_nifti = "/home/alexis/singbrain/data/debby_t1.nii"
+anatomical_nifti = "/home/alexis/singbrain/data/debby141209_gre3d_d004.nii"
+anatomical_img = load_img(anatomical_nifti)
+
+contrast_nifti = "/home/alexis/singbrain/data/debby141209_run02_mm1_d007.nii"
+contrast_img = load_img(contrast_nifti)
+
+contrast_img_resampled = resample_to_img(
+    contrast_img, anatomical_img
+).get_fdata()
+anatomical_img = anatomical_img.get_fdata()
 
 
 @eel.expose
-def get_sagital(x):
+def get_contrast_shape():
     if DEBUG:
-        print(f"get_sagital x: {x}")
-    return img[x, :, :].tolist()
+        print(f"get_contrast_shape")
+    return list(contrast_img_resampled.shape)
 
 
 @eel.expose
-def get_coronal(y):
+def get_contrast_sagital(x, t=0):
     if DEBUG:
-        print(f"get_coronal y: {y}")
-    return img[:, :, y].tolist()
+        print(f"get_contrast_sagital x={x}, t={t}")
+    return contrast_img_resampled[x, :, :, t].tolist()
 
 
 @eel.expose
-def get_horizontal(z):
+def get_contrast_coronal(y, t=0):
     if DEBUG:
-        print(f"get_horizontal z: {z}")
-    return img[:, z, :].tolist()
+        print(f"get_contrast_coronal y={y}, t={t}")
+    return contrast_img_resampled[:, y, :, t].tolist()
+
+
+@eel.expose
+def get_contrast_horizontal(z, t=0):
+    if DEBUG:
+        print(f"get_contrast_horizontal z={z}, t={t}")
+    return contrast_img_resampled[:, :, z, t].tolist()
+
+
+@eel.expose
+def get_anatomical_shape():
+    if DEBUG:
+        print(f"get_anatomical_shape")
+    return list(anatomical_img.shape)
+
+
+@eel.expose
+def get_anatomical_sagital(x):
+    if DEBUG:
+        print(f"get_anatomical_sagital x={x}")
+    return anatomical_img[x, :, :].tolist()
+
+
+@eel.expose
+def get_anatomical_coronal(y):
+    if DEBUG:
+        print(f"get_anatomical_coronal y={y}")
+        return anatomical_img[:, y, :].tolist()
+
+
+@eel.expose
+def get_anatomical_horizontal(z):
+    if DEBUG:
+        print(f"get_anatomical_horizontal z={z}")
+        return anatomical_img[:, :, z].tolist()

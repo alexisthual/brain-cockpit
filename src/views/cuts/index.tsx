@@ -1,3 +1,4 @@
+import { Colors } from "@blueprintjs/core";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import React, { useEffect, useState } from "react";
 
@@ -8,30 +9,76 @@ import CanvasCrosshair from "components/canvasCrosshair";
 import "./style.scss";
 
 const CutsExplorer = () => {
-  const [x, setX] = useState(125);
-  const [y, setY] = useState(75);
-  const [z, setZ] = useState(100);
-  const [sagitalSlice, setSagitalSlice] = useState<number[][]>([]);
-  const [coronalSlice, setCoronalSlice] = useState<number[][]>([]);
-  const [horizontalSlice, setHorizontalSlice] = useState<number[][]>([]);
+  const [x, setX] = useState(0.5);
+  const [y, setY] = useState(0.5);
+  const [z, setZ] = useState(0.5);
+  const [anatSize, setAnatSize] = useState<number[]>([0, 0, 0]);
+  const [anatSagitalSlice, setAnatSagitalSlice] = useState<number[][]>([]);
+  const [anatCoronalSlice, setAnatCoronalSlice] = useState<number[][]>([]);
+  const [anatHorizontalSlice, setAnatHorizontalSlice] = useState<number[][]>(
+    []
+  );
+  const [contSize, setContSize] = useState<number[]>([0, 0, 0]);
+  const [contSagitalSlice, setContSagitalSlice] = useState<number[][]>([]);
+  const [contCoronalSlice, setContCoronalSlice] = useState<number[][]>([]);
+  const [contHorizontalSlice, setContHorizontalSlice] = useState<number[][]>(
+    []
+  );
+  // Some nifti files are rotated
+  const [rotatedSagital] = useState(false);
+
+  // Get slice shapes
+  useEffect(() => {
+    eel.get_anatomical_shape()((shape: number[]) => {
+      setAnatSize(shape);
+    });
+    eel.get_contrast_shape()((shape: number[]) => {
+      setContSize(shape);
+    });
+  }, []);
+
+  // Set logic for updating slices on x,y,z-change
+  useEffect(() => {
+    eel.get_anatomical_sagital(Math.floor(x * anatSize[0]))(
+      (slice: number[][]) => {
+        setAnatSagitalSlice(slice);
+      }
+    );
+    eel.get_contrast_sagital(
+      Math.floor(x * contSize[0]),
+      5
+    )((slice: number[][]) => {
+      setContSagitalSlice(slice);
+    });
+  }, [x, anatSize, contSize]);
 
   useEffect(() => {
-    eel.get_sagital(x)((sagitalSlice: number[][]) => {
-      setSagitalSlice(sagitalSlice);
+    eel.get_anatomical_coronal(Math.floor(y * anatSize[1]))(
+      (slice: number[][]) => {
+        setAnatCoronalSlice(slice);
+      }
+    );
+    eel.get_contrast_coronal(
+      Math.floor(y * contSize[1]),
+      5
+    )((slice: number[][]) => {
+      setContCoronalSlice(slice);
     });
-  }, [x]);
+  }, [y, anatSize, contSize]);
 
   useEffect(() => {
-    eel.get_coronal(y)((coronalSlice: number[][]) => {
-      setCoronalSlice(coronalSlice);
+    eel.get_anatomical_horizontal(Math.floor(z * anatSize[2]))(
+      (slice: number[][]) => {
+        setAnatHorizontalSlice(slice);
+      }
+    );
+    eel.get_contrast_horizontal(
+      Math.floor(z * contSize[2]),
+      5
+    )((slice: number[][]) => {
+      setContHorizontalSlice(slice);
     });
-  }, [y]);
-
-  useEffect(() => {
-    eel.get_horizontal(z)((horizontalSlice: number[][]) => {
-      setHorizontalSlice(horizontalSlice);
-    });
-  }, [z]);
+  }, [z, anatSize, contSize]);
 
   return (
     <div className="slice-container">
@@ -39,16 +86,34 @@ const CutsExplorer = () => {
         <ParentSize>
           {({ width, height }) => (
             <>
-              <CanvasSlice image={sagitalSlice} height={height} width={width} />
-              {sagitalSlice.length > 0 ? (
+              <CanvasSlice
+                image={anatSagitalSlice}
+                height={Math.min(height, width)}
+                width={Math.min(height, width)}
+              />
+              <CanvasSlice
+                image={contSagitalSlice}
+                height={(Math.min(height, width) * contSize[0]) / anatSize[0]}
+                width={Math.min(height, width)}
+                alpha={0.8}
+                color1={Colors.VERMILION1}
+                color2={Colors.LIGHT_GRAY5}
+                threshold={0.5}
+              />
+              {anatSagitalSlice.length > 0 ? (
                 <CanvasCrosshair
-                  height={height}
-                  width={width}
-                  x={z / sagitalSlice.length}
-                  y={y / sagitalSlice.length}
+                  height={Math.min(height, width)}
+                  width={Math.min(height, width)}
+                  x={rotatedSagital ? z : y}
+                  y={rotatedSagital ? y : z}
                   changeCallback={(newX: number, newY: number) => {
-                    setZ(Math.floor(newX * sagitalSlice.length));
-                    setY(Math.floor(newY * sagitalSlice[0].length));
+                    if (rotatedSagital) {
+                      setZ(newX);
+                      setY(newY);
+                    } else {
+                      setY(newX);
+                      setZ(newY);
+                    }
                   }}
                 />
               ) : null}
@@ -59,16 +124,29 @@ const CutsExplorer = () => {
         <ParentSize>
           {({ width, height }) => (
             <>
-              <CanvasSlice image={coronalSlice} height={height} width={width} />
-              {coronalSlice.length > 0 ? (
+              <CanvasSlice
+                image={anatCoronalSlice}
+                height={Math.min(height, width)}
+                width={Math.min(height, width)}
+              />
+              <CanvasSlice
+                image={contCoronalSlice}
+                height={(Math.min(height, width) * contSize[1]) / anatSize[1]}
+                width={Math.min(height, width)}
+                alpha={0.8}
+                color1={Colors.VERMILION1}
+                color2={Colors.LIGHT_GRAY5}
+                threshold={0.5}
+              />
+              {anatCoronalSlice.length > 0 ? (
                 <CanvasCrosshair
-                  height={height}
-                  width={width}
-                  x={x / coronalSlice.length}
-                  y={z / coronalSlice.length}
+                  height={Math.min(height, width)}
+                  width={Math.min(height, width)}
+                  x={x}
+                  y={z}
                   changeCallback={(newX: number, newY: number) => {
-                    setX(Math.floor(newX * coronalSlice.length));
-                    setZ(Math.floor(newY * coronalSlice.length));
+                    setX(newX);
+                    setZ(newY);
                   }}
                 />
               ) : null}
@@ -80,19 +158,28 @@ const CutsExplorer = () => {
           {({ width, height }) => (
             <>
               <CanvasSlice
-                image={horizontalSlice}
-                height={height}
-                width={width}
+                image={anatHorizontalSlice}
+                height={Math.min(height, width)}
+                width={Math.min(height, width)}
               />
-              {horizontalSlice.length > 0 ? (
+              <CanvasSlice
+                image={contHorizontalSlice}
+                height={(Math.min(height, width) * contSize[2]) / anatSize[2]}
+                width={Math.min(height, width)}
+                alpha={0.8}
+                color1={Colors.VERMILION1}
+                color2={Colors.LIGHT_GRAY5}
+                threshold={0.5}
+              />
+              {anatHorizontalSlice.length > 0 ? (
                 <CanvasCrosshair
-                  height={height}
-                  width={width}
-                  x={x / horizontalSlice.length}
-                  y={y / horizontalSlice.length}
+                  height={Math.min(height, width)}
+                  width={Math.min(height, width)}
+                  x={x}
+                  y={y}
                   changeCallback={(newX: number, newY: number) => {
-                    setX(Math.floor(newX * horizontalSlice.length));
-                    setY(Math.floor(newY * horizontalSlice[0].length));
+                    setX(newX);
+                    setY(newY);
                   }}
                 />
               ) : null}

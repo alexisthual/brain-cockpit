@@ -26,28 +26,27 @@ const CanvasCrosshair = ({
     const ctx = canvas?.getContext("2d");
 
     if (canvas && ctx) {
-      const size = Math.min(height, width);
-      canvas.height = size;
-      canvas.width = size;
+      canvas.height = height;
+      canvas.width = width;
 
       ctx.strokeStyle = Colors.BLUE5;
 
       // Draw vertical line
       ctx.beginPath();
-      ctx.moveTo(x * size, 0);
-      ctx.lineTo(x * size, size);
+      ctx.moveTo(x * width, 0);
+      ctx.lineTo(x * width, width);
       ctx.stroke();
 
       // Draw horisontal line
       ctx.beginPath();
-      ctx.moveTo(0, y * size);
-      ctx.lineTo(size, y * size);
+      ctx.moveTo(0, y * height);
+      ctx.lineTo(height, y * height);
       ctx.stroke();
 
       // Mouse events
       canvas.onmousedown = (e) => {
         setMouseDown(true);
-        changeCallback(e.offsetX / size, e.offsetY / size);
+        changeCallback(e.offsetX / width, e.offsetY / height);
       };
       canvas.onmouseup = (e) => {
         setMouseDown(false);
@@ -57,12 +56,11 @@ const CanvasCrosshair = ({
 
   useEffect(() => {
     const canvas = canvasEl.current;
-    const size = Math.min(height, width);
 
     if (canvas) {
       canvas.onmousemove = (e) => {
         if (mouseDown) {
-          changeCallback(e.offsetX / size, e.offsetY / size);
+          changeCallback(e.offsetX / width, e.offsetY / height);
         }
       };
     }
