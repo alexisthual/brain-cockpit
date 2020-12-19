@@ -4,7 +4,7 @@ import { curveLinear } from "@visx/curve";
 import { Group } from "@visx/group";
 import { scaleLinear, scaleBand } from "@visx/scale";
 import { Bar, LinePath } from "@visx/shape";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 
 import "./style.scss";
 
@@ -36,7 +36,7 @@ const Timeseries = ({
         range: [0, width - margin.left - margin.right],
         domain: [...Array(timeseries.length).keys()],
       }),
-    [timeseries, width]
+    [timeseries, width, margin.left, margin.right]
   );
 
   const yScale = useMemo(
@@ -45,7 +45,7 @@ const Timeseries = ({
         range: [height - margin.bottom - margin.top, 0],
         domain: [Math.min(...timeseries, 0), Math.max(...timeseries)],
       }),
-    [timeseries, height]
+    [timeseries, height, margin.bottom, margin.top]
   );
 
   return (
@@ -105,4 +105,4 @@ const Timeseries = ({
   );
 };
 
-export default Timeseries;
+export default React.memo(Timeseries);

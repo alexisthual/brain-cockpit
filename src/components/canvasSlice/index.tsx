@@ -10,6 +10,7 @@ interface Props {
   image: number[][];
   alpha?: number;
   threshold?: number;
+  range?: number[];
   color1?: string;
   color2?: string;
   height: number;
@@ -32,6 +33,7 @@ const CanvasSlice = ({
   alpha = 1,
   image,
   threshold,
+  range,
   color1 = Colors.BLACK,
   color2 = Colors.WHITE,
   height,
@@ -48,8 +50,11 @@ const CanvasSlice = ({
     canvas.width = width;
     const pixelWidth = width / image.length;
     const pixelHeight = height / image[0].length;
-    const max = getMax(image);
-    const min = getMin(image, threshold ? max * threshold : 0);
+    const max = range !== undefined ? range[1] : getMax(image);
+    const min =
+      range !== undefined
+        ? range[0]
+        : getMin(image, threshold ? max * threshold : 0);
 
     // Draw image pixels
     for (let i = 0; i < image.length; i++) {

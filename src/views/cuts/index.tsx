@@ -1,15 +1,19 @@
-import { Button, Colors, FormGroup, Label, Slider } from "@blueprintjs/core";
+import { Button, Colors, Slider } from "@blueprintjs/core";
 import { Select } from "@blueprintjs/select";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
+import interpolate from "color-interpolate";
 import React, { useEffect, useState } from "react";
 
 import { eel } from "App";
 import CanvasSlice from "components/canvasSlice";
 import CanvasCrosshair from "components/canvasCrosshair";
+import Colorbar from "components/colorbar";
 import Timeseries from "components/timeseries";
 import { stringRenderer } from "constants/index";
 
 import "./style.scss";
+
+const colorString = require("color-string");
 
 const CutsExplorer = () => {
   const [subjects] = useState(["debby"]);
@@ -30,6 +34,7 @@ const CutsExplorer = () => {
   );
   const [contThreshold, setContThreshold] = useState(0.5);
   const [contSize, setContSize] = useState<number[]>([0, 0, 0]);
+  const [contRange, setContRange] = useState([0, 1]);
   const [contSagitalSlice, setContSagitalSlice] = useState<number[][]>([]);
   const [contCoronalSlice, setContCoronalSlice] = useState<number[][]>([]);
   const [contHorizontalSlice, setContHorizontalSlice] = useState<number[][]>(
@@ -38,6 +43,12 @@ const CutsExplorer = () => {
   const [voxelTimeseries, setVoxelTimeseries] = useState<number[]>([]);
   // Some nifti files are rotated
   const [rotatedSagital] = useState(false);
+
+  useEffect(() => {
+    eel.get_contrast_range()((range: number[]) => {
+      setContRange(range);
+    });
+  }, []);
 
   // Get voxel timeseries
   useEffect(() => {
@@ -48,7 +59,7 @@ const CutsExplorer = () => {
     )((timeseries: number[]) => {
       setVoxelTimeseries(timeseries);
     });
-  }, [x, y, z]);
+  }, [x, y, z, contSize]);
 
   // Get slice shapes
   useEffect(() => {
@@ -106,6 +117,11 @@ const CutsExplorer = () => {
   const SelectSubject = Select.ofType<string>();
   const SelectSequence = Select.ofType<string>();
   const SelectRun = Select.ofType<string>();
+
+  const color1 = Colors.VERMILION1;
+  const color2 = Colors.GOLD5;
+  const colormap = (i: number) =>
+    colorString.get.rgb(interpolate([color1, color2])(i));
 
   return (
     <div className="slice-container">
@@ -172,110 +188,116 @@ const CutsExplorer = () => {
         </div>
       </div>
       <div className="slices">
-        <ParentSize>
-          {({ width, height }) => (
-            <>
-              <CanvasSlice
-                image={anatSagitalSlice}
-                height={Math.min(height, width)}
-                width={Math.min(height, width)}
-              />
-              <CanvasSlice
-                image={contSagitalSlice}
-                height={(Math.min(height, width) * contSize[0]) / anatSize[0]}
-                width={Math.min(height, width)}
-                alpha={0.8}
-                color1={Colors.VERMILION1}
-                color2={Colors.GOLD5}
-                threshold={contThreshold}
-              />
-              {anatSagitalSlice.length > 0 ? (
-                <CanvasCrosshair
+        <div className="slices-grid">
+          <ParentSize>
+            {({ width, height }) => (
+              <>
+                <CanvasSlice
+                  image={anatSagitalSlice}
                   height={Math.min(height, width)}
                   width={Math.min(height, width)}
-                  x={rotatedSagital ? z : y}
-                  y={rotatedSagital ? y : z}
-                  changeCallback={(newX: number, newY: number) => {
-                    if (rotatedSagital) {
-                      setZ(newX);
-                      setY(newY);
-                    } else {
-                      setY(newX);
+                />
+                <CanvasSlice
+                  image={contSagitalSlice}
+                  height={(Math.min(height, width) * contSize[0]) / anatSize[0]}
+                  width={Math.min(height, width)}
+                  alpha={0.8}
+                  color1={color1}
+                  color2={color2}
+                  threshold={contThreshold}
+                  range={contRange}
+                />
+                {anatSagitalSlice.length > 0 ? (
+                  <CanvasCrosshair
+                    height={Math.min(height, width)}
+                    width={Math.min(height, width)}
+                    x={rotatedSagital ? z : y}
+                    y={rotatedSagital ? y : z}
+                    changeCallback={(newX: number, newY: number) => {
+                      if (rotatedSagital) {
+                        setZ(newX);
+                        setY(newY);
+                      } else {
+                        setY(newX);
+                        setZ(newY);
+                      }
+                    }}
+                  />
+                ) : null}
+                <div className="slice-label">x: {x.toFixed(3)}</div>
+              </>
+            )}
+          </ParentSize>
+          <ParentSize>
+            {({ width, height }) => (
+              <>
+                <CanvasSlice
+                  image={anatCoronalSlice}
+                  height={Math.min(height, width)}
+                  width={Math.min(height, width)}
+                />
+                <CanvasSlice
+                  image={contCoronalSlice}
+                  height={(Math.min(height, width) * contSize[1]) / anatSize[1]}
+                  width={Math.min(height, width)}
+                  alpha={0.8}
+                  color1={color1}
+                  color2={color2}
+                  threshold={contThreshold}
+                  range={contRange}
+                />
+                {anatCoronalSlice.length > 0 ? (
+                  <CanvasCrosshair
+                    height={Math.min(height, width)}
+                    width={Math.min(height, width)}
+                    x={x}
+                    y={z}
+                    changeCallback={(newX: number, newY: number) => {
+                      setX(newX);
                       setZ(newY);
-                    }
-                  }}
-                />
-              ) : null}
-              <div className="slice-label">x: {x.toFixed(3)}</div>
-            </>
-          )}
-        </ParentSize>
-        <ParentSize>
-          {({ width, height }) => (
-            <>
-              <CanvasSlice
-                image={anatCoronalSlice}
-                height={Math.min(height, width)}
-                width={Math.min(height, width)}
-              />
-              <CanvasSlice
-                image={contCoronalSlice}
-                height={(Math.min(height, width) * contSize[1]) / anatSize[1]}
-                width={Math.min(height, width)}
-                alpha={0.8}
-                color1={Colors.VERMILION1}
-                color2={Colors.GOLD5}
-                threshold={contThreshold}
-              />
-              {anatCoronalSlice.length > 0 ? (
-                <CanvasCrosshair
+                    }}
+                  />
+                ) : null}
+                <div className="slice-label">y: {y.toFixed(3)}</div>
+              </>
+            )}
+          </ParentSize>
+          <ParentSize>
+            {({ width, height }) => (
+              <>
+                <CanvasSlice
+                  image={anatHorizontalSlice}
                   height={Math.min(height, width)}
                   width={Math.min(height, width)}
-                  x={x}
-                  y={z}
-                  changeCallback={(newX: number, newY: number) => {
-                    setX(newX);
-                    setZ(newY);
-                  }}
                 />
-              ) : null}
-              <div className="slice-label">y: {y.toFixed(3)}</div>
-            </>
-          )}
-        </ParentSize>
-        <ParentSize>
-          {({ width, height }) => (
-            <>
-              <CanvasSlice
-                image={anatHorizontalSlice}
-                height={Math.min(height, width)}
-                width={Math.min(height, width)}
-              />
-              <CanvasSlice
-                image={contHorizontalSlice}
-                height={(Math.min(height, width) * contSize[2]) / anatSize[2]}
-                width={Math.min(height, width)}
-                alpha={0.8}
-                color1={Colors.VERMILION1}
-                color2={Colors.GOLD5}
-                threshold={contThreshold}
-              />
-              {anatHorizontalSlice.length > 0 ? (
-                <CanvasCrosshair
-                  height={Math.min(height, width)}
+                <CanvasSlice
+                  image={contHorizontalSlice}
+                  height={(Math.min(height, width) * contSize[2]) / anatSize[2]}
                   width={Math.min(height, width)}
-                  x={x}
-                  y={y}
-                  changeCallback={(newX: number, newY: number) => {
-                    setX(newX);
-                    setY(newY);
-                  }}
+                  alpha={0.8}
+                  color1={color1}
+                  color2={color2}
+                  threshold={contThreshold}
+                  range={contRange}
                 />
-              ) : null}
-              <div className="slice-label">z: {z.toFixed(3)}</div>
-            </>
-          )}
-        </ParentSize>
+                {anatHorizontalSlice.length > 0 ? (
+                  <CanvasCrosshair
+                    height={Math.min(height, width)}
+                    width={Math.min(height, width)}
+                    x={x}
+                    y={y}
+                    changeCallback={(newX: number, newY: number) => {
+                      setX(newX);
+                      setY(newY);
+                    }}
+                  />
+                ) : null}
+                <div className="slice-label">z: {z.toFixed(3)}</div>
+              </>
+            )}
+          </ParentSize>
+        </div>
+        <Colorbar colormap={colormap} vmin={contRange[0]} vmax={contRange[1]} />
       </div>
       <div className={"slice-information"}>
         <ParentSize>

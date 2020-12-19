@@ -128,3 +128,11 @@
   overflow: hidden;
   position: relative;
 }
+
+.axis {
+  position: absolute;
+  .tick {
+    fill: $gray3;
+    font-size: 11px;
+  }
+}

@@ -1,5 +1,4 @@
 import { MenuItem } from "@blueprintjs/core";
-import { ItemRenderer } from "@blueprintjs/select";
 
 export enum Orientation {
   HORIZONTAL = "horizontal",

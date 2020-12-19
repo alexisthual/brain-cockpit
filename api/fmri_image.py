@@ -46,6 +46,15 @@ if SLICE_DATA_PATH and os.path.exists(SLICE_DATA_PATH):
         contrast_img, anatomical_img_resampled
     ).get_fdata()
     anatomical_img_resampled = anatomical_img_resampled.get_fdata()
+else:
+    print("\tEmpty.")
+
+
+@eel.expose
+def get_contrast_range():
+    if DEBUG:
+        print(f"[{datetime.now()}] get_contrast_shape")
+    return [np.min(contrast_img_resampled), np.max(contrast_img_resampled)]
 
 
 @eel.expose
