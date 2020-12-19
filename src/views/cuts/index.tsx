@@ -297,7 +297,11 @@ const CutsExplorer = () => {
             )}
           </ParentSize>
         </div>
-        <Colorbar colormap={colormap} vmin={contRange[0]} vmax={contRange[1]} />
+        <Colorbar
+          colormap={colormap}
+          vmin={contThreshold ? contRange[1] * contThreshold : contRange[0]}
+          vmax={contRange[1]}
+        />
       </div>
       <div className={"slice-information"}>
         <ParentSize>
@@ -306,6 +310,7 @@ const CutsExplorer = () => {
               clickCallback={(t: number) => setT(t)}
               timeseries={voxelTimeseries}
               selectedT={t}
+              range={contRange}
               height={height}
               width={width}
             />

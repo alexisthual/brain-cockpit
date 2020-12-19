@@ -14,6 +14,7 @@ interface Props {
   width: number;
   clickCallback?: (t: number) => void;
   selectedT?: number;
+  range?: number[];
 }
 
 const Timeseries = ({
@@ -22,6 +23,7 @@ const Timeseries = ({
   clickCallback = () => {},
   height,
   width,
+  range,
 }: Props) => {
   const margin = {
     top: 30,
@@ -43,7 +45,10 @@ const Timeseries = ({
     () =>
       scaleLinear<number>({
         range: [height - margin.bottom - margin.top, 0],
-        domain: [Math.min(...timeseries, 0), Math.max(...timeseries)],
+        domain:
+          range !== undefined
+            ? range
+            : [Math.min(...timeseries, 0), Math.max(...timeseries)],
       }),
     [timeseries, height, margin.bottom, margin.top]
   );

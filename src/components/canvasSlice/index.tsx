@@ -53,7 +53,9 @@ const CanvasSlice = ({
     const max = range !== undefined ? range[1] : getMax(image);
     const min =
       range !== undefined
-        ? range[0]
+        ? threshold !== undefined
+          ? max * threshold
+          : range[0]
         : getMin(image, threshold ? max * threshold : 0);
 
     // Draw image pixels
