@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useReducer, useState } from "react";
 import { nanoid } from "nanoid";
 
 import { eel } from "App";
+import Colorbar from "components/colorbar";
 import ContrastFingerprint from "components/contrastFingerprint";
 import InfoPanel from "components/infoPanel";
 import PanelButtons from "components/infoPanel/buttons";
@@ -310,6 +311,14 @@ const SurfaceExplorer = () => {
       }`}
     >
       <div id="scenes">
+        <Colorbar
+          vmin={
+            contrastMap !== undefined ? Math.min(...contrastMap) : undefined
+          }
+          vmax={
+            contrastMap !== undefined ? Math.max(...contrastMap) : undefined
+          }
+        />
         <PanesButtons
           addPaneCallback={() => {
             setPanes({ type: "add" });
