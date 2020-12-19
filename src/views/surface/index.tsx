@@ -175,7 +175,7 @@ const SurfaceExplorer = () => {
   // I
   const incrementSubject = useCallback(
     (event: any) => {
-      if (event.isComposing || event.keyCode === 75) {
+      if (event.isComposing || event.keyCode === 73) {
         if (sharedState && !meanContrastMap) {
           setSubject({ type: "increment" });
         }
@@ -191,7 +191,7 @@ const SurfaceExplorer = () => {
   // K
   const decrementSubject = useCallback(
     (event: any) => {
-      if (event.isComposing || event.keyCode === 73) {
+      if (event.isComposing || event.keyCode === 75) {
         if (sharedState && !meanContrastMap) {
           setSubject({ type: "decrement" });
         }

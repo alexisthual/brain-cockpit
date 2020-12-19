@@ -96,13 +96,13 @@ const FunctionalDistanceExplorer = () => {
     // Set keybinding
     const keyPressEvents = [
       {
-        keyCode: 73, // K
+        keyCode: 75, // K
         callback: () => {
           setSubject({ type: "decrement" });
         },
       },
       {
-        keyCode: 75, // I
+        keyCode: 73, // I
         callback: () => {
           setSubject({ type: "increment" });
         },
