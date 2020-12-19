@@ -136,3 +136,8 @@
     font-size: 11px;
   }
 }
+
+.bp3-select-popover .bp3-menu {
+  max-height: 300px;
+  overflow: auto;
+}

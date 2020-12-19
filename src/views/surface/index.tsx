@@ -335,11 +335,15 @@ const SurfaceExplorer = () => {
           <InfoPanel
             subjectLabels={subjectLabels}
             subject={subject.label}
+            contrastLabels={contrastLabels}
             contrast={contrast.label}
             contrastIndex={contrast.index}
             voxelIndex={voxelIndex}
             subjectChangeCallback={(subjectIndex: number) => {
               setSubject({ payload: subjectIndex });
+            }}
+            contrastChangeCallback={(contrastIndex: number) => {
+              setContrast({ payload: contrastIndex });
             }}
             meanSurfaceMap={meanContrastMap}
             meanChangeCallback={() => {

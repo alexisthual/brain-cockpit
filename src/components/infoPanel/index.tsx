@@ -20,6 +20,8 @@ interface IProps {
   subjectLabels?: string[];
   subjectChangeCallback?: (subjectIndex: number) => void;
   contrast?: string;
+  contrastLabels?: string[];
+  contrastChangeCallback?: (contrastIndex: number) => void;
   contrastIndex?: number;
   voxelIndex?: number;
   meanSurfaceMap?: boolean;
@@ -43,6 +45,8 @@ const InfoPanel = ({
   subjectLabels,
   subjectChangeCallback = () => {},
   contrast,
+  contrastLabels,
+  contrastChangeCallback = () => {},
   contrastIndex,
   voxelIndex,
   meanSurfaceMap,
@@ -63,6 +67,7 @@ const InfoPanel = ({
   const MeshTypeSelect = Select.ofType<MeshTypeString>();
   const HemiSelect = Select.ofType<HemisphereSideString>();
   const SelectSubject = Select.ofType<string>();
+  const SelectContrast = Select.ofType<string>();
   const MetricSelect = Select.ofType<MetricString>();
   const SurfaceMapTypeSelect = Select.ofType<SurfaceMapTypeString>();
 
@@ -153,7 +158,22 @@ const InfoPanel = ({
         <>
           <div className="header-item-label">Contrast</div>
           <div className="header-item-value">
-            {contrast} ({contrastIndex})
+            {contrastLabels ? (
+              <ButtonGroup>
+                <SelectContrast
+                  filterable={false}
+                  items={contrastLabels}
+                  itemRenderer={stringRenderer}
+                  onItemSelect={(item: string) => {
+                    contrastChangeCallback(contrastLabels.indexOf(item));
+                  }}
+                >
+                  <Button rightIcon="double-caret-vertical" text={contrast} />
+                </SelectContrast>
+              </ButtonGroup>
+            ) : (
+              <>{contrast}</>
+            )}
           </div>
         </>
       ) : null}
