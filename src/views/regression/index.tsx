@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useReducer, useState } from "react";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 
+import Colorbar from "components/colorbar";
 import ContrastFingerprint from "components/contrastFingerprint";
 import InfoPanel from "components/infoPanel";
 import PanelButtons from "components/infoPanel/buttons";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
-import { Orientation, Subject } from "constants/index";
+import { ActionLabel, Orientation, Subject } from "constants/index";
 import { eel } from "App";
 
 const RegressionExplorer = () => {
-  const initalSubject: Subject = { index: 10, label: "sub-15" };
-  const [subject] = useState(initalSubject);
+  const [subjectLabels, setSubjectLabels] = useState<string[]>([]);
   const [contrastLabels, setContrastLabels] = useState<string[]>([]);
   const [taskLabels, setTaskLabels] = useState<string[]>([]);
   const [taskCounts, setTaskCounts] = useState<number[]>([]);
@@ -27,24 +27,52 @@ const RegressionExplorer = () => {
     number[] | undefined
   >();
 
+  const initialSubject: Subject = { index: 10, label: "sub-15" };
+  const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
+    let newIndex = state.index;
+    let n = subjectLabels.length;
+    switch (action.type) {
+      case "increment":
+        newIndex = ((((state.index ?? 0) + 1) % n) + n) % n;
+        break;
+      case "decrement":
+        newIndex = ((((state.index ?? 0) - 1) % n) + n) % n;
+        break;
+      default:
+        newIndex = ((action.payload ?? 0 % n) + n) % n;
+        break;
+    }
+    return {
+      index: newIndex,
+      label: subjectLabels[newIndex],
+    };
+  };
+  const [subject, setSubject] = useReducer(subjectReducer, initialSubject);
+
   // Initialise all app state variables
   useEffect(() => {
     const fetchAllData = async () => {
       // Load static data
       const contrastLabels = eel.get_contrast_labels()();
       const tasks = eel.get_tasks()();
-      const errorMap = eel.get_regressed_coordinates_error()();
+      const subjectLabels = eel.get_subjects()();
+      const errorMap = eel.get_regressed_coordinates_error(
+        initialSubject.label
+      )();
       setLoadingErrorMap(true);
 
       // Wait for all data to be loaded before setting app state
-      Promise.all([contrastLabels, tasks, errorMap]).then((values) => {
-        setVoxelIndex(0);
-        setContrastLabels(values[0]);
-        setTaskLabels(values[1].map((x: any) => x[0]));
-        setTaskCounts(values[1].map((x: any) => x[1]));
-        setErrorMap(values[2]);
-        setLoadingErrorMap(false);
-      });
+      Promise.all([contrastLabels, tasks, subjectLabels, errorMap]).then(
+        (values) => {
+          setVoxelIndex(0);
+          setContrastLabels(values[0]);
+          setTaskLabels(values[1].map((x: any) => x[0]));
+          setTaskCounts(values[1].map((x: any) => x[1]));
+          setSubjectLabels(values[2]);
+          setErrorMap(values[3]);
+          setLoadingErrorMap(false);
+        }
+      );
     };
 
     fetchAllData();
@@ -81,36 +109,74 @@ const RegressionExplorer = () => {
         });
       });
     };
-  }, []);
+  }, [initialSubject.label]);
+
+  // Update on subject change
+  useEffect(() => {
+    setLoadingErrorMap(true);
+    eel.get_regressed_coordinates_error(subject.label)((error: number[]) => {
+      setErrorMap(error);
+      setLoadingErrorMap(false);
+    });
+  }, [subject.label]);
 
   // Update on voxelIndex change
   useEffect(() => {
     // Get regressed coordinates on voxelIndex change
     if (voxelIndex !== undefined) {
-      eel.get_regressed_coordinates(voxelIndex)((coordinates: number[]) => {
+      eel.get_regressed_coordinates(
+        subject.label,
+        voxelIndex
+      )((coordinates: number[]) => {
         setRegressedCoordinates(coordinates);
       });
     }
 
     // Get activation fingerprint for this voxel
     setLoadingFingerprint(true);
-    if (meanFingerprint) {
-      eel.get_voxel_fingerprint_mean(voxelIndex)((fingerprint: number[]) => {
-        setContrastFingerprint(fingerprint);
+    if (voxelIndex !== undefined) {
+      if (meanFingerprint) {
+        eel.get_voxel_fingerprint_mean(voxelIndex)((fingerprint: number[]) => {
+          setContrastFingerprint(fingerprint);
+          setLoadingFingerprint(false);
+        });
+      } else if (subject.index !== undefined) {
+        eel.get_voxel_fingerprint(
+          subject.index,
+          voxelIndex
+        )((contrastFingerprint: number[]) => {
+          setContrastFingerprint(contrastFingerprint);
+          setLoadingFingerprint(false);
+        });
+      } else {
         setLoadingFingerprint(false);
-      });
-    } else if (subject.index !== undefined) {
-      eel.get_voxel_fingerprint(
-        subject.index,
-        voxelIndex
-      )((contrastFingerprint: number[]) => {
-        setContrastFingerprint(contrastFingerprint);
-        setLoadingFingerprint(false);
-      });
-    } else {
-      setLoadingFingerprint(false);
+      }
     }
-  }, [voxelIndex, subject, meanFingerprint]);
+  }, [voxelIndex, subject.label, subject.index, meanFingerprint]);
+
+  // Set key events
+
+  // I
+  const incrementSubject = useCallback((event: any) => {
+    if (event.isComposing || event.keyCode === 73) {
+      setSubject({ type: "increment" });
+    }
+  }, []);
+  useEffect(() => {
+    window.addEventListener("keydown", incrementSubject);
+    return () => window.removeEventListener("keydown", incrementSubject);
+  }, [incrementSubject]);
+
+  // K
+  const decrementSubject = useCallback((event: any) => {
+    if (event.isComposing || event.keyCode === 75) {
+      setSubject({ type: "decrement" });
+    }
+  }, []);
+  useEffect(() => {
+    window.addEventListener("keydown", decrementSubject);
+    return () => window.removeEventListener("keydown", decrementSubject);
+  }, [decrementSubject]);
 
   return (
     <div
@@ -119,11 +185,22 @@ const RegressionExplorer = () => {
         voxelIndex !== undefined ? `${orientation}-orientation` : ""
       }`}
     >
-      <InfoPanel subject={subject.label} voxelIndex={voxelIndex} />
+      <InfoPanel
+        subject={subject.label}
+        subjectLabels={subjectLabels}
+        subjectChangeCallback={(subjectIndex: number) => {
+          setSubject({ payload: subjectIndex });
+        }}
+        voxelIndex={voxelIndex}
+      />
       {loadingContrastMap ? (
         <TextualLoader text="Loading error map..." />
       ) : null}
       <div id="scene">
+        <Colorbar
+          vmin={errorMap ? Math.min(...errorMap) : undefined}
+          vmax={errorMap ? Math.max(...errorMap) : undefined}
+        />
         <ParentSize className="scene-container" debounceTime={10}>
           {({ width: sceneWidth, height: sceneHeight }) => (
             <Scene
