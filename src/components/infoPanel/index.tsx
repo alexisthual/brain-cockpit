@@ -140,13 +140,15 @@ const InfoPanel = ({
                     text={subject}
                   />
                 </SelectSubject>
-                <Button
-                  active={meanSurfaceMap}
-                  icon={meanSurfaceMap ? "ungroup-objects" : "group-objects"}
-                  onClick={meanChangeCallback}
-                  outlined
-                  title={"Take subjects' mean"}
-                />
+                {meanSurfaceMap !== undefined ? (
+                  <Button
+                    active={meanSurfaceMap}
+                    icon={meanSurfaceMap ? "ungroup-objects" : "group-objects"}
+                    onClick={meanChangeCallback}
+                    outlined
+                    title={"Take subjects' mean"}
+                  />
+                ) : null}
               </ButtonGroup>
             ) : (
               <>{subject}</>
