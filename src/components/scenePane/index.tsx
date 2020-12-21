@@ -6,6 +6,7 @@ import InfoPanel from "components/infoPanel";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
 import {
+  ActionLabel,
   Contrast,
   HemisphereSide,
   HemisphereSideString,
@@ -14,11 +15,6 @@ import {
   Subject,
 } from "constants/index";
 import PaneButtons from "./buttons";
-
-type ActionLabel = {
-  type?: "increment" | "decrement";
-  payload?: number;
-};
 
 interface Props {
   closeCallback: () => void;

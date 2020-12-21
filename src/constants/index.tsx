@@ -55,3 +55,13 @@ export function stringRenderer(
 
   return <MenuItem key={`menuitem-${str}`} onClick={handleClick} text={str} />;
 }
+
+export type ActionLabel = {
+  type?: "increment" | "decrement";
+  payload?: number;
+};
+
+export type ActionPane = {
+  type?: "add" | "remove";
+  payload?: string;
+};

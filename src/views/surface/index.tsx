@@ -11,6 +11,8 @@ import PanesButtons from "./panesButtons";
 import ScenePane from "components/scenePane";
 import TextualLoader from "components/textualLoader";
 import {
+  ActionLabel,
+  ActionPane,
   Contrast,
   HemisphereSide,
   HemisphereSideString,
@@ -19,16 +21,6 @@ import {
   Orientation,
   Subject,
 } from "constants/index";
-
-type ActionLabel = {
-  type?: "increment" | "decrement";
-  payload?: number;
-};
-
-type ActionPane = {
-  type?: "add" | "remove";
-  payload?: string;
-};
 
 const SurfaceExplorer = () => {
   const [subjectLabels, setSubjectLabels] = useState<string[]>([]);

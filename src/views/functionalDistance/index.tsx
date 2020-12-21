@@ -8,6 +8,7 @@ import PanelButtons from "components/infoPanel/buttons";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
 import {
+  ActionLabel,
   MeshType,
   Metric,
   MetricString,
@@ -18,11 +19,6 @@ import {
 } from "constants/index";
 import { eel } from "App";
 import "./style.scss";
-
-type ActionLabel = {
-  type?: "increment" | "decrement";
-  payload?: number;
-};
 
 const FunctionalDistanceExplorer = () => {
   const [subjectLabels, setSubjectLabels] = useState<string[]>([]);
