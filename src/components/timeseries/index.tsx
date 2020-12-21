@@ -50,7 +50,7 @@ const Timeseries = ({
             ? range
             : [Math.min(...timeseries, 0), Math.max(...timeseries)],
       }),
-    [timeseries, height, margin.bottom, margin.top]
+    [timeseries, height, range, margin.bottom, margin.top]
   );
 
   return (
