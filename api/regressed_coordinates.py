@@ -17,7 +17,16 @@ DEBUG = os.getenv("DEBUG")
 EXPERIMENT_DATA_PATH = os.getenv("EXPERIMENT_DATA_PATH")
 EXPERIMENT_REGRESSION = bool(strtobool(os.getenv("EXPERIMENT_REGRESSION")))
 EXPERIMENT_REGRESSION_FOLDER = os.getenv("EXPERIMENT_REGRESSION_FOLDER")
-EXPERIMENT_REGRESSION_MODEL = os.getenv("EXPERIMENT_REGRESSION_MODEL")
+
+MODELS = ["linear_svr", "nystroem_n_components_5000"]
+
+
+@eel.expose
+def get_regression_models():
+    if DEBUG:
+        print(f"[{datetime.now()}] get_regression_models")
+    return MODELS
+
 
 ## Load regressed coordinates
 regressed_coordinates = {}
@@ -27,25 +36,28 @@ if (
     and os.path.exists(EXPERIMENT_DATA_PATH)
 ):
     print("Loading regressed coordinates...")
-    for subject in subjects:
-        with open(
-            os.path.join(
-                EXPERIMENT_DATA_PATH,
-                EXPERIMENT_REGRESSION_FOLDER,
-                f"prediction_{EXPERIMENT_REGRESSION_MODEL}_subject_{subject}.npy",
-            ),
-            "rb",
-        ) as f:
-            regressed_coordinates[subject] = np.load(f)
+    for model in MODELS:
+        coordinates = {}
+        for subject in subjects:
+            with open(
+                os.path.join(
+                    EXPERIMENT_DATA_PATH,
+                    EXPERIMENT_REGRESSION_FOLDER,
+                    f"prediction_{model}_subject_{subject}.npy",
+                ),
+                "rb",
+            ) as f:
+                coordinates[subject] = np.load(f)
+        regressed_coordinates[model] = coordinates
 
 
 @eel.expose
-def get_regressed_coordinates(subject, voxel_index):
+def get_regressed_coordinates(model, subject, voxel_index):
     if DEBUG:
         print(
-            f"[{datetime.now()}] get_regressed_coordinates for voxel {voxel_index} for subject {subject}"
+            f"[{datetime.now()}] get_regressed_coordinates for model {model}, subject {subject}, voxel {voxel_index}"
         )
-    return (regressed_coordinates[subject][voxel_index, :]).tolist()
+    return (regressed_coordinates[model][subject][voxel_index, :]).tolist()
 
 
 ## Load regressed coordinates error map
@@ -56,22 +68,25 @@ if (
     and os.path.exists(EXPERIMENT_DATA_PATH)
 ):
     print("Loading regression error map...")
-    for subject in subjects:
-        with open(
-            os.path.join(
-                EXPERIMENT_DATA_PATH,
-                EXPERIMENT_REGRESSION_FOLDER,
-                f"error_{EXPERIMENT_REGRESSION_MODEL}_subject_{subject}.npy",
-            ),
-            "rb",
-        ) as f:
-            regressed_coordinates_error[subject] = np.load(f)
+    for model in MODELS:
+        error = {}
+        for subject in subjects:
+            with open(
+                os.path.join(
+                    EXPERIMENT_DATA_PATH,
+                    EXPERIMENT_REGRESSION_FOLDER,
+                    f"error_{model}_subject_{subject}.npy",
+                ),
+                "rb",
+            ) as f:
+                error[subject] = np.load(f)
+        regressed_coordinates_error[model] = error
 
 
 @eel.expose
-def get_regressed_coordinates_error(subject):
+def get_regressed_coordinates_error(model, subject):
     if DEBUG:
         print(
-            f"[{datetime.now()}] get_regressed_coordinates_error for subject {subject}"
+            f"[{datetime.now()}] get_regressed_coordinates_error for model {model}, subject {subject}"
         )
-    return regressed_coordinates_error[subject].tolist()
+    return regressed_coordinates_error[model][subject].tolist()

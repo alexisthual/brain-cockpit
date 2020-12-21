@@ -11,6 +11,8 @@ import { ActionLabel, Orientation, Subject } from "constants/index";
 import { eel } from "App";
 
 const RegressionExplorer = () => {
+  const [model, setModel] = useState<string>();
+  const [models, setModels] = useState<string[]>([]);
   const [subjectLabels, setSubjectLabels] = useState<string[]>([]);
   const [contrastLabels, setContrastLabels] = useState<string[]>([]);
   const [taskLabels, setTaskLabels] = useState<string[]>([]);
@@ -56,21 +58,17 @@ const RegressionExplorer = () => {
       const contrastLabels = eel.get_contrast_labels()();
       const tasks = eel.get_tasks()();
       const subjectLabels = eel.get_subjects()();
-      const errorMap = eel.get_regressed_coordinates_error(
-        initialSubject.label
-      )();
-      setLoadingErrorMap(true);
+      const models = eel.get_regression_models()();
 
       // Wait for all data to be loaded before setting app state
-      Promise.all([contrastLabels, tasks, subjectLabels, errorMap]).then(
+      Promise.all([contrastLabels, tasks, subjectLabels, models]).then(
         (values) => {
           setVoxelIndex(0);
           setContrastLabels(values[0]);
           setTaskLabels(values[1].map((x: any) => x[0]));
           setTaskCounts(values[1].map((x: any) => x[1]));
           setSubjectLabels(values[2]);
-          setErrorMap(values[3]);
-          setLoadingErrorMap(false);
+          setModels(values[3]);
         }
       );
     };
@@ -111,27 +109,47 @@ const RegressionExplorer = () => {
     };
   }, [initialSubject.label]);
 
+  // On subjectLabels & models change
+  useEffect(() => {
+    if (subjectLabels.length > 0 && models.length > 0) {
+      setSubject({ payload: 0 });
+      setModel(models[0]);
+    }
+  }, [subjectLabels, models]);
+
   // Update on subject change
   useEffect(() => {
-    setLoadingErrorMap(true);
-    eel.get_regressed_coordinates_error(subject.label)((error: number[]) => {
-      setErrorMap(error);
-      setLoadingErrorMap(false);
-    });
-  }, [subject.label]);
+    if (subject.label !== undefined && model !== undefined) {
+      setLoadingErrorMap(true);
+      eel.get_regressed_coordinates_error(
+        model,
+        subject.label
+      )((error: number[]) => {
+        setErrorMap(error);
+        setLoadingErrorMap(false);
+      });
+    }
+  }, [subject.label, model]);
 
-  // Update on voxelIndex change
+  // Update coordinates on voxelIndex change
   useEffect(() => {
     // Get regressed coordinates on voxelIndex change
-    if (voxelIndex !== undefined) {
+    if (
+      voxelIndex !== undefined &&
+      model !== undefined &&
+      subject.label !== undefined
+    ) {
       eel.get_regressed_coordinates(
+        model,
         subject.label,
         voxelIndex
       )((coordinates: number[]) => {
         setRegressedCoordinates(coordinates);
       });
     }
+  }, [voxelIndex, subject.label, model]);
 
+  useEffect(() => {
     // Get activation fingerprint for this voxel
     setLoadingFingerprint(true);
     if (voxelIndex !== undefined) {
@@ -152,7 +170,7 @@ const RegressionExplorer = () => {
         setLoadingFingerprint(false);
       }
     }
-  }, [voxelIndex, subject.label, subject.index, meanFingerprint]);
+  }, [voxelIndex, subject.index, meanFingerprint]);
 
   // Set key events
 
@@ -186,12 +204,37 @@ const RegressionExplorer = () => {
       }`}
     >
       <InfoPanel
-        subject={subject.label}
-        subjectLabels={subjectLabels}
-        subjectChangeCallback={(subjectIndex: number) => {
-          setSubject({ payload: subjectIndex });
-        }}
-        voxelIndex={voxelIndex}
+        rows={[
+          {
+            label: "Model",
+            inputs: [
+              {
+                value: model,
+                values: models,
+                onChangeCallback: (newValue: string) => setModel(newValue),
+              },
+            ],
+          },
+          {
+            label: "Subject",
+            inputs: [
+              {
+                value: subject.label,
+                values: subjectLabels,
+                onChangeCallback: (newValue: string) =>
+                  setSubject({ payload: subjectLabels.indexOf(newValue) }),
+              },
+            ],
+          },
+          {
+            label: "Voxel",
+            inputs: [
+              {
+                value: voxelIndex ? voxelIndex.toString() : undefined,
+              },
+            ],
+          },
+        ]}
       />
       {loadingContrastMap ? (
         <TextualLoader text="Loading error map..." />
