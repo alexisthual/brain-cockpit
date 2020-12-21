@@ -325,32 +325,70 @@ const SurfaceExplorer = () => {
         ) : null}
         {sharedState ? (
           <InfoPanel
-            subjectLabels={subjectLabels}
-            subject={subject.label}
-            contrastLabels={contrastLabels}
-            contrast={contrast.label}
-            contrastIndex={contrast.index}
-            voxelIndex={voxelIndex}
-            subjectChangeCallback={(subjectIndex: number) => {
-              setSubject({ payload: subjectIndex });
-            }}
-            contrastChangeCallback={(contrastIndex: number) => {
-              setContrast({ payload: contrastIndex });
-            }}
-            meanSurfaceMap={meanContrastMap}
-            meanChangeCallback={() => {
-              setMeanContrastMap(!meanContrastMap);
-            }}
-            meshType={meshType}
-            meshTypeLabels={Object.keys(MeshType) as MeshTypeString[]}
-            meshTypeChangeCallback={(meshType: MeshType) => {
-              setMeshType(meshType);
-            }}
-            hemi={hemi}
-            hemiLabels={Object.keys(HemisphereSide) as HemisphereSideString[]}
-            hemiChangeCallback={(hemi: HemisphereSide) => {
-              setHemi(hemi);
-            }}
+            rows={[
+              {
+                label: "Mesh Type",
+                inputs: [
+                  {
+                    value: meshType,
+                    values: Object.keys(MeshType),
+                    onChangeCallback: (newValue: string) =>
+                      setMeshType(newValue as MeshType),
+                  },
+                ],
+              },
+              {
+                label: "Hemi",
+                inputs: [
+                  {
+                    value: hemi,
+                    values: Object.keys(HemisphereSide),
+                    onChangeCallback: (newValue: string) =>
+                      setHemi(newValue as HemisphereSide),
+                  },
+                ],
+              },
+              {
+                label: "Subject",
+                inputs: [
+                  {
+                    value: subject.label,
+                    values: subjectLabels,
+                    onChangeCallback: (newValue: string) =>
+                      setSubject({ payload: subjectLabels.indexOf(newValue) }),
+                  },
+                  {
+                    value: meanContrastMap,
+                    onChangeCallback: () =>
+                      setMeanContrastMap(!meanContrastMap),
+                    iconActive: "group-objects",
+                    iconInactive: "ungroup-objects",
+                    title: "Take subject's mean",
+                  },
+                ],
+              },
+              {
+                label: "Contrast",
+                inputs: [
+                  {
+                    value: contrast.label,
+                    values: contrastLabels,
+                    onChangeCallback: (newValue: string) =>
+                      setContrast({
+                        payload: contrastLabels.indexOf(newValue),
+                      }),
+                  },
+                ],
+              },
+              {
+                label: "Voxel",
+                inputs: [
+                  {
+                    value: voxelIndex ? voxelIndex.toString() : undefined,
+                  },
+                ],
+              },
+            ]}
           />
         ) : null}
         <div className="scene-panes">

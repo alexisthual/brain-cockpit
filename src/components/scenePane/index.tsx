@@ -21,8 +21,8 @@ interface Props {
   subjectLabels: string[];
   contrastLabels: string[];
   sharedState: boolean;
-  sharedSubject: Subject;
-  sharedContrast: Contrast;
+  sharedSubject?: Subject;
+  sharedContrast?: Contrast;
   sharedSurfaceMap?: number[];
   sharedMeanSurfaceMap: boolean;
   sharedVoxelIndex?: number;
@@ -37,8 +37,8 @@ const ScenePane = ({
   subjectLabels = [],
   contrastLabels = [],
   sharedState = false,
-  sharedSubject = {},
-  sharedContrast = {},
+  sharedSubject,
+  sharedContrast,
   sharedSurfaceMap,
   sharedMeanSurfaceMap = false,
   sharedVoxelIndex,
@@ -217,28 +217,67 @@ const ScenePane = ({
       <PaneButtons closeCallback={closeCallback} />
       {!sharedState ? (
         <InfoPanel
-          subjectLabels={subjectLabels}
-          subject={sharedState ? sharedSubject.label : subject.label}
-          contrast={sharedState ? sharedContrast.label : contrast.label}
-          contrastIndex={sharedState ? sharedContrast.index : contrast.index}
-          voxelIndex={sharedState ? sharedVoxelIndex : voxelIndex}
-          subjectChangeCallback={(subjectIndex: number) => {
-            setSubject({ payload: subjectIndex });
-          }}
-          meanSurfaceMap={sharedState ? sharedMeanSurfaceMap : meanSurfaceMap}
-          meanChangeCallback={() => {
-            setMeanSurfaceMap(!meanSurfaceMap);
-          }}
-          meshType={sharedState ? sharedMeshType : meshType}
-          meshTypeLabels={Object.keys(MeshType) as MeshTypeString[]}
-          meshTypeChangeCallback={(meshType: MeshType) => {
-            setMeshType(meshType);
-          }}
-          hemi={sharedState ? sharedHemi : hemi}
-          hemiLabels={Object.keys(HemisphereSide) as HemisphereSideString[]}
-          hemiChangeCallback={(hemi: HemisphereSide) => {
-            setHemi(hemi);
-          }}
+          rows={[
+            {
+              label: "Mesh Type",
+              inputs: [
+                {
+                  value: sharedState ? sharedMeshType : meshType,
+                  values: Object.keys(MeshType),
+                  onChangeCallback: (newValue: string) =>
+                    setMeshType(newValue as MeshType),
+                },
+              ],
+            },
+            {
+              label: "Hemi",
+              inputs: [
+                {
+                  value: sharedState ? sharedHemi : hemi,
+                  values: Object.keys(HemisphereSide),
+                  onChangeCallback: (newValue: string) =>
+                    setHemi(newValue as HemisphereSide),
+                },
+              ],
+            },
+            {
+              label: "Subject",
+              inputs: [
+                {
+                  value: subject.label,
+                  values: subjectLabels,
+                  onChangeCallback: (newValue: string) =>
+                    setSubject({ payload: subjectLabels.indexOf(newValue) }),
+                },
+                {
+                  value: meanSurfaceMap,
+                  onChangeCallback: () => setMeanSurfaceMap(!meanSurfaceMap),
+                  iconActive: "group-objects",
+                  iconInactive: "ungroup-objects",
+                  title: "Take subject's mean",
+                },
+              ],
+            },
+            {
+              label: "Contrast",
+              inputs: [
+                {
+                  value: contrast.label,
+                  values: contrastLabels,
+                  onChangeCallback: (newValue: string) =>
+                    setContrast({ payload: contrastLabels.indexOf(newValue) }),
+                },
+              ],
+            },
+            {
+              label: "Voxel",
+              inputs: [
+                {
+                  value: voxelIndex ? voxelIndex.toString() : undefined,
+                },
+              ],
+            },
+          ]}
         />
       ) : null}
       {loadingSurfaceMap ? (

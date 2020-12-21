@@ -1,4 +1,5 @@
 import { Button, ButtonGroup } from "@blueprintjs/core";
+import { IconName } from "@blueprintjs/icons";
 import { Select } from "@blueprintjs/select";
 import React from "react";
 
@@ -15,221 +16,75 @@ import {
 } from "constants/index";
 import "./style.scss";
 
-interface IProps {
-  subject?: string;
-  subjectLabels?: string[];
-  subjectChangeCallback?: (subjectIndex: number) => void;
-  contrast?: string;
-  contrastLabels?: string[];
-  contrastChangeCallback?: (contrastIndex: number) => void;
-  contrastIndex?: number;
-  voxelIndex?: number;
-  meanSurfaceMap?: boolean;
-  meanChangeCallback?: () => void;
-  meshType?: MeshType;
-  meshTypeLabels?: MeshTypeString[];
-  meshTypeChangeCallback?: (meshType: MeshType) => void;
-  metric?: Metric;
-  metricLabels?: MetricString[];
-  metricChangeCallback?: (metric: Metric) => void;
-  surfaceMapType?: SurfaceMapType;
-  surfaceMapTypeLabels?: SurfaceMapTypeString[];
-  surfaceMapTypeChangeCallback?: (surfaceMapType: SurfaceMapType) => void;
-  hemi?: HemisphereSide;
-  hemiLabels?: HemisphereSideString[];
-  hemiChangeCallback?: (hemi: HemisphereSide) => void;
+interface InfoPanelInput {
+  value?: string | boolean;
+  values?: string[];
+  onChangeCallback?: any;
+  iconActive?: IconName;
+  iconInactive?: IconName;
+  title?: string;
 }
 
-const InfoPanel = ({
-  subject,
-  subjectLabels,
-  subjectChangeCallback = () => {},
-  contrast,
-  contrastLabels,
-  contrastChangeCallback = () => {},
-  contrastIndex,
-  voxelIndex,
-  meanSurfaceMap,
-  meanChangeCallback = () => {},
-  meshType,
-  meshTypeLabels,
-  meshTypeChangeCallback = () => {},
-  hemi,
-  hemiLabels,
-  hemiChangeCallback = () => {},
-  metric,
-  metricLabels,
-  metricChangeCallback = () => {},
-  surfaceMapType,
-  surfaceMapTypeLabels,
-  surfaceMapTypeChangeCallback = () => {},
-}: IProps) => {
-  const MeshTypeSelect = Select.ofType<MeshTypeString>();
-  const HemiSelect = Select.ofType<HemisphereSideString>();
-  const SelectSubject = Select.ofType<string>();
-  const SelectContrast = Select.ofType<string>();
-  const MetricSelect = Select.ofType<MetricString>();
-  const SurfaceMapTypeSelect = Select.ofType<SurfaceMapTypeString>();
+interface InfoPanelRow {
+  label: string;
+  inputs: InfoPanelInput[];
+}
 
+interface IProps {
+  rows: InfoPanelRow[];
+}
+
+const InfoPanel = ({ rows }: IProps) => {
   return (
     <div className="info-panel">
-      {meshType ? (
+      {rows.map((row: InfoPanelRow) => (
         <>
-          <div className="header-item-label">Mesh type</div>
+          <div className="header-item-label">{row.label}</div>
           <div className="header-item-value">
-            {meshTypeLabels ? (
-              <ButtonGroup>
-                <MeshTypeSelect
-                  filterable={false}
-                  items={meshTypeLabels}
-                  itemRenderer={stringRenderer}
-                  onItemSelect={(meshTypeString: MeshTypeString) => {
-                    meshTypeChangeCallback(MeshType[meshTypeString]);
-                  }}
-                >
-                  <Button rightIcon="double-caret-vertical" text={meshType} />
-                </MeshTypeSelect>
-              </ButtonGroup>
-            ) : (
-              <>{meshType}</>
-            )}
+            <ButtonGroup>
+              {row.inputs.map((input: InfoPanelInput) => (
+                <>
+                  {input.values ? (
+                    <Select<string>
+                      filterable={false}
+                      items={input.values}
+                      itemRenderer={stringRenderer}
+                      onItemSelect={(newItem: string) => {
+                        if (input.onChangeCallback) {
+                          input.onChangeCallback(newItem);
+                        }
+                      }}
+                    >
+                      <Button
+                        rightIcon="double-caret-vertical"
+                        text={input.value}
+                      />
+                    </Select>
+                  ) : input.onChangeCallback ? (
+                    <Button
+                      active={input.value as boolean | undefined}
+                      icon={
+                        input.value
+                          ? input.iconActive
+                          : input.iconInactive ?? input.iconActive
+                      }
+                      onClick={() => {
+                        if (input.onChangeCallback) {
+                          input.onChangeCallback();
+                        }
+                      }}
+                      outlined
+                      title={input.title}
+                    />
+                  ) : (
+                    <>{input.value}</>
+                  )}
+                </>
+              ))}
+            </ButtonGroup>
           </div>
         </>
-      ) : null}
-      {hemi ? (
-        <>
-          <div className="header-item-label">Hemisphere</div>
-          <div className="header-item-value">
-            {hemiLabels ? (
-              <ButtonGroup>
-                <HemiSelect
-                  filterable={false}
-                  items={hemiLabels}
-                  itemRenderer={stringRenderer}
-                  onItemSelect={(hemiString: HemisphereSideString) => {
-                    hemiChangeCallback(HemisphereSide[hemiString]);
-                  }}
-                >
-                  <Button rightIcon="double-caret-vertical" text={hemi} />
-                </HemiSelect>
-              </ButtonGroup>
-            ) : (
-              <>{hemi}</>
-            )}
-          </div>
-        </>
-      ) : null}
-      {subjectLabels || subject ? (
-        <>
-          <div className="header-item-label">Subject</div>
-          <div className="header-item-value">
-            {subjectLabels ? (
-              <ButtonGroup>
-                <SelectSubject
-                  disabled={meanSurfaceMap}
-                  filterable={false}
-                  items={subjectLabels}
-                  itemRenderer={stringRenderer}
-                  onItemSelect={(item: string) => {
-                    subjectChangeCallback(subjectLabels.indexOf(item));
-                  }}
-                >
-                  <Button
-                    disabled={meanSurfaceMap}
-                    rightIcon="double-caret-vertical"
-                    text={subject}
-                  />
-                </SelectSubject>
-                {meanSurfaceMap !== undefined ? (
-                  <Button
-                    active={meanSurfaceMap}
-                    icon={meanSurfaceMap ? "ungroup-objects" : "group-objects"}
-                    onClick={meanChangeCallback}
-                    outlined
-                    title={"Take subjects' mean"}
-                  />
-                ) : null}
-              </ButtonGroup>
-            ) : (
-              <>{subject}</>
-            )}
-          </div>
-        </>
-      ) : null}
-      {contrast ? (
-        <>
-          <div className="header-item-label">Contrast</div>
-          <div className="header-item-value">
-            {contrastLabels ? (
-              <ButtonGroup>
-                <SelectContrast
-                  filterable={false}
-                  items={contrastLabels}
-                  itemRenderer={stringRenderer}
-                  onItemSelect={(item: string) => {
-                    contrastChangeCallback(contrastLabels.indexOf(item));
-                  }}
-                >
-                  <Button rightIcon="double-caret-vertical" text={contrast} />
-                </SelectContrast>
-              </ButtonGroup>
-            ) : (
-              <>{contrast}</>
-            )}
-          </div>
-        </>
-      ) : null}
-      {metricLabels || metric ? (
-        <>
-          <div className="header-item-label">Metric</div>
-          <div className="header-item-value">
-            {metricLabels ? (
-              <MetricSelect
-                filterable={false}
-                items={metricLabels}
-                itemRenderer={stringRenderer}
-                onItemSelect={(metric: MetricString) => {
-                  metricChangeCallback(Metric[metric]);
-                }}
-              >
-                <Button rightIcon="double-caret-vertical" text={metric} />
-              </MetricSelect>
-            ) : (
-              <>{metric}</>
-            )}
-          </div>
-        </>
-      ) : null}
-      {surfaceMapTypeLabels || surfaceMapType ? (
-        <>
-          <div className="header-item-label">Type</div>
-          <div className="header-item-value">
-            {surfaceMapTypeLabels ? (
-              <SurfaceMapTypeSelect
-                filterable={false}
-                items={surfaceMapTypeLabels}
-                itemRenderer={stringRenderer}
-                onItemSelect={(surfaceMapType: SurfaceMapTypeString) => {
-                  surfaceMapTypeChangeCallback(SurfaceMapType[surfaceMapType]);
-                }}
-              >
-                <Button
-                  rightIcon="double-caret-vertical"
-                  text={surfaceMapType}
-                />
-              </SurfaceMapTypeSelect>
-            ) : (
-              <>{surfaceMapType}</>
-            )}
-          </div>
-        </>
-      ) : null}
-      {voxelIndex ? (
-        <>
-          <div className="header-item-label">Voxel</div>
-          <div className="header-item-value">{voxelIndex}</div>
-        </>
-      ) : null}
+      ))}
     </div>
   );
 };

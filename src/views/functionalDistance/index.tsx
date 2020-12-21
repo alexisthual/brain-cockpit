@@ -248,29 +248,53 @@ const FunctionalDistanceExplorer = () => {
       }`}
     >
       <InfoPanel
-        subjectLabels={subjectLabels}
-        subject={subject.label}
-        subjectChangeCallback={(subjectIndex: number) => {
-          setSubject({ payload: subjectIndex });
-        }}
-        meanSurfaceMap={meanSurfaceMap}
-        meanChangeCallback={() => {
-          setMeanSurfaceMap(!meanSurfaceMap);
-          setMeanFunctionalDistance(!meanFunctionalDistance);
-        }}
-        voxelIndex={voxelIndex}
-        metric={metric}
-        metricLabels={Object.keys(Metric) as MetricString[]}
-        metricChangeCallback={(metric: Metric) => {
-          setMetric(metric);
-        }}
-        surfaceMapType={surfaceMapType}
-        surfaceMapTypeLabels={
-          Object.keys(SurfaceMapType) as SurfaceMapTypeString[]
-        }
-        surfaceMapTypeChangeCallback={(surfaceMapType: SurfaceMapType) => {
-          setSurfaceMapType(surfaceMapType);
-        }}
+        rows={[
+          {
+            label: "Metric",
+            inputs: [
+              {
+                value: metric,
+                values: Object.keys(Metric),
+                onChangeCallback: (newValue: string) =>
+                  setMetric(newValue as Metric),
+              },
+            ],
+          },
+          {
+            label: "Surface Type",
+            inputs: [
+              {
+                value: surfaceMapType,
+                values: Object.keys(SurfaceMapType),
+                onChangeCallback: (newValue: string) =>
+                  setSurfaceMapType(newValue as SurfaceMapType),
+              },
+            ],
+          },
+          {
+            label: "Subject",
+            inputs: [
+              {
+                value: subject.label,
+                values: subjectLabels,
+                onChangeCallback: (newValue: string) =>
+                  setSubject({ payload: subjectLabels.indexOf(newValue) }),
+              },
+              {
+                value: meanSurfaceMap,
+                onChangeCallback: () => setMeanSurfaceMap(!meanSurfaceMap),
+              },
+            ],
+          },
+          {
+            label: "Voxel",
+            inputs: [
+              {
+                value: voxelIndex ? voxelIndex.toString() : undefined,
+              },
+            ],
+          },
+        ]}
       />
       {loadingSurfaceMap ? (
         <TextualLoader text="Loading surface map..." />
