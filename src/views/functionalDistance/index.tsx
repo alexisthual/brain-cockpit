@@ -11,11 +11,9 @@ import {
   ActionLabel,
   MeshType,
   Metric,
-  MetricString,
   Orientation,
   Subject,
   SurfaceMapType,
-  SurfaceMapTypeString,
 } from "constants/index";
 import { eel } from "App";
 import "./style.scss";

@@ -3,17 +3,7 @@ import { IconName } from "@blueprintjs/icons";
 import { Select } from "@blueprintjs/select";
 import React from "react";
 
-import {
-  HemisphereSide,
-  HemisphereSideString,
-  MeshType,
-  MeshTypeString,
-  Metric,
-  MetricString,
-  SurfaceMapType,
-  SurfaceMapTypeString,
-  stringRenderer,
-} from "constants/index";
+import { stringRenderer } from "constants/index";
 import "./style.scss";
 
 interface InfoPanelInput {

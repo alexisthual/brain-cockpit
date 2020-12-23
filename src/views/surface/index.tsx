@@ -15,9 +15,7 @@ import {
   ActionPane,
   Contrast,
   HemisphereSide,
-  HemisphereSideString,
   MeshType,
-  MeshTypeString,
   Orientation,
   Subject,
 } from "constants/index";
