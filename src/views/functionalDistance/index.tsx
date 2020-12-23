@@ -1,14 +1,18 @@
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
+import { nanoid } from "nanoid";
 import React, { useEffect, useReducer, useState } from "react";
 
+import Colorbar from "components/colorbar";
 import ContrastFingerprint from "components/contrastFingerprint";
 import DistanceBars from "./distanceBars";
 import InfoPanel from "components/infoPanel";
 import PanelButtons from "components/infoPanel/buttons";
-import Scene from "components/scene";
+import PanesButtons from "./panesButtons";
+import ScenePane from "./scenePane";
 import TextualLoader from "components/textualLoader";
 import {
   ActionLabel,
+  ActionPane,
   MeshType,
   Metric,
   Orientation,
@@ -43,6 +47,7 @@ const FunctionalDistanceExplorer = () => {
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [wireframe, setWireframe] = useState(false);
   const [meshType] = useState(MeshType.PIAL);
+  const [sharedState, setSharedState] = useState(true);
 
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
@@ -64,6 +69,29 @@ const FunctionalDistanceExplorer = () => {
     };
   };
   const [subject, setSubject] = useReducer(subjectReducer, {} as Subject);
+
+  const panesReducer = (state: string[], action: ActionPane): string[] => {
+    const newState = [...state];
+
+    switch (action.type) {
+      case "add":
+        newState.push(nanoid());
+        break;
+      case "remove":
+        if (action.payload !== undefined) {
+          const index = state.indexOf(action.payload);
+          if (index >= 0) {
+            newState.splice(index, 1);
+          }
+        }
+        break;
+      default:
+        break;
+    }
+
+    return newState;
+  };
+  const [panes, setPanes] = useReducer(panesReducer, [nanoid()]);
 
   // Initialise all app state variables
   useEffect(() => {
@@ -120,6 +148,12 @@ const FunctionalDistanceExplorer = () => {
         keyCode: 87, // W
         callback: () => {
           setWireframe((prevWireframe) => !prevWireframe);
+        },
+      },
+      {
+        keyCode: 78, // N
+        callback: () => {
+          setPanes({ type: "add" });
         },
       },
     ];
@@ -240,84 +274,104 @@ const FunctionalDistanceExplorer = () => {
 
   return (
     <div
-      id="main-container"
-      className={`${
+      className={`main-container ${
         voxelIndex !== undefined ? `${orientation}-orientation` : ""
       }`}
     >
-      <InfoPanel
-        rows={[
-          {
-            label: "Metric",
-            inputs: [
+      <div className="scenes">
+        {loadingSurfaceMap ? (
+          <TextualLoader text="Loading surface map..." />
+        ) : null}
+        <Colorbar nUniqueValues={10} />
+        <PanesButtons
+          addPaneCallback={() => {
+            setPanes({ type: "add" });
+          }}
+          sharedState={sharedState}
+          sharedStateCallback={() => {
+            setSharedState(!sharedState);
+          }}
+        />
+        {sharedState ? (
+          <InfoPanel
+            rows={[
               {
-                value: metric,
-                values: Object.keys(Metric),
-                onChangeCallback: (newValue: string) =>
-                  setMetric(Metric[newValue as keyof typeof Metric]),
-              },
-            ],
-          },
-          {
-            label: "Surface Type",
-            inputs: [
-              {
-                value: surfaceMapType,
-                values: Object.keys(SurfaceMapType),
-                onChangeCallback: (newValue: string) =>
-                  setSurfaceMapType(
-                    SurfaceMapType[newValue as keyof typeof SurfaceMapType]
-                  ),
-              },
-            ],
-          },
-          {
-            label: "Subject",
-            inputs: [
-              {
-                value: subject.label,
-                values: subjectLabels,
-                onChangeCallback: (newValue: string) =>
-                  setSubject({ payload: subjectLabels.indexOf(newValue) }),
+                label: "Metric",
+                inputs: [
+                  {
+                    value: metric,
+                    values: Object.keys(Metric),
+                    onChangeCallback: (newValue: string) =>
+                      setMetric(Metric[newValue as keyof typeof Metric]),
+                  },
+                ],
               },
               {
-                value: meanSurfaceMap,
-                onChangeCallback: () => setMeanSurfaceMap(!meanSurfaceMap),
-                iconActive: "group-objects",
-                iconInactive: "ungroup-objects",
-                title: "Take subject's mean",
+                label: "Surface Type",
+                inputs: [
+                  {
+                    value: surfaceMapType,
+                    values: Object.keys(SurfaceMapType),
+                    onChangeCallback: (newValue: string) =>
+                      setSurfaceMapType(
+                        SurfaceMapType[newValue as keyof typeof SurfaceMapType]
+                      ),
+                  },
+                ],
               },
-            ],
-          },
-          {
-            label: "Voxel",
-            inputs: [
               {
-                value: voxelIndex ? voxelIndex.toString() : undefined,
+                label: "Subject",
+                inputs: [
+                  {
+                    value: subject.label,
+                    values: subjectLabels,
+                    onChangeCallback: (newValue: string) =>
+                      setSubject({ payload: subjectLabels.indexOf(newValue) }),
+                  },
+                  {
+                    value: meanSurfaceMap,
+                    onChangeCallback: () => setMeanSurfaceMap(!meanSurfaceMap),
+                    iconActive: "group-objects",
+                    iconInactive: "ungroup-objects",
+                    title: "Take subject's mean",
+                  },
+                ],
               },
-            ],
-          },
-        ]}
-      />
-      {loadingSurfaceMap ? (
-        <TextualLoader text="Loading surface map..." />
-      ) : null}
-      <div id="scene">
-        <ParentSize className="scene-container" debounceTime={10}>
-          {({ width: sceneWidth, height: sceneHeight }) => (
-            <Scene
-              clickedVoxelCallback={(voxelIndex: number) => {
-                setVoxelIndex(voxelIndex);
-              }}
-              voxelIndex={voxelIndex}
-              surfaceMap={surfaceMap}
-              wireframe={wireframe}
-              width={sceneWidth}
-              height={sceneHeight}
-              meshType={meshType}
-            />
-          )}
-        </ParentSize>
+              {
+                label: "Voxel",
+                inputs: [
+                  {
+                    value: voxelIndex ? voxelIndex.toString() : undefined,
+                  },
+                ],
+              },
+            ]}
+          />
+        ) : null}
+        <div className="scene-panes">
+          {panes.map((paneId: string) => {
+            return (
+              <ScenePane
+                key={`scene-pane-${paneId}`}
+                closeCallback={() => {
+                  setPanes({ type: "remove", payload: paneId });
+                }}
+                sharedSurfaceMap={surfaceMap}
+                sharedVoxelIndex={voxelIndex}
+                setSharedVoxelIndex={(newVoxelIndex: number) => {
+                  setVoxelIndex(newVoxelIndex);
+                }}
+                subjectLabels={subjectLabels}
+                sharedState={sharedState}
+                sharedSubject={subject}
+                sharedMeanSurfaceMap={meanSurfaceMap}
+                sharedWireframe={wireframe}
+                sharedSurfaceMapType={surfaceMapType}
+                sharedMetric={metric}
+              />
+            );
+          })}
+        </div>
       </div>
       {voxelIndex !== undefined ? (
         <div

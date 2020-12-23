@@ -153,7 +153,7 @@ const ScenePane = ({
   // I
   const incrementSubject = useCallback(
     (event: any) => {
-      if (event.isComposing || event.keyCode === 75) {
+      if (event.isComposing || event.keyCode === 73) {
         if (!sharedState && !meanSurfaceMap) {
           setSubject({ type: "increment" });
         }
@@ -169,7 +169,7 @@ const ScenePane = ({
   // K
   const decrementSubject = useCallback(
     (event: any) => {
-      if (event.isComposing || event.keyCode === 73) {
+      if (event.isComposing || event.keyCode === 75) {
         if (!sharedState && !meanSurfaceMap) {
           setSubject({ type: "decrement" });
         }
@@ -256,7 +256,7 @@ const ScenePane = ({
                   value: sharedState ? sharedMeshType : meshType,
                   values: Object.keys(MeshType),
                   onChangeCallback: (newValue: string) =>
-                    setMeshType(newValue as MeshType),
+                    setMeshType(MeshType[newValue as keyof typeof MeshType]),
                 },
               ],
             },
@@ -267,7 +267,9 @@ const ScenePane = ({
                   value: sharedState ? sharedHemi : hemi,
                   values: Object.keys(HemisphereSide),
                   onChangeCallback: (newValue: string) =>
-                    setHemi(newValue as HemisphereSide),
+                    setHemi(
+                      HemisphereSide[newValue as keyof typeof HemisphereSide]
+                    ),
                 },
               ],
             },

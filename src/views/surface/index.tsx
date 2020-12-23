@@ -1,6 +1,6 @@
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
-import React, { useCallback, useEffect, useReducer, useState } from "react";
 import { nanoid } from "nanoid";
+import React, { useCallback, useEffect, useReducer, useState } from "react";
 
 import { eel } from "App";
 import Colorbar from "components/colorbar";
@@ -8,7 +8,7 @@ import ContrastFingerprint from "components/contrastFingerprint";
 import InfoPanel from "components/infoPanel";
 import PanelButtons from "components/infoPanel/buttons";
 import PanesButtons from "./panesButtons";
-import ScenePane from "components/scenePane";
+import ScenePane from "./scenePane";
 import TextualLoader from "components/textualLoader";
 import {
   ActionLabel,
@@ -310,12 +310,14 @@ const SurfaceExplorer = () => {
 
   return (
     <div
-      id="main-container"
-      className={`${
+      className={`main-container ${
         voxelIndex !== undefined ? `${orientation}-orientation` : ""
       }`}
     >
-      <div id="scenes">
+      <div className="scenes">
+        {sharedState && loadingContrastMap ? (
+          <TextualLoader text="Loading surface map..." />
+        ) : null}
         <Colorbar vmin={-10} vmax={10} />
         <PanesButtons
           addPaneCallback={() => {
@@ -326,9 +328,6 @@ const SurfaceExplorer = () => {
             setSharedState(!sharedState);
           }}
         />
-        {sharedState && loadingContrastMap ? (
-          <TextualLoader text="Loading surface map..." />
-        ) : null}
         {sharedState ? (
           <InfoPanel
             rows={[
