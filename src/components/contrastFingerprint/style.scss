@@ -1,20 +1,35 @@
 @import "~@blueprintjs/core/lib/scss/variables";
 
+$padding: 40px;
+$offsetBottom: 80px;
+$offsetTop: 30px;
+$offsetLeft: 120px;
+$offsetRight: 70px;
+
 .contrast-fingerprint {
   box-sizing: border-box;
 
-  &.horizontal-orientation {
-    border-top: 1px solid $light-gray3;
-  }
-  &.vertical-orientation {
-    border-left: 1px solid $light-gray3;
+  .contrast-fingerprint-slider {
+    position: absolute;
   }
 
-  .axis {
-    position: absolute;
-    .tick {
-      fill: $gray3;
-      font-size: 11px;
+  &.horizontal-orientation {
+    border-top: 1px solid $light-gray3;
+
+    .contrast-fingerprint-slider {
+      top: calc(#{$padding} + #{$offsetTop});
+      left: $padding;
+      height: calc(100% - 2 * #{$padding} - #{$offsetBottom} - #{$offsetTop});
+    }
+  }
+
+  &.vertical-orientation {
+    border-left: 1px solid $light-gray3;
+
+    .contrast-fingerprint-slider {
+      top: $padding;
+      left: calc(#{$padding} + #{$offsetLeft});
+      width: calc(100% - 2 * #{$padding} - #{$offsetLeft} - #{$offsetRight});
     }
   }
 

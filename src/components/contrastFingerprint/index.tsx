@@ -1,10 +1,9 @@
-import { Colors } from "@blueprintjs/core";
-import { AxisLeft, AxisTop } from "@visx/axis";
+import { Colors, MultiSlider } from "@blueprintjs/core";
 import { Group } from "@visx/group";
 import { scaleBand, scaleLinear } from "@visx/scale";
 import { Bar } from "@visx/shape";
 import { Text } from "@visx/text";
-import React from "react";
+import React, { useState } from "react";
 
 import { Contrast, Orientation } from "constants/index";
 import OverlayLoader from "components/overlayLoader";
@@ -21,6 +20,10 @@ interface Props {
   clickedLabelCallback?: (labelIndex: number) => void;
   orientation: Orientation;
   selectedContrast?: Contrast;
+  lowHandleMinRelease?: (newValue: number) => void;
+  lowHandleMaxRelease?: (newValue: number) => void;
+  highHandleMinRelease?: (newValue: number) => void;
+  highHandleMaxRelease?: (newValue: number) => void;
 }
 
 const ContrastFingerprint = ({
@@ -34,6 +37,10 @@ const ContrastFingerprint = ({
   clickedLabelCallback,
   orientation = Orientation.VERTICAL,
   selectedContrast,
+  lowHandleMinRelease,
+  lowHandleMaxRelease,
+  highHandleMinRelease,
+  highHandleMaxRelease,
 }: Props) => {
   let padding = 40;
   let labelMargin = 15;
@@ -77,13 +84,85 @@ const ContrastFingerprint = ({
     return acc + count;
   }, 0);
 
+  const [lowHandleMin, setLowHandleMin] = useState(-10);
+  const [lowHandleMax, setLowHandleMax] = useState(-3);
+  const [highHandleMin, setHighHandleMin] = useState(3);
+  const [highHandleMax, setHighHandleMax] = useState(10);
+
   return (
-    <>
+    <div className={`contrast-fingerprint ${orientation}-orientation`}>
       {loading ? <OverlayLoader /> : null}
+      <MultiSlider
+        className="contrast-fingerprint-slider"
+        labelStepSize={2}
+        max={10}
+        min={-10}
+        showTrackFill={true}
+        stepSize={1}
+        vertical={orientation === Orientation.HORIZONTAL}
+        onChange={(newValues: number[]) => {
+          if (newValues[0] !== lowHandleMin) {
+            setLowHandleMin(newValues[0]);
+          }
+          if (newValues[1] !== lowHandleMax) {
+            setLowHandleMax(newValues[1]);
+          }
+          if (newValues[2] !== highHandleMin) {
+            setHighHandleMin(newValues[2]);
+          }
+          if (newValues[3] !== highHandleMax) {
+            setHighHandleMax(newValues[3]);
+          }
+        }}
+        onRelease={(newValues: number[]) => {
+          if (lowHandleMinRelease !== undefined) {
+            lowHandleMinRelease(newValues[0]);
+          }
+          if (lowHandleMaxRelease !== undefined) {
+            lowHandleMaxRelease(newValues[1]);
+          }
+          if (highHandleMinRelease !== undefined) {
+            highHandleMinRelease(newValues[2]);
+          }
+          if (highHandleMaxRelease !== undefined) {
+            highHandleMaxRelease(newValues[3]);
+          }
+        }}
+      >
+        {lowHandleMinRelease !== undefined ? (
+          <MultiSlider.Handle
+            intentBefore={undefined}
+            type="start"
+            value={lowHandleMin}
+          />
+        ) : null}
+        {highHandleMinRelease !== undefined ? (
+          <MultiSlider.Handle
+            intentBefore={"primary"}
+            type="end"
+            value={lowHandleMax}
+          />
+        ) : null}
+        {highHandleMinRelease !== undefined ? (
+          <MultiSlider.Handle
+            intentBefore={undefined}
+            type="start"
+            value={highHandleMin}
+          />
+        ) : null}
+        {highHandleMinRelease !== undefined ? (
+          <MultiSlider.Handle
+            intentBefore={"primary"}
+            intentAfter={undefined}
+            type="end"
+            value={highHandleMax}
+          />
+        ) : null}
+      </MultiSlider>
       <svg
         width={width}
         height={height}
-        className={`contrast-fingerprint ${orientation}-orientation`}
+        className={`${orientation}-orientation`}
       >
         <Group
           width={width - 2 * padding - offsetLeft}
@@ -128,16 +207,6 @@ const ContrastFingerprint = ({
                   </Group>
                 );
               })}
-              <AxisTop
-                axisClassName="axis"
-                scale={valueScale}
-                stroke={Colors.GRAY3}
-                tickStroke={Colors.GRAY3}
-                tickClassName="tick"
-                tickLabelProps={() => ({
-                  textAnchor: "middle",
-                })}
-              />
             </>
           ) : (
             <>
@@ -177,16 +246,6 @@ const ContrastFingerprint = ({
                   </Group>
                 );
               })}
-              <AxisLeft
-                axisClassName="axis"
-                scale={valueScale}
-                stroke={Colors.GRAY3}
-                tickStroke={Colors.GRAY3}
-                tickClassName="tick"
-                tickLabelProps={() => ({
-                  textAnchor: "middle",
-                })}
-              />
             </>
           )}
           <Group>
@@ -302,7 +361,7 @@ const ContrastFingerprint = ({
           </Group>
         </Group>
       </svg>
-    </>
+    </div>
   );
 };
 

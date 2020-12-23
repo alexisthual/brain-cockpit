@@ -19,6 +19,10 @@ interface ISceneProps {
   meshType: MeshType;
   hemi: HemisphereSide;
   uniqueKey?: string;
+  lowThresholdMin?: number;
+  lowThresholdMax?: number;
+  highThresholdMin?: number;
+  highThresholdMax?: number;
 }
 
 class Scene extends Component<ISceneProps, {}> {
@@ -110,7 +114,11 @@ class Scene extends Component<ISceneProps, {}> {
   static initialiseMesh(
     object: any,
     wireframe: boolean = false,
-    surfaceMap: number[] | undefined = undefined
+    surfaceMap: number[] | undefined = undefined,
+    lowThresholdMin: number | undefined = undefined,
+    lowThresholdMax: number | undefined = undefined,
+    highThresholdMin: number | undefined = undefined,
+    highThresholdMax: number | undefined = undefined
   ) {
     // Set a random color to each vertex
     if (object.geometry.attributes.color === undefined) {
@@ -120,8 +128,15 @@ class Scene extends Component<ISceneProps, {}> {
         new THREE.BufferAttribute(new Float32Array(count * 3), 3)
       );
     }
-    if (surfaceMap) {
-      object = Scene.coloriseFromSurfaceMap(object, surfaceMap);
+    if (surfaceMap !== undefined) {
+      object = Scene.coloriseFromSurfaceMap(
+        object,
+        surfaceMap,
+        lowThresholdMin,
+        lowThresholdMax,
+        highThresholdMin,
+        highThresholdMax
+      );
     } else {
       object = Scene.coloriseFromRandomMap(object);
     }
@@ -164,7 +179,14 @@ class Scene extends Component<ISceneProps, {}> {
     return object;
   }
 
-  static coloriseFromSurfaceMap(object: any, surfaceMap: number[]) {
+  static coloriseFromSurfaceMap(
+    object: any,
+    surfaceMap: number[],
+    lowThresholdMin: number | undefined,
+    lowThresholdMax: number | undefined,
+    highThresholdMin: number | undefined,
+    highThresholdMax: number | undefined
+  ) {
     const color = new THREE.Color();
     const count = object.geometry.attributes.position.count;
     const colors = object.geometry.attributes.color;
@@ -173,11 +195,32 @@ class Scene extends Component<ISceneProps, {}> {
     const light = 0.2;
     for (let i = 0; i < count; i++) {
       const a = (surfaceMap[i] - min) / (max - min);
-      color.setRGB(
-        light + (1 - light) * Math.exp(-0.5 * ((a - 0.75) / 0.15) ** 2),
-        light + (1 - light) * Math.exp(-0.5 * ((a - 0.5) / 0.15) ** 2),
-        light + (1 - light) * Math.exp(-0.5 * ((a - 0.25) / 0.15) ** 2)
-      );
+      if (
+        (lowThresholdMin !== undefined &&
+          lowThresholdMin <= surfaceMap[i] &&
+          lowThresholdMax !== undefined &&
+          lowThresholdMax >= surfaceMap[i]) ||
+        (highThresholdMin !== undefined &&
+          highThresholdMin <= surfaceMap[i] &&
+          highThresholdMax !== undefined &&
+          highThresholdMax >= surfaceMap[i]) ||
+        (lowThresholdMin === undefined &&
+          lowThresholdMax === undefined &&
+          highThresholdMin === undefined &&
+          highThresholdMax === undefined)
+      ) {
+        color.setRGB(
+          light + (1 - light) * Math.exp(-0.5 * ((a - 0.75) / 0.15) ** 2),
+          light + (1 - light) * Math.exp(-0.5 * ((a - 0.5) / 0.15) ** 2),
+          light + (1 - light) * Math.exp(-0.5 * ((a - 0.25) / 0.15) ** 2)
+        );
+      } else {
+        color.setRGB(
+          0.57 + 0.08 * Math.random(),
+          0.57 + 0.08 * Math.random(),
+          0.57 + 0.08 * Math.random()
+        );
+      }
       colors.setXYZ(i, color.r, color.g, color.b);
     }
     object.geometry.attributes.color.needsUpdate = true;
@@ -244,9 +287,13 @@ class Scene extends Component<ISceneProps, {}> {
 
     // Update object color to display surface map
     if (
-      this.props.surfaceMap &&
+      this.props.surfaceMap !== undefined &&
       (this.props.surfaceMap !== prevProps.surfaceMap ||
-        prevProps.hemi !== this.props.hemi)
+        prevProps.hemi !== this.props.hemi ||
+        this.props.lowThresholdMin !== prevProps.lowThresholdMin ||
+        this.props.lowThresholdMax !== prevProps.lowThresholdMax ||
+        this.props.highThresholdMin !== prevProps.highThresholdMin ||
+        this.props.highThresholdMax !== prevProps.highThresholdMax)
     ) {
       if (
         this.props.surfaceMap.length ===
@@ -254,7 +301,11 @@ class Scene extends Component<ISceneProps, {}> {
       ) {
         this.object = Scene.coloriseFromSurfaceMap(
           this.object,
-          this.props.surfaceMap
+          this.props.surfaceMap,
+          this.props.lowThresholdMin,
+          this.props.lowThresholdMax,
+          this.props.highThresholdMin,
+          this.props.highThresholdMax
         );
       } else if (this.props.surfaceMap.length > 0) {
         console.warn("surfacemap and current mesh have different lengths");

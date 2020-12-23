@@ -28,12 +28,15 @@ const InfoPanel = ({ rows }: IProps) => {
   return (
     <div className="info-panel">
       {rows.map((row: InfoPanelRow) => (
-        <>
+        <div className="info-panel-row" key={`info-panel-row-${row.label}`}>
           <div className="header-item-label">{row.label}</div>
           <div className="header-item-value">
             <ButtonGroup>
-              {row.inputs.map((input: InfoPanelInput) => (
-                <>
+              {row.inputs.map((input: InfoPanelInput, index: number) => (
+                <div
+                  className="info-panel-input"
+                  key={`info-panel-input-${index}`}
+                >
                   {input.values ? (
                     <Select<string>
                       filterable={false}
@@ -69,11 +72,11 @@ const InfoPanel = ({ rows }: IProps) => {
                   ) : (
                     <>{input.value}</>
                   )}
-                </>
+                </div>
               ))}
             </ButtonGroup>
           </div>
-        </>
+        </div>
       ))}
     </div>
   );

@@ -37,6 +37,10 @@ const SurfaceExplorer = () => {
   const [meshType, setMeshType] = useState(MeshType.PIAL);
   const [hemi, setHemi] = useState(HemisphereSide.LEFT);
   const [sharedState, setSharedState] = useState(true);
+  const [lowThresholdMin, setLowThresholdMin] = useState(-10);
+  const [lowThresholdMax, setLowThresholdMax] = useState(-3);
+  const [highThresholdMin, setHighThresholdMin] = useState(3);
+  const [highThresholdMax, setHighThresholdMax] = useState(10);
 
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
@@ -301,14 +305,7 @@ const SurfaceExplorer = () => {
       }`}
     >
       <div id="scenes">
-        <Colorbar
-          vmin={
-            contrastMap !== undefined ? Math.min(...contrastMap) : undefined
-          }
-          vmax={
-            contrastMap !== undefined ? Math.max(...contrastMap) : undefined
-          }
-        />
+        <Colorbar vmin={-10} vmax={10} />
         <PanesButtons
           addPaneCallback={() => {
             setPanes({ type: "add" });
@@ -411,6 +408,10 @@ const SurfaceExplorer = () => {
                 sharedWireframe={wireframe}
                 sharedMeshType={meshType}
                 sharedHemi={hemi}
+                lowThresholdMin={lowThresholdMin}
+                lowThresholdMax={lowThresholdMax}
+                highThresholdMin={highThresholdMin}
+                highThresholdMax={highThresholdMax}
               />
             );
           })}
@@ -463,6 +464,18 @@ const SurfaceExplorer = () => {
                 fingerprint={contrastFingerprint}
                 width={fingerprintWidth}
                 height={fingerprintHeight}
+                lowHandleMinRelease={(newValue: number) =>
+                  setLowThresholdMin(newValue)
+                }
+                lowHandleMaxRelease={(newValue: number) =>
+                  setLowThresholdMax(newValue)
+                }
+                highHandleMinRelease={(newValue: number) =>
+                  setHighThresholdMin(newValue)
+                }
+                highHandleMaxRelease={(newValue: number) =>
+                  setHighThresholdMax(newValue)
+                }
               />
             )}
           </ParentSize>

@@ -9,9 +9,7 @@ import {
   ActionLabel,
   Contrast,
   HemisphereSide,
-  HemisphereSideString,
   MeshType,
-  MeshTypeString,
   Subject,
 } from "constants/index";
 import PaneButtons from "./buttons";
@@ -30,6 +28,10 @@ interface Props {
   sharedWireframe: boolean;
   sharedMeshType: MeshType;
   sharedHemi: HemisphereSide;
+  lowThresholdMin?: number;
+  lowThresholdMax?: number;
+  highThresholdMin?: number;
+  highThresholdMax?: number;
 }
 
 const ScenePane = ({
@@ -46,6 +48,10 @@ const ScenePane = ({
   sharedWireframe = false,
   sharedMeshType = MeshType.PIAL,
   sharedHemi = HemisphereSide.LEFT,
+  lowThresholdMin,
+  lowThresholdMax,
+  highThresholdMin,
+  highThresholdMax,
 }: Props) => {
   const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
   const [surfaceMap, setSurfaceMap] = useState<number[] | undefined>();
@@ -300,6 +306,10 @@ const ScenePane = ({
             wireframe={sharedState ? sharedWireframe : wireframe}
             width={sceneWidth}
             height={sceneHeight}
+            lowThresholdMin={lowThresholdMin}
+            lowThresholdMax={lowThresholdMax}
+            highThresholdMin={highThresholdMin}
+            highThresholdMax={highThresholdMax}
           />
         )}
       </ParentSize>
