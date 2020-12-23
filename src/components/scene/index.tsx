@@ -5,7 +5,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
-import { MeshType, HemisphereSide } from "constants/index";
+import { HemisphereSide, MeshType, View } from "constants/index";
 import "./style.scss";
 
 interface ISceneProps {
@@ -63,6 +63,7 @@ class Scene extends Component<ISceneProps, {}> {
     this.onMouseDown = this.onMouseDown.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
     this.updateHotspot = this.updateHotspot.bind(this);
+    this.switchView = this.switchView.bind(this);
   }
 
   // Turn THREE.js loader into Promise
@@ -303,8 +304,9 @@ class Scene extends Component<ISceneProps, {}> {
         this.props.highThresholdMax !== prevProps.highThresholdMax)
     ) {
       if (
+        this.object !== undefined &&
         this.props.surfaceMap.length ===
-        this.object.geometry.attributes.position.count
+          this.object.geometry.attributes.position.count
       ) {
         this.object = Scene.coloriseFromSurfaceMap(
           this.object,
@@ -433,7 +435,7 @@ class Scene extends Component<ISceneProps, {}> {
 
   // This functions focuses controls and camera
   // on the main object
-  focusOnMainObject() {
+  focusOnMainObject(view: View = View.LATERAL) {
     // Compute BoundingBox
     const boundingBox = new THREE.Box3().setFromObject(this.object);
     const center = boundingBox.getCenter(new THREE.Vector3());
@@ -443,12 +445,36 @@ class Scene extends Component<ISceneProps, {}> {
     let offset = 1.5;
     const maxDim = Math.max(size.x, size.y, size.z);
     const fov = this.camera.fov * (Math.PI / 180);
-    let cameraZ = (maxDim / 2 / Math.tan(fov / 2)) * offset;
-    this.camera.position.x = center.x;
-    this.camera.position.y = center.y;
-    this.camera.position.z = center.z + cameraZ;
-    const minZ = boundingBox.min.z;
-    const cameraToFarEdge = cameraZ - minZ;
+    const cameraOffset = (maxDim / 2 / Math.tan(fov / 2)) * offset;
+    switch (view) {
+      case View.LATERAL:
+        this.camera.position.x = center.x;
+        this.camera.position.y = center.y;
+        this.camera.position.z = center.z + cameraOffset;
+        break;
+      case View.MEDIAL:
+        this.camera.position.x = center.x;
+        this.camera.position.y = center.y;
+        this.camera.position.z = center.z - cameraOffset;
+        break;
+      case View.FRONTAL:
+        this.camera.position.x = center.x - cameraOffset;
+        this.camera.position.y = center.y;
+        this.camera.position.z = center.z;
+        break;
+      case View.DORSAL:
+        this.camera.position.x = center.x + cameraOffset;
+        this.camera.position.y = center.y;
+        this.camera.position.z = center.z;
+        break;
+      default:
+        this.camera.position.x = center.x;
+        this.camera.position.y = center.y;
+        this.camera.position.z = center.z + cameraOffset;
+        break;
+    }
+    const min = boundingBox.min.z;
+    const cameraToFarEdge = cameraOffset - min;
     this.camera.far = cameraToFarEdge * 3;
     this.camera.lookAt(center);
     this.camera.updateProjectionMatrix();
@@ -512,9 +538,42 @@ class Scene extends Component<ISceneProps, {}> {
     }
   }
 
+  switchView(event: any) {
+    console.log(this.container.matches(":hover"));
+    // E
+    if (
+      (event.isComposing || event.keyCode === 69) &&
+      this.container.matches(":hover")
+    ) {
+      this.focusOnMainObject(View.FRONTAL);
+    }
+    // S
+    if (
+      (event.isComposing || event.keyCode === 83) &&
+      this.container.matches(":hover")
+    ) {
+      this.focusOnMainObject(View.LATERAL);
+    }
+    // D
+    if (
+      (event.isComposing || event.keyCode === 68) &&
+      this.container.matches(":hover")
+    ) {
+      this.focusOnMainObject(View.DORSAL);
+    }
+    // F
+    if (
+      (event.isComposing || event.keyCode === 70) &&
+      this.container.matches(":hover")
+    ) {
+      this.focusOnMainObject(View.MEDIAL);
+    }
+  }
+
   start() {
     this.container.addEventListener("pointerdown", this.onMouseDown, false);
     this.container.addEventListener("pointerup", this.onMouseUp, false);
+    window.addEventListener("keydown", this.switchView, false);
 
     if (!this.frameId) {
       this.frameId = requestAnimationFrame(this.animate);
@@ -584,6 +643,7 @@ class Scene extends Component<ISceneProps, {}> {
   componentWillUnmount() {
     // Remove events
     window.removeEventListener("resize", this.handleWindowResize);
+    window.removeEventListener("keydown", this.switchView);
 
     // Remove Three.js related objects
     cancelAnimationFrame(this.frameId);

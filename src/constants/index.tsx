@@ -1,5 +1,12 @@
 import { MenuItem } from "@blueprintjs/core";
 
+export enum View {
+  LATERAL = "lateral",
+  FRONTAL = "frontal",
+  MEDIAL = "medial",
+  DORSAL = "dorsal",
+}
+
 export enum Orientation {
   HORIZONTAL = "horizontal",
   VERTICAL = "vertical",
