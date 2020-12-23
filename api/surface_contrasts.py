@@ -208,7 +208,7 @@ def get_voxel_fingerprint_mean(voxel_index):
 def get_contrast(subject_index, contrast_index, hemi="both"):
     if DEBUG:
         print(
-            f"[{datetime.now()}] get_contrast {contrasts[contrast_index]} ({contrast_index}) for {subjects[subject_index]} ({subject_index})"
+            f"[{datetime.now()}] get_contrast {contrasts[contrast_index]} for {subjects[subject_index]}, {hemi} hemi"
         )
 
     start_index = n_voxels * subject_index
@@ -225,7 +225,7 @@ def get_contrast(subject_index, contrast_index, hemi="both"):
     elif hemi == "both":
         return X[start_index : start_index + n_voxels, contrast_index].tolist()
     else:
-        print(f"Unknown value for hemi: ${hemi}")
+        print(f"Unknown value for hemi: {hemi}")
         return []
 
 
@@ -282,6 +282,6 @@ def get_contrast_mean(contrast_index, hemi="both"):
             axis=0,
         )
     else:
-        print(f"Unknown value for hemi: ${hemi}")
+        print(f"Unknown value for hemi: {hemi}")
 
     return mean.tolist()
