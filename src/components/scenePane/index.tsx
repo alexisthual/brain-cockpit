@@ -1,5 +1,11 @@
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
-import React, { useCallback, useEffect, useReducer, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 
 import { eel } from "App";
 import InfoPanel from "components/infoPanel";
@@ -60,6 +66,7 @@ const ScenePane = ({
   const [wireframe] = useState(false);
   const [meshType, setMeshType] = useState(MeshType.PIAL);
   const [hemi, setHemi] = useState(HemisphereSide.LEFT);
+  const panelEl = useRef<HTMLDivElement>(null);
 
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
@@ -191,6 +198,24 @@ const ScenePane = ({
     return () => window.removeEventListener("keydown", toggleMeanContrastMap);
   }, [toggleMeanContrastMap]);
 
+  // X
+  const closePane = useCallback(
+    (event: any) => {
+      if (
+        (event.isComposing || event.keyCode === 88) &&
+        panelEl.current !== null &&
+        panelEl.current.matches(":hover")
+      ) {
+        closeCallback();
+      }
+    },
+    [closeCallback]
+  );
+  useEffect(() => {
+    window.addEventListener("keydown", closePane);
+    return () => window.removeEventListener("keydown", closePane);
+  }, [closePane]);
+
   // Update contrast map when subject or contrast change
   useEffect(() => {
     if (contrast.index !== undefined) {
@@ -219,7 +244,7 @@ const ScenePane = ({
   }, [subject, contrast, meanSurfaceMap, hemi]);
 
   return (
-    <div className="scene">
+    <div className="scene" ref={panelEl}>
       <PaneButtons closeCallback={closeCallback} />
       {!sharedState ? (
         <InfoPanel

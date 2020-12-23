@@ -247,6 +247,17 @@ const SurfaceExplorer = () => {
     return () => window.removeEventListener("keydown", toggleWireframe);
   }, [toggleWireframe]);
 
+  // N
+  const addPane = useCallback((event: any) => {
+    if (event.isComposing || event.keyCode === 78) {
+      setPanes({ type: "add" });
+    }
+  }, []);
+  useEffect(() => {
+    window.addEventListener("keydown", addPane);
+    return () => window.removeEventListener("keydown", addPane);
+  }, [addPane]);
+
   // Update contrast map when subject or contrast change
   useEffect(() => {
     if (contrast.index !== undefined) {
