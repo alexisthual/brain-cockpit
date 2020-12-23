@@ -39,6 +39,8 @@ class Scene extends Component<ISceneProps, {}> {
   regressedSphere?: THREE.Mesh;
   gridHelper?: THREE.GridHelper;
   uniqueKey: string;
+  mouseDownX?: number;
+  mouseDownY?: number;
 
   static defaultProps = {
     meshType: MeshType.PIAL,
@@ -58,7 +60,8 @@ class Scene extends Component<ISceneProps, {}> {
     this.focusOnMainObject = this.focusOnMainObject.bind(this);
     this.setupScene = this.setupScene.bind(this);
     this.handleWindowResize = this.handleWindowResize.bind(this);
-    this.onMouseClick = this.onMouseClick.bind(this);
+    this.onMouseDown = this.onMouseDown.bind(this);
+    this.onMouseUp = this.onMouseUp.bind(this);
     this.updateHotspot = this.updateHotspot.bind(this);
   }
 
@@ -450,49 +453,64 @@ class Scene extends Component<ISceneProps, {}> {
     this.controls.target.set(center.x, center.y, center.z);
   }
 
-  onMouseClick(event: MouseEvent) {
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-    // Compute renderer offset on the page
-    const rect = this.renderer.domElement.getBoundingClientRect();
-    // Deduce mouse coordinates
-    mouse.x = ((event.clientX - rect.left) / this.props.width) * 2 - 1;
-    mouse.y = -((event.clientY - rect.top) / this.props.height) * 2 + 1;
-    raycaster.setFromCamera(mouse, this.camera);
+  // This function allows to distinct click from drag events.
+  // One stores mousedown coordinates and will check if they
+  // match mouseup coordinates.
+  onMouseDown(event: MouseEvent) {
+    this.mouseDownX = event.clientX;
+    this.mouseDownY = event.clientY;
+  }
 
-    // Intersect raycast with object
-    // and select closest voxel in intersected face
-    const intersects = raycaster.intersectObject(this.object);
-    let selectedVertexIndex = undefined;
-    if (intersects.length > 0) {
-      // Select face's vertex closest to click
-      let minDistance = null;
-      const face = intersects[0].face as any;
-      const vertices = [face.a, face.b, face.c];
+  onMouseUp(event: MouseEvent) {
+    if (
+      event.clientX === this.mouseDownX &&
+      event.clientY === this.mouseDownY
+    ) {
+      // Compute renderer offset on the page
+      const rect = this.renderer.domElement.getBoundingClientRect();
+      const mouse = new THREE.Vector2();
+      // Deduce mouse coordinates
+      mouse.x = ((event.clientX - rect.left) / this.props.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / this.props.height) * 2 + 1;
 
-      for (let i = 0; i < vertices.length; i++) {
-        const vertex = new THREE.Vector3();
-        vertex.fromBufferAttribute(
-          this.object.geometry.getAttribute("position"),
-          vertices[i]
-        );
-        this.object.localToWorld(vertex);
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(mouse, this.camera);
 
-        let distance = vertex.distanceTo(intersects[0].point);
+      // Intersect raycast with object
+      // and select closest voxel in intersected face
+      const intersects = raycaster.intersectObject(this.object);
+      let selectedVertexIndex = undefined;
+      if (intersects.length > 0) {
+        // Select face's vertex closest to click
+        let minDistance = null;
+        const face = intersects[0].face as any;
+        const vertices = [face.a, face.b, face.c];
 
-        if (minDistance == null || distance < minDistance) {
-          minDistance = distance;
-          selectedVertexIndex = vertices[i];
+        for (let i = 0; i < vertices.length; i++) {
+          const vertex = new THREE.Vector3();
+          vertex.fromBufferAttribute(
+            this.object.geometry.getAttribute("position"),
+            vertices[i]
+          );
+          this.object.localToWorld(vertex);
+
+          let distance = vertex.distanceTo(intersects[0].point);
+
+          if (minDistance == null || distance < minDistance) {
+            minDistance = distance;
+            selectedVertexIndex = vertices[i];
+          }
         }
-      }
 
-      // Callback
-      this.props.clickedVoxelCallback(selectedVertexIndex);
+        // Callback
+        this.props.clickedVoxelCallback(selectedVertexIndex);
+      }
     }
   }
 
   start() {
-    this.container.addEventListener("click", this.onMouseClick, false);
+    this.container.addEventListener("pointerdown", this.onMouseDown, false);
+    this.container.addEventListener("pointerup", this.onMouseUp, false);
 
     if (!this.frameId) {
       this.frameId = requestAnimationFrame(this.animate);
