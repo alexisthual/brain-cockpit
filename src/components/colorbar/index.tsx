@@ -18,6 +18,7 @@ const defaultColorMap = (x: number, light: number = 0.2) => [
 interface ColorbarProps {
   vmin?: number;
   vmax?: number;
+  nUniqueValues?: number;
   maxHeight?: number;
   colormap?: (i: number) => number[];
 }
@@ -32,6 +33,7 @@ const Colorbar = ({
   width,
   vmin = 0,
   vmax = 1,
+  nUniqueValues,
   maxHeight = 300,
   colormap = defaultColorMap,
 }: Props) => {
@@ -63,13 +65,34 @@ const Colorbar = ({
     const h = realHeight - margin.top - margin.bottom;
 
     if (canvas && ctx) {
-      for (let i = 0; i <= h; i++) {
-        ctx.beginPath();
-        ctx.fillStyle = colorString.to.rgb(colormap(1 - i / h));
-        ctx.fillRect(0, i, width, 1);
+      // Discrete colorbar
+      if (nUniqueValues !== undefined) {
+        for (let c = 0; c < nUniqueValues; c++) {
+          for (let i = 0; i <= h / nUniqueValues; i++) {
+            ctx.beginPath();
+            ctx.fillStyle = colorString.to.rgb(colormap(c / nUniqueValues));
+            ctx.fillRect(0, (c * h) / nUniqueValues + i, width, 1);
+          }
+        }
+      }
+      // Continuous colorbar
+      else {
+        for (let i = 0; i <= h; i++) {
+          ctx.beginPath();
+          ctx.fillStyle = colorString.to.rgb(colormap(1 - i / h));
+          ctx.fillRect(0, i, width, 1);
+        }
       }
     }
-  }, [height, width, realHeight, margin.top, margin.bottom, colormap]);
+  }, [
+    height,
+    width,
+    realHeight,
+    margin.top,
+    margin.bottom,
+    colormap,
+    nUniqueValues,
+  ]);
 
   return (
     <>
@@ -105,6 +128,7 @@ const Colorbar = ({
 const ColorbarWrapper = ({
   vmin,
   vmax,
+  nUniqueValues,
   maxHeight,
   colormap,
 }: ColorbarProps) => {
@@ -116,6 +140,7 @@ const ColorbarWrapper = ({
             maxHeight={maxHeight}
             vmin={vmin}
             vmax={vmax}
+            nUniqueValues={nUniqueValues}
             height={height}
             width={width}
             colormap={colormap}
