@@ -240,7 +240,11 @@ class Scene extends Component<ISceneProps, {}> {
     object = Scene.initialiseMesh(
       object,
       this.props.wireframe,
-      this.props.surfaceMap
+      this.props.surfaceMap,
+      this.props.lowThresholdMin,
+      this.props.lowThresholdMax,
+      this.props.highThresholdMin,
+      this.props.highThresholdMax
     );
     this.setupScene(object as THREE.Object3D);
   }
