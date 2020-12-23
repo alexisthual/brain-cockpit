@@ -54,9 +54,9 @@ const Colorbar = ({
     () =>
       scaleLinear<number>({
         range: [realHeight - margin.top - margin.bottom, 0],
-        domain: [vmin, vmax],
+        domain: [nUniqueValues !== undefined ? 0 : vmin, nUniqueValues ?? vmax],
       }),
-    [vmin, vmax, realHeight, margin.top, margin.bottom]
+    [vmin, vmax, realHeight, margin.top, margin.bottom, nUniqueValues]
   );
 
   useEffect(() => {
@@ -70,7 +70,7 @@ const Colorbar = ({
         for (let c = 0; c < nUniqueValues; c++) {
           for (let i = 0; i <= h / nUniqueValues; i++) {
             ctx.beginPath();
-            ctx.fillStyle = colorString.to.rgb(colormap(c / nUniqueValues));
+            ctx.fillStyle = colorString.to.rgb(colormap(1 - c / nUniqueValues));
             ctx.fillRect(0, (c * h) / nUniqueValues + i, width, 1);
           }
         }
