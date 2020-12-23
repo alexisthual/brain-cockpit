@@ -328,7 +328,7 @@ const SurfaceExplorer = () => {
                     value: meshType,
                     values: Object.keys(MeshType),
                     onChangeCallback: (newValue: string) =>
-                      setMeshType(newValue as MeshType),
+                      setMeshType(MeshType[newValue as keyof typeof MeshType]),
                   },
                 ],
               },
@@ -339,7 +339,9 @@ const SurfaceExplorer = () => {
                     value: hemi,
                     values: Object.keys(HemisphereSide),
                     onChangeCallback: (newValue: string) =>
-                      setHemi(newValue as HemisphereSide),
+                      setHemi(
+                        HemisphereSide[newValue as keyof typeof HemisphereSide]
+                      ),
                   },
                 ],
               },

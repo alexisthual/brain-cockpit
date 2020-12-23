@@ -254,7 +254,7 @@ const FunctionalDistanceExplorer = () => {
                 value: metric,
                 values: Object.keys(Metric),
                 onChangeCallback: (newValue: string) =>
-                  setMetric(newValue as Metric),
+                  setMetric(Metric[newValue as keyof typeof Metric]),
               },
             ],
           },
@@ -265,7 +265,9 @@ const FunctionalDistanceExplorer = () => {
                 value: surfaceMapType,
                 values: Object.keys(SurfaceMapType),
                 onChangeCallback: (newValue: string) =>
-                  setSurfaceMapType(newValue as SurfaceMapType),
+                  setSurfaceMapType(
+                    SurfaceMapType[newValue as keyof typeof SurfaceMapType]
+                  ),
               },
             ],
           },
