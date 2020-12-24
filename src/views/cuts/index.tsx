@@ -16,6 +16,12 @@ import "./style.scss";
 
 const colorString = require("color-string");
 
+interface Position {
+  x: number;
+  y: number;
+  z: number;
+}
+
 const CutsExplorer = () => {
   const [subjects] = useState(["debby"]);
   const [subject, setSubject] = useState("debby");
@@ -23,9 +29,11 @@ const CutsExplorer = () => {
   const [sequence, setSequence] = useState("seq-01");
   const [runs] = useState(["run-01"]);
   const [run, setRun] = useState("run-01");
-  const [x, setX] = useState(0.5);
-  const [y, setY] = useState(0.5);
-  const [z, setZ] = useState(0.5);
+  const [position, setPosition] = useState<Position>({
+    x: 0.5,
+    y: 0.5,
+    z: 0.3,
+  });
   const [t, setT] = useState(0);
   const [loadingSagital, setLoadingSagital] = useState(false);
   const [loadingCoronal, setLoadingCoronal] = useState(false);
@@ -59,14 +67,14 @@ const CutsExplorer = () => {
   useEffect(() => {
     setLoadingTimeseries(true);
     eel.get_voxel_timeseries(
-      Math.floor(x * contSize[0]),
-      Math.floor(y * contSize[1]),
-      Math.floor(z * contSize[2])
+      Math.floor(position.x * contSize[0]),
+      Math.floor(position.y * contSize[1]),
+      Math.floor(position.z * contSize[2])
     )((timeseries: number[]) => {
       setVoxelTimeseries(timeseries);
       setLoadingTimeseries(false);
     });
-  }, [x, y, z, contSize]);
+  }, [position.x, position.y, position.z, contSize]);
 
   // Get slice shapes
   useEffect(() => {
@@ -81,31 +89,43 @@ const CutsExplorer = () => {
   // Set logic for updating slices on x,y,z-change
   useEffect(() => {
     setLoadingSagital(true);
-    const anat = eel.get_anatomical_sagital(Math.floor(x * anatSize[0]))();
-    const contrast = eel.get_contrast_sagital(Math.floor(x * contSize[0]), t)();
+    const anat = eel.get_anatomical_sagital(
+      Math.floor(position.x * anatSize[0])
+    )();
+    const contrast = eel.get_contrast_sagital(
+      Math.floor(position.x * contSize[0]),
+      t
+    )();
     Promise.all([anat, contrast]).then((values) => {
       setAnatSagitalSlice(values[0]);
       setContSagitalSlice(values[1]);
       setLoadingSagital(false);
     });
-  }, [x, t, anatSize, contSize]);
+  }, [position.x, t, anatSize, contSize]);
 
   useEffect(() => {
     setLoadingCoronal(true);
-    const anat = eel.get_anatomical_coronal(Math.floor(y * anatSize[1]))();
-    const contrast = eel.get_contrast_coronal(Math.floor(y * contSize[1]), t)();
+    const anat = eel.get_anatomical_coronal(
+      Math.floor(position.y * anatSize[1])
+    )();
+    const contrast = eel.get_contrast_coronal(
+      Math.floor(position.y * contSize[1]),
+      t
+    )();
     Promise.all([anat, contrast]).then((values) => {
       setAnatCoronalSlice(values[0]);
       setContCoronalSlice(values[1]);
       setLoadingCoronal(false);
     });
-  }, [y, t, anatSize, contSize]);
+  }, [position.y, t, anatSize, contSize]);
 
   useEffect(() => {
     setLoadingHorizontal(true);
-    const anat = eel.get_anatomical_horizontal(Math.floor(z * anatSize[2]))();
+    const anat = eel.get_anatomical_horizontal(
+      Math.floor(position.z * anatSize[2])
+    )();
     const contrast = eel.get_contrast_horizontal(
-      Math.floor(z * contSize[2]),
+      Math.floor(position.z * contSize[2]),
       t
     )();
     Promise.all([anat, contrast]).then((values) => {
@@ -113,7 +133,7 @@ const CutsExplorer = () => {
       setContHorizontalSlice(values[1]);
       setLoadingHorizontal(false);
     });
-  }, [z, t, anatSize, contSize]);
+  }, [position.z, t, anatSize, contSize]);
 
   const SelectSubject = Select.ofType<string>();
   const SelectSequence = Select.ofType<string>();
@@ -213,20 +233,26 @@ const CutsExplorer = () => {
                   <CanvasCrosshair
                     height={Math.min(height, width)}
                     width={Math.min(height, width)}
-                    x={rotatedSagital ? z : y}
-                    y={rotatedSagital ? y : z}
+                    x={rotatedSagital ? position.z : position.y}
+                    y={rotatedSagital ? position.y : position.z}
                     changeCallback={(newX: number, newY: number) => {
                       if (rotatedSagital) {
-                        setZ(newX);
-                        setY(newY);
+                        setPosition({
+                          x: position.x,
+                          y: newY,
+                          z: newX,
+                        });
                       } else {
-                        setY(newX);
-                        setZ(newY);
+                        setPosition({
+                          x: position.x,
+                          y: newX,
+                          z: newY,
+                        });
                       }
                     }}
                   />
                 ) : null}
-                <div className="slice-label">x: {x.toFixed(3)}</div>
+                <div className="slice-label">x: {position.x.toFixed(3)}</div>
               </>
             )}
           </ParentSize>
@@ -253,15 +279,18 @@ const CutsExplorer = () => {
                   <CanvasCrosshair
                     height={Math.min(height, width)}
                     width={Math.min(height, width)}
-                    x={x}
-                    y={z}
+                    x={position.x}
+                    y={position.z}
                     changeCallback={(newX: number, newY: number) => {
-                      setX(newX);
-                      setZ(newY);
+                      setPosition({
+                        x: newX,
+                        y: position.y,
+                        z: newY,
+                      });
                     }}
                   />
                 ) : null}
-                <div className="slice-label">y: {y.toFixed(3)}</div>
+                <div className="slice-label">y: {position.y.toFixed(3)}</div>
               </>
             )}
           </ParentSize>
@@ -288,15 +317,18 @@ const CutsExplorer = () => {
                   <CanvasCrosshair
                     height={Math.min(height, width)}
                     width={Math.min(height, width)}
-                    x={x}
-                    y={y}
+                    x={position.x}
+                    y={position.y}
                     changeCallback={(newX: number, newY: number) => {
-                      setX(newX);
-                      setY(newY);
+                      setPosition({
+                        x: newX,
+                        y: newY,
+                        z: position.z,
+                      });
                     }}
                   />
                 ) : null}
-                <div className="slice-label">z: {z.toFixed(3)}</div>
+                <div className="slice-label">z: {position.z.toFixed(3)}</div>
               </>
             )}
           </ParentSize>
