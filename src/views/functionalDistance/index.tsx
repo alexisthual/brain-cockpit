@@ -13,7 +13,6 @@ import TextualLoader from "components/textualLoader";
 import {
   ActionLabel,
   ActionPane,
-  MeshType,
   Metric,
   Orientation,
   Subject,
@@ -46,7 +45,6 @@ const FunctionalDistanceExplorer = () => {
   const [meanFunctionalDistance, setMeanFunctionalDistance] = useState(false);
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [wireframe, setWireframe] = useState(false);
-  const [meshType] = useState(MeshType.PIAL);
   const [sharedState, setSharedState] = useState(true);
 
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
