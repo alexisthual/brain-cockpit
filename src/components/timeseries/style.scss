@@ -1,24 +1,28 @@
 @import "~@blueprintjs/core/lib/scss/variables";
 
-.timeseries {
-  .axis {
-    position: absolute;
-    .tick {
-      fill: $gray3;
-      font-size: 11px;
-    }
-  }
+.timeseries-container {
+  position: relative;
 
-  .timeseries-bar {
-    fill: transparent;
-
-    &:hover,
-    &.active {
-      fill: $light-gray3;
+  .timeseries {
+    .axis {
+      position: absolute;
+      .tick {
+        fill: $gray3;
+        font-size: 11px;
+      }
     }
 
-    &:hover {
-      cursor: pointer;
+    .timeseries-bar {
+      fill: transparent;
+
+      &:hover,
+      &.active {
+        fill: $light-gray3;
+      }
+
+      &:hover {
+        cursor: pointer;
+      }
     }
   }
 }

@@ -6,9 +6,11 @@ import { scaleLinear, scaleBand } from "@visx/scale";
 import { Bar, LinePath } from "@visx/shape";
 import React, { useMemo } from "react";
 
+import OverlayLoader from "components/overlayLoader";
 import "./style.scss";
 
 interface Props {
+  loading?: boolean;
   timeseries: number[];
   height: number;
   width: number;
@@ -18,6 +20,7 @@ interface Props {
 }
 
 const Timeseries = ({
+  loading,
   timeseries,
   selectedT,
   clickCallback = () => {},
@@ -54,59 +57,62 @@ const Timeseries = ({
   );
 
   return (
-    <svg className="timeseries" height={height} width={width}>
-      <AxisLeft
-        axisClassName="axis"
-        scale={yScale}
-        stroke={Colors.GRAY3}
-        top={margin.top}
-        left={margin.left}
-        tickStroke={Colors.GRAY3}
-        tickClassName="tick"
-        tickLabelProps={() => ({
-          textAnchor: "end",
-        })}
-      />
-      <AxisBottom
-        axisClassName="axis"
-        scale={xScale}
-        stroke={Colors.GRAY3}
-        left={margin.left}
-        top={height - margin.bottom}
-        tickStroke={Colors.GRAY3}
-        tickClassName="tick"
-        tickLabelProps={() => ({
-          textAnchor: "middle",
-        })}
-      />
-      <Group left={margin.left} top={margin.top}>
-        {[...Array(timeseries.length).keys()].map((index: number) => (
-          <Bar
-            className={`timeseries-bar ${
-              selectedT !== undefined && index === selectedT ? "active" : null
-            }`}
-            key={`bar-${timeseries.length}-${index}`}
-            x={xScale(index)}
-            y={0}
-            width={xScale.step()}
-            height={height - margin.top - margin.bottom}
-            fill={Colors.BLUE1}
-            onClick={() => {
-              clickCallback(index);
-            }}
-          />
-        ))}
-        <LinePath<number>
-          curve={curveLinear}
-          data={timeseries}
-          stroke={Colors.DARK_GRAY3}
-          x={(d: number, index: number) =>
-            (xScale(index) || 0) + xScale.step() / 2
-          }
-          y={(d: number) => yScale(d)}
+    <div className="timeseries-container">
+      {loading ? <OverlayLoader /> : null}
+      <svg className="timeseries" height={height} width={width}>
+        <AxisLeft
+          axisClassName="axis"
+          scale={yScale}
+          stroke={Colors.GRAY3}
+          top={margin.top}
+          left={margin.left}
+          tickStroke={Colors.GRAY3}
+          tickClassName="tick"
+          tickLabelProps={() => ({
+            textAnchor: "end",
+          })}
         />
-      </Group>
-    </svg>
+        <AxisBottom
+          axisClassName="axis"
+          scale={xScale}
+          stroke={Colors.GRAY3}
+          left={margin.left}
+          top={height - margin.bottom}
+          tickStroke={Colors.GRAY3}
+          tickClassName="tick"
+          tickLabelProps={() => ({
+            textAnchor: "middle",
+          })}
+        />
+        <Group left={margin.left} top={margin.top}>
+          {[...Array(timeseries.length).keys()].map((index: number) => (
+            <Bar
+              className={`timeseries-bar ${
+                selectedT !== undefined && index === selectedT ? "active" : null
+              }`}
+              key={`bar-${timeseries.length}-${index}`}
+              x={xScale(index)}
+              y={0}
+              width={xScale.step()}
+              height={height - margin.top - margin.bottom}
+              fill={Colors.BLUE1}
+              onClick={() => {
+                clickCallback(index);
+              }}
+            />
+          ))}
+          <LinePath<number>
+            curve={curveLinear}
+            data={timeseries}
+            stroke={Colors.DARK_GRAY3}
+            x={(d: number, index: number) =>
+              (xScale(index) || 0) + xScale.step() / 2
+            }
+            y={(d: number) => yScale(d)}
+          />
+        </Group>
+      </svg>
+    </div>
   );
 };
 

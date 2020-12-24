@@ -8,6 +8,7 @@ import { eel } from "App";
 import CanvasSlice from "components/canvasSlice";
 import CanvasCrosshair from "components/canvasCrosshair";
 import Colorbar from "components/colorbar";
+import TextualLoader from "components/textualLoader";
 import Timeseries from "components/timeseries";
 import { stringRenderer } from "constants/index";
 
@@ -26,6 +27,10 @@ const CutsExplorer = () => {
   const [y, setY] = useState(0.5);
   const [z, setZ] = useState(0.5);
   const [t, setT] = useState(0);
+  const [loadingSagital, setLoadingSagital] = useState(false);
+  const [loadingCoronal, setLoadingCoronal] = useState(false);
+  const [loadingHorizontal, setLoadingHorizontal] = useState(false);
+  const [loadingTimeseries, setLoadingTimeseries] = useState(false);
   const [anatSize, setAnatSize] = useState<number[]>([0, 0, 0]);
   const [anatSagitalSlice, setAnatSagitalSlice] = useState<number[][]>([]);
   const [anatCoronalSlice, setAnatCoronalSlice] = useState<number[][]>([]);
@@ -52,12 +57,14 @@ const CutsExplorer = () => {
 
   // Get voxel timeseries
   useEffect(() => {
+    setLoadingTimeseries(true);
     eel.get_voxel_timeseries(
       Math.floor(x * contSize[0]),
       Math.floor(y * contSize[1]),
       Math.floor(z * contSize[2])
     )((timeseries: number[]) => {
       setVoxelTimeseries(timeseries);
+      setLoadingTimeseries(false);
     });
   }, [x, y, z, contSize]);
 
@@ -73,44 +80,38 @@ const CutsExplorer = () => {
 
   // Set logic for updating slices on x,y,z-change
   useEffect(() => {
-    eel.get_anatomical_sagital(Math.floor(x * anatSize[0]))(
-      (slice: number[][]) => {
-        setAnatSagitalSlice(slice);
-      }
-    );
-    eel.get_contrast_sagital(
-      Math.floor(x * contSize[0]),
-      t
-    )((slice: number[][]) => {
-      setContSagitalSlice(slice);
+    setLoadingSagital(true);
+    const anat = eel.get_anatomical_sagital(Math.floor(x * anatSize[0]))();
+    const contrast = eel.get_contrast_sagital(Math.floor(x * contSize[0]), t)();
+    Promise.all([anat, contrast]).then((values) => {
+      setAnatSagitalSlice(values[0]);
+      setContSagitalSlice(values[1]);
+      setLoadingSagital(false);
     });
   }, [x, t, anatSize, contSize]);
 
   useEffect(() => {
-    eel.get_anatomical_coronal(Math.floor(y * anatSize[1]))(
-      (slice: number[][]) => {
-        setAnatCoronalSlice(slice);
-      }
-    );
-    eel.get_contrast_coronal(
-      Math.floor(y * contSize[1]),
-      t
-    )((slice: number[][]) => {
-      setContCoronalSlice(slice);
+    setLoadingCoronal(true);
+    const anat = eel.get_anatomical_coronal(Math.floor(y * anatSize[1]))();
+    const contrast = eel.get_contrast_coronal(Math.floor(y * contSize[1]), t)();
+    Promise.all([anat, contrast]).then((values) => {
+      setAnatCoronalSlice(values[0]);
+      setContCoronalSlice(values[1]);
+      setLoadingCoronal(false);
     });
   }, [y, t, anatSize, contSize]);
 
   useEffect(() => {
-    eel.get_anatomical_horizontal(Math.floor(z * anatSize[2]))(
-      (slice: number[][]) => {
-        setAnatHorizontalSlice(slice);
-      }
-    );
-    eel.get_contrast_horizontal(
+    setLoadingHorizontal(true);
+    const anat = eel.get_anatomical_horizontal(Math.floor(z * anatSize[2]))();
+    const contrast = eel.get_contrast_horizontal(
       Math.floor(z * contSize[2]),
       t
-    )((slice: number[][]) => {
-      setContHorizontalSlice(slice);
+    )();
+    Promise.all([anat, contrast]).then((values) => {
+      setAnatHorizontalSlice(values[0]);
+      setContHorizontalSlice(values[1]);
+      setLoadingHorizontal(false);
     });
   }, [z, t, anatSize, contSize]);
 
@@ -192,6 +193,7 @@ const CutsExplorer = () => {
           <ParentSize>
             {({ width, height }) => (
               <>
+                {loadingSagital ? <TextualLoader text="Loading..." /> : null}
                 <CanvasSlice
                   image={anatSagitalSlice}
                   height={Math.min(height, width)}
@@ -231,6 +233,7 @@ const CutsExplorer = () => {
           <ParentSize>
             {({ width, height }) => (
               <>
+                {loadingCoronal ? <TextualLoader text="Loading..." /> : null}
                 <CanvasSlice
                   image={anatCoronalSlice}
                   height={Math.min(height, width)}
@@ -265,6 +268,7 @@ const CutsExplorer = () => {
           <ParentSize>
             {({ width, height }) => (
               <>
+                {loadingHorizontal ? <TextualLoader text="Loading..." /> : null}
                 <CanvasSlice
                   image={anatHorizontalSlice}
                   height={Math.min(height, width)}
@@ -307,6 +311,7 @@ const CutsExplorer = () => {
         <ParentSize>
           {({ width, height }) => (
             <Timeseries
+              loading={loadingTimeseries}
               clickCallback={(t: number) => setT(t)}
               timeseries={voxelTimeseries}
               selectedT={t}
