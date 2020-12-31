@@ -8,7 +8,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from api.surface_contrasts import subjects
-import utils.setup as setup
+import custom_utils.setup as setup
 
 # Load environment variables
 setup.load_env()
@@ -18,7 +18,11 @@ EXPERIMENT_DATA_PATH = os.getenv("EXPERIMENT_DATA_PATH")
 EXPERIMENT_REGRESSION = bool(strtobool(os.getenv("EXPERIMENT_REGRESSION")))
 EXPERIMENT_REGRESSION_FOLDER = os.getenv("EXPERIMENT_REGRESSION_FOLDER")
 
-MODELS = ["linear_svr", "nystroem_n_components_5000"]
+MODELS = [
+    "linear_svr",
+    "nystroem_n_components_500",
+    "nystroem_n_components_5000",
+]
 
 
 @eel.expose

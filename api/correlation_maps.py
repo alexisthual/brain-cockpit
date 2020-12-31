@@ -8,7 +8,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from api.surface_contrasts import subjects
-import utils.setup as setup
+import custom_utils.setup as setup
 
 # Load environment variables
 setup.load_env()

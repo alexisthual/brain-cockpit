@@ -12,7 +12,7 @@ import api.regressed_coordinates
 import api.correlation_maps
 
 # Custom utils
-import utils.setup as setup
+import custom_utils.setup as setup
 
 setup.load_env()
 REACT_APP_API_PORT = os.getenv("REACT_APP_API_PORT")
