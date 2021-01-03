@@ -13,7 +13,7 @@ import custom_utils.setup as setup
 # Load environment variables
 setup.load_env()
 
-N_JOBS = os.getenv("N_JOBS")
+N_JOBS = int(os.getenv("N_JOBS"))
 SLICE_DATA_PATH = os.getenv("SLICE_DATA_PATH")
 SLICE_DATA_HUMAN_SUBJECTS = os.getenv("SLICE_DATA_HUMAN_SUBJECTS")
 SLICE_DATA_MONKEY_SUBJECTS = os.getenv("SLICE_DATA_MONKEY_SUBJECTS")
