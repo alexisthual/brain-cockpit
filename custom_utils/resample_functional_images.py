@@ -70,6 +70,9 @@ def resample_subject(folder, subject):
             functional_img, anatomical_img_resampled
         )
 
+        if not os.path.exists(os.path.join(subject_data_path, "resampled")):
+            os.mkdir(os.path.join(subject_data_path, "resampled"))
+
         nib.save(
             functional_img_resampled,
             os.path.join(
