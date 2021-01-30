@@ -14,11 +14,10 @@ import custom_utils.setup as setup
 setup.load_env()
 
 DEBUG = os.getenv("DEBUG")
-REACT_APP_EXPERIMENT_CORRELATION_VIEW = os.getenv(
-    "REACT_APP_EXPERIMENT_CORRELATION_VIEW"
-)
-EXPERIMENT_CORRELATION_VIEW = bool(
-    strtobool(os.getenv("EXPERIMENT_CORRELATION_VIEW"))
+EXPERIMENT_DATA_PATH = os.getenv("EXPERIMENT_DATA_PATH")
+EXPERIMENT_CORRELATION_FOLDER = os.getenv("EXPERIMENT_CORRELATION_FOLDER")
+REACT_APP_EXPERIMENT_CORRELATION_VIEW = bool(
+    strtobool(os.getenv("REACT_APP_EXPERIMENT_CORRELATION_VIEW"))
 )
 
 # Functional distance vs topographical distance experiment
@@ -27,17 +26,16 @@ d_max = 40
 
 ## Load correlation maps
 distance_maps = []
-if (
-    EXPERIMENT_CORRELATION_VIEW
-    and REACT_APP_EXPERIMENT_CORRELATION_VIEW is not None
-    and os.path.exists(REACT_APP_EXPERIMENT_CORRELATION_VIEW)
+if REACT_APP_EXPERIMENT_CORRELATION_VIEW is not None and os.path.exists(
+    os.path.join(EXPERIMENT_DATA_PATH, EXPERIMENT_CORRELATION_FOLDER)
 ):
     print("Loading correlation maps...")
     for subject in tqdm(subjects):
         with open(
             os.path.join(
-                REACT_APP_EXPERIMENT_CORRELATION_VIEW,
-                f"011_mean_m_distance_correlation_map.py/pairwise_{metric}_{subject}.npy",
+                EXPERIMENT_DATA_PATH,
+                EXPERIMENT_CORRELATION_FOLDER,
+                f"pairwise_{metric}_{subject}.npy",
             ),
             "rb",
         ) as f:
@@ -117,17 +115,16 @@ def get_mean_topographic_distance_to_m_functional_distance(m):
 
 ## Load functional distance means
 mean_functional_distances = []
-if (
-    EXPERIMENT_CORRELATION_VIEW
-    and REACT_APP_EXPERIMENT_CORRELATION_VIEW is not None
-    and os.path.exists(REACT_APP_EXPERIMENT_CORRELATION_VIEW)
+if REACT_APP_EXPERIMENT_CORRELATION_VIEW is not None and os.path.exists(
+    os.path.join(EXPERIMENT_DATA_PATH, EXPERIMENT_CORRELATION_FOLDER)
 ):
     print("Loading mean functional distances...")
     for subject in tqdm(subjects):
         with open(
             os.path.join(
-                REACT_APP_EXPERIMENT_CORRELATION_VIEW,
-                f"011_mean_m_distance_correlation_map.py/mean_functional_distance_{metric}_{subject}.npy",
+                EXPERIMENT_DATA_PATH,
+                EXPERIMENT_CORRELATION_FOLDER,
+                f"mean_functional_distance_{metric}_{subject}.npy",
             ),
             "rb",
         ) as f:
