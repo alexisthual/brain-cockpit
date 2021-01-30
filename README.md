@@ -52,22 +52,32 @@ scp username@drago2:/storage/store2/work/athual/data/ibc_surface_conditions_db.z
 unzip /path/to/ibc_surface_conditions_db.zip
 ```
 
-### Overwrite default environment varaibles
+### Overwrite default environment variables
 
 Default environment variables are initiated in `.env`.
-You can overwrite these by creating a `.env.local` file suited to your needs.
+You can overwrite these by creating a `.env.development.local` file suited to your needs.
 In particular, you most likely want to set `DATA_PATH` to point to downloaded IBC contrasts.
 
 If you need a more custom `.env` files setup, check out [all other possibilities](https://create-react-app.dev/docs/adding-custom-environment-variables/#what-other-env-files-can-be-used) allowed by `create-react-app`.
 
 ## Run
 
-### Dev mode
+### Application in dev mode
 
 In separate prompts:
 
 - start the frontend with `yarn start`
 - start the backend with `python main.py` (using your `brain-cockpit` conda env)
+
+### Custom utilitaries
+
+#### Functional images resampling
+
+This will resample functional images contained in `SLICE_DATA_PATH`, to later be displayed in `brain-cockpit`.
+
+```
+python custom_utils/resample_functional_images.py --env {development, production}
+```
 
 ## Contributing
 
