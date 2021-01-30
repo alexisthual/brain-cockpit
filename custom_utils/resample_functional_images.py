@@ -8,17 +8,18 @@ import numpy as np
 import os
 from tqdm import tqdm
 
-import custom_utils.setup as setup
+import setup as setup
 
 # Load environment variables
 setup.load_env()
 
 N_JOBS = int(os.getenv("N_JOBS"))
 SLICE_DATA_PATH = os.getenv("SLICE_DATA_PATH")
-SLICE_DATA_HUMAN_SUBJECTS = os.getenv("SLICE_DATA_HUMAN_SUBJECTS")
-SLICE_DATA_MONKEY_SUBJECTS = os.getenv("SLICE_DATA_MONKEY_SUBJECTS")
+SLICE_DATA_HUMAN_SUBJECTS = os.getenv("SLICE_DATA_HUMAN_SUBJECTS").split(",")
+SLICE_DATA_MONKEY_SUBJECTS = os.getenv("SLICE_DATA_MONKEY_SUBJECTS").split(",")
 print(SLICE_DATA_HUMAN_SUBJECTS)
 print(SLICE_DATA_MONKEY_SUBJECTS)
+MAX_DIM = 128
 
 subjects = list(
     zip(
@@ -32,8 +33,19 @@ subjects = list(
     )
 )
 
+OUTPUT_FOLDER = os.path.join(SLICE_DATA_PATH, "resampled")
+
+if not os.path.exists(OUTPUT_FOLDER):
+    os.makedirs(OUTPUT_FOLDER)
+
 
 def resample_subject(folder, subject):
+    output_subject = os.path.join(OUTPUT_FOLDER, subject)
+    if not os.path.exists(output_subject):
+        os.makedirs(output_subject)
+        os.makedirs(os.path.join(output_subject, "anatomical"))
+        os.makedirs(os.path.join(output_subject, "functional"))
+
     # The commented nifti path is rotated
     # I presume this can be solved with nilearn.image.reorder_img
     # anatomical_nifti = os.path.join(SLICE_DATA_PATH, "anatomical/debby_t1.nii")
@@ -49,12 +61,21 @@ def resample_subject(folder, subject):
     else:
         print(f"Missing anatomical files for subject {subject}")
 
-    anatomical_img = load_img(anatomical_nifti)
-    m = np.max(anatomical_img.shape)
-    anatomical_img_resampled = resample_img(
-        anatomical_img,
-        target_affine=anatomical_img.affine,
+    anatomical_image = load_img(anatomical_nifti, dtype=np.float32)
+    m = min(np.max(anatomical_image.shape), MAX_DIM)
+    anatomical_image_resampled = resample_img(
+        anatomical_image,
+        target_affine=anatomical_image.affine,
         target_shape=(m, m, m),
+    )
+
+    nib.save(
+        anatomical_image_resampled,
+        os.path.join(
+            output_subject,
+            "anatomical",
+            f"{os.path.splitext(anatomical_image_name)[0]}_resampled.nii",
+        ),
     )
 
     for functional_image_name in tqdm(
@@ -64,20 +85,20 @@ def resample_subject(folder, subject):
         functional_nifti = os.path.join(
             subject_data_path, "functional", functional_image_name
         )
-        functional_img = load_img(functional_nifti)
+        functional_image = load_img(functional_nifti, dtype=np.float32)
 
-        functional_img_resampled = resample_to_img(
-            functional_img, anatomical_img_resampled
+        functional_image_resampled = resample_to_img(
+            functional_image, anatomical_image_resampled
         )
 
         if not os.path.exists(os.path.join(subject_data_path, "resampled")):
             os.mkdir(os.path.join(subject_data_path, "resampled"))
 
         nib.save(
-            functional_img_resampled,
+            functional_image_resampled,
             os.path.join(
-                subject_data_path,
-                "resampled",
+                output_subject,
+                "functional",
                 f"{os.path.splitext(functional_image_name)[0]}_resampled_to_{os.path.splitext(anatomical_image_name)[0]}.nii",
             ),
         )
