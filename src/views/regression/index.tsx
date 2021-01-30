@@ -198,8 +198,7 @@ const RegressionExplorer = () => {
 
   return (
     <div
-      id="main-container"
-      className={`${
+      className={`main-container ${
         voxelIndex !== undefined ? `${orientation}-orientation` : ""
       }`}
     >
@@ -261,7 +260,7 @@ const RegressionExplorer = () => {
         </ParentSize>
       </div>
       {voxelIndex !== undefined ? (
-        <div id="fingerprint">
+        <div className="fingerprint">
           <PanelButtons
             orientation={
               orientation === Orientation.VERTICAL

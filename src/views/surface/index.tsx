@@ -430,7 +430,7 @@ const SurfaceExplorer = () => {
         </div>
       </div>
       {voxelIndex !== undefined ? (
-        <div id="fingerprint">
+        <div className="fingerprint">
           <PanelButtons
             orientation={
               orientation === Orientation.VERTICAL
