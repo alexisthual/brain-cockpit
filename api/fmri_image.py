@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
+from distutils.util import strtobool
 import dotenv
 import eel
 import nibabel as nib
@@ -14,13 +15,10 @@ import custom_utils.setup as setup
 setup.load_env()
 
 DEBUG = os.getenv("DEBUG")
-REACT_APP_SLICE_VIEW = os.getenv("REACT_APP_SLICE_VIEW")
+REACT_APP_SLICE_VIEW = bool(strtobool(os.getenv("REACT_APP_SLICE_VIEW")))
 SLICE_DATA_PATH = os.getenv("SLICE_DATA_PATH")
 if os.path.exists(os.path.join(SLICE_DATA_PATH, "resampled")):
     SLICE_DATA_PATH = os.path.join(SLICE_DATA_PATH, "resampled")
-
-print(REACT_APP_SLICE_VIEW)
-print(SLICE_DATA_PATH)
 
 subjects = ["debby", "aliami"]
 

@@ -1,4 +1,5 @@
 from datetime import datetime
+from distutils.util import strtobool
 import dotenv
 import eel
 import nibabel as nib
@@ -13,6 +14,9 @@ import custom_utils.setup as setup
 setup.load_env()
 
 DEBUG = os.getenv("DEBUG")
+REACT_APP_CONDITIONS_VIEW = bool(
+    strtobool(os.getenv("REACT_APP_CONDITIONS_VIEW"))
+)
 CONDITIONS_DATA_PATH = os.getenv("CONDITIONS_DATA_PATH")
 AVAILABLE_CONTRASTS_PATH = os.getenv("AVAILABLE_CONTRASTS_PATH")
 
@@ -138,12 +142,12 @@ def load_fmri(df, subjects, unique_contrasts):
 
 ## Init variables and load data if possible
 df = pd.DataFrame()
-subjects, contrasts, n_contrasts_by_task = [], [], 0
+subjects, contrasts, n_contrasts_by_task = [], [], []
 n_subjects, n_contrasts = 0, 0
 X = np.empty((0, 0))
 n_voxels = 0
 
-if CONDITIONS_DATA_PATH is not None and os.path.exists(CONDITIONS_DATA_PATH):
+if REACT_APP_CONDITIONS_VIEW and os.path.exists(CONDITIONS_DATA_PATH):
     ## Load selected subjects and contrasts
     df = pd.read_csv(AVAILABLE_CONTRASTS_PATH)
     subjects, contrasts, n_contrasts_by_task = select_subjects_and_contrasts(

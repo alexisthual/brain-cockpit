@@ -26,7 +26,7 @@ d_max = 40
 
 ## Load correlation maps
 distance_maps = []
-if REACT_APP_EXPERIMENT_CORRELATION_VIEW is not None and os.path.exists(
+if REACT_APP_EXPERIMENT_CORRELATION_VIEW and os.path.exists(
     os.path.join(EXPERIMENT_DATA_PATH, EXPERIMENT_CORRELATION_FOLDER)
 ):
     print("Loading correlation maps...")
@@ -115,7 +115,7 @@ def get_mean_topographic_distance_to_m_functional_distance(m):
 
 ## Load functional distance means
 mean_functional_distances = []
-if REACT_APP_EXPERIMENT_CORRELATION_VIEW is not None and os.path.exists(
+if REACT_APP_EXPERIMENT_CORRELATION_VIEW and os.path.exists(
     os.path.join(EXPERIMENT_DATA_PATH, EXPERIMENT_CORRELATION_FOLDER)
 ):
     print("Loading mean functional distances...")
