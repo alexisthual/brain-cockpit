@@ -239,7 +239,7 @@ const RegressionExplorer = () => {
       {loadingContrastMap ? (
         <TextualLoader text="Loading error map..." />
       ) : null}
-      <div id="scene">
+      <div className="scene">
         <Colorbar
           vmin={errorMap ? Math.min(...errorMap) : undefined}
           vmax={errorMap ? Math.max(...errorMap) : undefined}
