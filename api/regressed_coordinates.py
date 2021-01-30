@@ -15,7 +15,9 @@ setup.load_env()
 
 DEBUG = os.getenv("DEBUG")
 EXPERIMENT_DATA_PATH = os.getenv("EXPERIMENT_DATA_PATH")
-EXPERIMENT_REGRESSION = bool(strtobool(os.getenv("EXPERIMENT_REGRESSION")))
+REACT_APP_EXPERIMENT_REGRESSION_VIEW = bool(
+    strtobool(os.getenv("REACT_APP_EXPERIMENT_REGRESSION_VIEW"))
+)
 EXPERIMENT_REGRESSION_FOLDER = os.getenv("EXPERIMENT_REGRESSION_FOLDER")
 
 MODELS = [
@@ -35,7 +37,7 @@ def get_regression_models():
 ## Load regressed coordinates
 regressed_coordinates = {}
 if (
-    EXPERIMENT_REGRESSION
+    REACT_APP_EXPERIMENT_REGRESSION_VIEW
     and EXPERIMENT_DATA_PATH is not None
     and os.path.exists(EXPERIMENT_DATA_PATH)
 ):
@@ -67,7 +69,7 @@ def get_regressed_coordinates(model, subject, voxel_index):
 ## Load regressed coordinates error map
 regressed_coordinates_error = {}
 if (
-    EXPERIMENT_REGRESSION
+    REACT_APP_EXPERIMENT_REGRESSION_VIEW
     and EXPERIMENT_DATA_PATH is not None
     and os.path.exists(EXPERIMENT_DATA_PATH)
 ):

@@ -14,8 +14,12 @@ import custom_utils.setup as setup
 setup.load_env()
 
 DEBUG = os.getenv("DEBUG")
-EXPERIMENT_DATA_PATH = os.getenv("EXPERIMENT_DATA_PATH")
-EXPERIMENT_CORRELATION = bool(strtobool(os.getenv("EXPERIMENT_CORRELATION")))
+REACT_APP_EXPERIMENT_CORRELATION_VIEW = os.getenv(
+    "REACT_APP_EXPERIMENT_CORRELATION_VIEW"
+)
+EXPERIMENT_CORRELATION_VIEW = bool(
+    strtobool(os.getenv("EXPERIMENT_CORRELATION_VIEW"))
+)
 
 # Functional distance vs topographical distance experiment
 metric = "cosine"
@@ -24,15 +28,15 @@ d_max = 40
 ## Load correlation maps
 distance_maps = []
 if (
-    EXPERIMENT_CORRELATION
-    and EXPERIMENT_DATA_PATH is not None
-    and os.path.exists(EXPERIMENT_DATA_PATH)
+    EXPERIMENT_CORRELATION_VIEW
+    and REACT_APP_EXPERIMENT_CORRELATION_VIEW is not None
+    and os.path.exists(REACT_APP_EXPERIMENT_CORRELATION_VIEW)
 ):
     print("Loading correlation maps...")
     for subject in tqdm(subjects):
         with open(
             os.path.join(
-                EXPERIMENT_DATA_PATH,
+                REACT_APP_EXPERIMENT_CORRELATION_VIEW,
                 f"011_mean_m_distance_correlation_map.py/pairwise_{metric}_{subject}.npy",
             ),
             "rb",
@@ -114,15 +118,15 @@ def get_mean_topographic_distance_to_m_functional_distance(m):
 ## Load functional distance means
 mean_functional_distances = []
 if (
-    EXPERIMENT_CORRELATION
-    and EXPERIMENT_DATA_PATH is not None
-    and os.path.exists(EXPERIMENT_DATA_PATH)
+    EXPERIMENT_CORRELATION_VIEW
+    and REACT_APP_EXPERIMENT_CORRELATION_VIEW is not None
+    and os.path.exists(REACT_APP_EXPERIMENT_CORRELATION_VIEW)
 ):
     print("Loading mean functional distances...")
     for subject in tqdm(subjects):
         with open(
             os.path.join(
-                EXPERIMENT_DATA_PATH,
+                REACT_APP_EXPERIMENT_CORRELATION_VIEW,
                 f"011_mean_m_distance_correlation_map.py/mean_functional_distance_{metric}_{subject}.npy",
             ),
             "rb",
