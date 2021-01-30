@@ -32,7 +32,7 @@ const App = () => {
     <Router>
       <div id="app-container">
         <div id="navbar">
-          {process.env.REACT_APP_CONDITIONS_VIEW ? (
+          {process.env.REACT_APP_CONDITIONS_VIEW === "true" ? (
             <Tooltip
               content="IBC conditions on surface"
               position={Position.RIGHT}
@@ -43,7 +43,7 @@ const App = () => {
             </Tooltip>
           ) : null}
           <Divider />
-          {process.env.REACT_APP_SLICE_VIEW ? (
+          {process.env.REACT_APP_SLICE_VIEW === "true" ? (
             <Tooltip content="Cross-species slices" position={Position.RIGHT}>
               <NavLink className="view-button" exact to="/cuts">
                 <Icon icon="symbol-circle" />
@@ -51,7 +51,7 @@ const App = () => {
             </Tooltip>
           ) : null}
           <Divider />
-          {process.env.REACT_APP_EXPERIMENT_REGRESSION_VIEW ? (
+          {process.env.REACT_APP_EXPERIMENT_REGRESSION_VIEW === "true" ? (
             <Tooltip
               content="Regressed MNI coordinates"
               position={Position.RIGHT}
@@ -61,7 +61,7 @@ const App = () => {
               </NavLink>
             </Tooltip>
           ) : null}
-          {process.env.REACT_APP_EXPERIMENT_CORRELATION_VIEW ? (
+          {process.env.REACT_APP_EXPERIMENT_CORRELATION_VIEW === "true" ? (
             <Tooltip
               content="Functional distance maps"
               position={Position.RIGHT}
