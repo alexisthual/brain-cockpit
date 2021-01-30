@@ -14,7 +14,7 @@ import api.correlation_maps
 # Custom utils
 import custom_utils.setup as setup
 
-setup.load_env()
+setup.load_env(verbose=True)
 REACT_APP_API_PORT = os.getenv("REACT_APP_API_PORT")
 
 

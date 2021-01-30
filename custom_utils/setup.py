@@ -17,11 +17,13 @@ def load_arguments():
     return parser.parse_args()
 
 
-def load_env():
+def load_env(verbose=False):
     args = load_arguments()
 
     dotenv.load_dotenv()
     if args.env == "production":
+        if verbose:
+            print("Loading production env files...")
         if os.path.exists(".env.production"):
             dotenv.load_dotenv(dotenv_path=".env.production", override=True)
         if os.path.exists(".env.production.local"):
@@ -29,6 +31,8 @@ def load_env():
                 dotenv_path=".env.production.local", override=True
             )
     else:
+        if verbose:
+            print("Loading development env files...")
         if os.path.exists(".env.development"):
             dotenv.load_dotenv(dotenv_path=".env.development", override=True)
         if os.path.exists(".env.development.local"):
