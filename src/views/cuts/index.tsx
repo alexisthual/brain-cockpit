@@ -23,12 +23,10 @@ interface Position {
 }
 
 const CutsExplorer = () => {
-  const [subjects] = useState(["debby"]);
-  const [subject, setSubject] = useState("debby");
-  const [sequences] = useState(["seq-01"]);
-  const [sequence, setSequence] = useState("seq-01");
-  const [runs] = useState(["run-01"]);
-  const [run, setRun] = useState("run-01");
+  const [subjects, setSubjects] = useState<string[]>([]);
+  const [subject, setSubject] = useState<string>();
+  const [images, setImages] = useState<string[]>([]);
+  const [image, setImage] = useState<string>();
   const [position, setPosition] = useState<Position>({
     x: 0.5,
     y: 0.5,
@@ -58,86 +56,123 @@ const CutsExplorer = () => {
   const [rotatedSagital] = useState(false);
 
   useEffect(() => {
-    eel.get_contrast_range()((range: number[]) => {
-      setContRange(range);
+    eel.get_subject_list()((subjects: string[]) => {
+      setSubjects(subjects);
     });
   }, []);
+
+  useEffect(() => {
+    if (subject !== undefined) {
+      setImage(undefined);
+      eel.get_functional_image_names(subject)((names: string[]) => {
+        setImages(names);
+      });
+    }
+  }, [subject]);
+
+  useEffect(() => {
+    if (subject !== undefined && image !== undefined) {
+      eel.get_functional_range(
+        subject,
+        image
+      )((range: number[]) => {
+        setContRange(range);
+      });
+      eel.get_functional_shape(
+        subject,
+        image
+      )((shape: number[]) => {
+        setContSize(shape);
+      });
+      eel.get_anatomical_shape(subject)((shape: number[]) => {
+        setAnatSize(shape);
+      });
+    }
+  }, [subject, image]);
 
   // Get voxel timeseries
   useEffect(() => {
-    setLoadingTimeseries(true);
-    eel.get_voxel_timeseries(
-      Math.floor(position.x * contSize[0]),
-      Math.floor(position.y * contSize[1]),
-      Math.floor(position.z * contSize[2])
-    )((timeseries: number[]) => {
-      setVoxelTimeseries(timeseries);
-      setLoadingTimeseries(false);
-    });
-  }, [position.x, position.y, position.z, contSize]);
-
-  // Get slice shapes
-  useEffect(() => {
-    eel.get_anatomical_shape()((shape: number[]) => {
-      setAnatSize(shape);
-    });
-    eel.get_contrast_shape()((shape: number[]) => {
-      setContSize(shape);
-    });
-  }, []);
+    if (subject !== undefined && image !== undefined) {
+      setLoadingTimeseries(true);
+      eel.get_voxel_timeseries(
+        subject,
+        image,
+        Math.floor(position.x * contSize[0]),
+        Math.floor(position.y * contSize[1]),
+        Math.floor(position.z * contSize[2])
+      )((timeseries: number[]) => {
+        setVoxelTimeseries(timeseries);
+        setLoadingTimeseries(false);
+      });
+    }
+  }, [subject, image, position.x, position.y, position.z, contSize]);
 
   // Set logic for updating slices on x,y,z-change
   useEffect(() => {
-    setLoadingSagital(true);
-    const anat = eel.get_anatomical_sagital(
-      Math.floor(position.x * anatSize[0])
-    )();
-    const contrast = eel.get_contrast_sagital(
-      Math.floor(position.x * contSize[0]),
-      t
-    )();
-    Promise.all([anat, contrast]).then((values) => {
-      setAnatSagitalSlice(values[0]);
-      setContSagitalSlice(values[1]);
-      setLoadingSagital(false);
-    });
-  }, [position.x, t, anatSize, contSize]);
+    if (subject !== undefined && image !== undefined) {
+      setLoadingSagital(true);
+      const anat = eel.get_anatomical_sagital(
+        subject,
+        Math.floor(position.x * anatSize[0])
+      )();
+      const contrast = eel.get_functional_sagital(
+        subject,
+        image,
+        Math.floor(position.x * contSize[0]),
+        t
+      )();
+      Promise.all([anat, contrast]).then((values) => {
+        setAnatSagitalSlice(values[0]);
+        setContSagitalSlice(values[1]);
+        setLoadingSagital(false);
+      });
+    }
+  }, [subject, image, position.x, t, anatSize, contSize]);
 
   useEffect(() => {
-    setLoadingCoronal(true);
-    const anat = eel.get_anatomical_coronal(
-      Math.floor(position.y * anatSize[1])
-    )();
-    const contrast = eel.get_contrast_coronal(
-      Math.floor(position.y * contSize[1]),
-      t
-    )();
-    Promise.all([anat, contrast]).then((values) => {
-      setAnatCoronalSlice(values[0]);
-      setContCoronalSlice(values[1]);
-      setLoadingCoronal(false);
-    });
-  }, [position.y, t, anatSize, contSize]);
+    if (subject !== undefined && image !== undefined) {
+      setLoadingCoronal(true);
+      const anat = eel.get_anatomical_coronal(
+        subject,
+        Math.floor(position.y * anatSize[1])
+      )();
+      const contrast = eel.get_functional_coronal(
+        subject,
+        image,
+        Math.floor(position.y * contSize[1]),
+        t
+      )();
+      Promise.all([anat, contrast]).then((values) => {
+        setAnatCoronalSlice(values[0]);
+        setContCoronalSlice(values[1]);
+        setLoadingCoronal(false);
+      });
+    }
+  }, [subject, image, position.y, t, anatSize, contSize]);
 
   useEffect(() => {
-    setLoadingHorizontal(true);
-    const anat = eel.get_anatomical_horizontal(
-      Math.floor(position.z * anatSize[2])
-    )();
-    const contrast = eel.get_contrast_horizontal(
-      Math.floor(position.z * contSize[2]),
-      t
-    )();
-    Promise.all([anat, contrast]).then((values) => {
-      setAnatHorizontalSlice(values[0]);
-      setContHorizontalSlice(values[1]);
-      setLoadingHorizontal(false);
-    });
-  }, [position.z, t, anatSize, contSize]);
+    if (subject !== undefined && image !== undefined) {
+      setLoadingHorizontal(true);
+      const anat = eel.get_anatomical_horizontal(
+        subject,
+        Math.floor(position.z * anatSize[2])
+      )();
+      const contrast = eel.get_functional_horizontal(
+        subject,
+        image,
+        Math.floor(position.z * contSize[2]),
+        t
+      )();
+      Promise.all([anat, contrast]).then((values) => {
+        setAnatHorizontalSlice(values[0]);
+        setContHorizontalSlice(values[1]);
+        setLoadingHorizontal(false);
+      });
+    }
+  }, [subject, image, position.z, t, anatSize, contSize]);
 
   const SelectSubject = Select.ofType<string>();
   const SelectSequence = Select.ofType<string>();
-  const SelectRun = Select.ofType<string>();
 
   const color1 = Colors.VERMILION1;
   const color2 = Colors.GOLD5;
@@ -163,33 +198,18 @@ const CutsExplorer = () => {
           </div>
         </div>
         <div className="item">
-          <div className="item-label">Sequance</div>
+          <div className="item-label">Image</div>
           <div className="item-value">
             <SelectSequence
               filterable={false}
-              items={sequences}
+              items={images}
               itemRenderer={stringRenderer}
               onItemSelect={(item: string) => {
-                setSequence(item);
+                setImage(item);
               }}
             >
-              <Button rightIcon="double-caret-vertical" text={sequence} />
+              <Button rightIcon="double-caret-vertical" text={image} />
             </SelectSequence>
-          </div>
-        </div>
-        <div className="item">
-          <div className="item-label">Run</div>
-          <div className="item-value">
-            <SelectRun
-              filterable={false}
-              items={runs}
-              itemRenderer={stringRenderer}
-              onItemSelect={(item: string) => {
-                setRun(item);
-              }}
-            >
-              <Button rightIcon="double-caret-vertical" text={run} />
-            </SelectRun>
           </div>
         </div>
         <div className="item">
