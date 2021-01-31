@@ -1,6 +1,5 @@
 import {
   Button,
-  Divider,
   Icon,
   NonIdealState,
   Position,
@@ -42,7 +41,6 @@ const App = () => {
               </NavLink>
             </Tooltip>
           ) : null}
-          <Divider />
           {process.env.REACT_APP_SLICE_VIEW === "true" ? (
             <Tooltip content="Cross-species slices" position={Position.RIGHT}>
               <NavLink className="view-button" exact to="/cuts">
@@ -50,7 +48,6 @@ const App = () => {
               </NavLink>
             </Tooltip>
           ) : null}
-          <Divider />
           {process.env.REACT_APP_EXPERIMENT_REGRESSION_VIEW === "true" ? (
             <Tooltip
               content="Regressed MNI coordinates"
