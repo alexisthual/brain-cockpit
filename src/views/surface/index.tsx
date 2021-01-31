@@ -370,7 +370,7 @@ const SurfaceExplorer = () => {
                       setMeanContrastMap(!meanContrastMap),
                     iconActive: "group-objects",
                     iconInactive: "ungroup-objects",
-                    title: "Take subject's mean",
+                    title: "Mean across subjects",
                   },
                 ],
               },

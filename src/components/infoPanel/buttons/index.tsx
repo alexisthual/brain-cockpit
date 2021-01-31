@@ -25,7 +25,7 @@ const PanelButtons = ({
         icon={meanFingerprint ? "ungroup-objects" : "group-objects"}
         onClick={meanChangeCallback}
         outlined
-        title={"Take subjects' mean"}
+        title={"Mean across subjects"}
       />
       <Button
         icon={"rotate-page"}

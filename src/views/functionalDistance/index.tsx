@@ -331,7 +331,7 @@ const FunctionalDistanceExplorer = () => {
                     onChangeCallback: () => setMeanSurfaceMap(!meanSurfaceMap),
                     iconActive: "group-objects",
                     iconInactive: "ungroup-objects",
-                    title: "Take subject's mean",
+                    title: "Mean across subjects",
                   },
                 ],
               },
