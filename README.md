@@ -69,6 +69,13 @@ In separate prompts:
 - start the frontend with `yarn start`
 - start the backend with `python main.py` (using your `brain-cockpit` conda env)
 
+### Application in production mode
+
+In separate prompts:
+
+- build the frontend with `yarn build`
+- start the backend with `python main.py --env production` (using your `brain-cockpit` conda env)
+
 ### Custom utilitaries
 
 #### Functional images resampling
