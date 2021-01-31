@@ -399,7 +399,7 @@ const FunctionalDistanceExplorer = () => {
               setVoxelIndex(undefined);
             }}
           />
-          <div id="fingerprint">
+          <div className="fingerprint">
             <ParentSize className="fingerprint-container" debounceTime={10}>
               {({ width: fingerprintWidth, height: fingerprintHeight }) => (
                 <ContrastFingerprint
