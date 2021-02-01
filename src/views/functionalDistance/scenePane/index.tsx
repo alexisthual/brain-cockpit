@@ -7,7 +7,6 @@ import React, {
   useState,
 } from "react";
 
-import { eel } from "App";
 import InfoPanel from "components/infoPanel";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
@@ -56,8 +55,8 @@ const ScenePane = ({
   highThresholdMax,
 }: Props) => {
   const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
-  const [surfaceMap, setSurfaceMap] = useState<number[] | undefined>();
-  const [loadingSurfaceMap, setLoadingSurfaceMap] = useState(false);
+  const [surfaceMap] = useState<number[] | undefined>();
+  const [loadingSurfaceMap] = useState(false);
   const [meanSurfaceMap, setMeanSurfaceMap] = useState(false);
   const [wireframe] = useState(false);
   const [surfaceMapType, setSurfaceMapType] = useState(
@@ -65,11 +64,6 @@ const ScenePane = ({
   );
   const [metric, setMetric] = useState(Metric.COSINE);
   const panelEl = useRef<HTMLDivElement>(null);
-  const [functionalDistances, setFunctionalDistances] = useState<number[]>([]);
-  const [loadingFunctionalDistances, setLoadingFunctionalDistances] = useState(
-    false
-  );
-  const [meanFunctionalDistance, setMeanFunctionalDistance] = useState(false);
 
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
@@ -162,31 +156,6 @@ const ScenePane = ({
     window.addEventListener("keydown", closePane);
     return () => window.removeEventListener("keydown", closePane);
   }, [closePane]);
-
-  // Update functional distances when voxelIndex or subject change
-  useEffect(() => {
-    if (voxelIndex !== undefined) {
-      setLoadingFunctionalDistances(true);
-      if (meanFunctionalDistance) {
-        eel.get_mean_across_subjects_mean_functional_distance(voxelIndex)(
-          (distances: number[]) => {
-            setFunctionalDistances(distances);
-            setLoadingFunctionalDistances(false);
-          }
-        );
-      } else if (subject.index !== undefined) {
-        eel.get_mean_functional_distance(
-          subject.index,
-          voxelIndex
-        )((distances: number[]) => {
-          setFunctionalDistances(distances);
-          setLoadingFunctionalDistances(false);
-        });
-      } else {
-        setLoadingFunctionalDistances(false);
-      }
-    }
-  }, [voxelIndex, subject, meanFunctionalDistance]);
 
   return (
     <div className="scene" ref={panelEl}>
