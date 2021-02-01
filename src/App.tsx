@@ -16,6 +16,7 @@ import {
 
 import CutsExplorer from "views/cuts";
 import FunctionalDistanceExplorer from "views/functionalDistance";
+import KnnExplorer from "views/knn";
 import RegressionExplorer from "views/regression";
 import SurfaceExplorer from "views/surface";
 import "./App.scss";
@@ -58,6 +59,13 @@ const App = () => {
               </NavLink>
             </Tooltip>
           ) : null}
+          {process.env.REACT_APP_EXPERIMENT_KNN_VIEW === "true" ? (
+            <Tooltip content="Functional KNN" position={Position.RIGHT}>
+              <NavLink className="view-button" to="/knn">
+                <Icon icon="graph" />
+              </NavLink>
+            </Tooltip>
+          ) : null}
           {process.env.REACT_APP_EXPERIMENT_CORRELATION_VIEW === "true" ? (
             <Tooltip
               content="Functional distance maps"
@@ -73,17 +81,22 @@ const App = () => {
           <Route exact path="/">
             <SurfaceExplorer />
           </Route>
-          {process.env.REACT_APP_SLICE_VIEW ? (
+          {process.env.REACT_APP_SLICE_VIEW === "true" ? (
             <Route exact path="/cuts">
               <CutsExplorer />
             </Route>
           ) : null}
-          {process.env.REACT_APP_EXPERIMENT_REGRESSION_VIEW ? (
+          {process.env.REACT_APP_EXPERIMENT_REGRESSION_VIEW === "true" ? (
             <Route exact path="/regression">
               <RegressionExplorer />
             </Route>
           ) : null}
-          {process.env.REACT_APP_EXPERIMENT_CORRELATION_VIEW ? (
+          {process.env.REACT_APP_EXPERIMENT_KNN_VIEW === "true" ? (
+            <Route exact path="/knn">
+              <KnnExplorer />
+            </Route>
+          ) : null}
+          {process.env.REACT_APP_EXPERIMENT_CORRELATION_VIEW === "true" ? (
             <Route exact path="/functional-distance">
               <FunctionalDistanceExplorer />
             </Route>

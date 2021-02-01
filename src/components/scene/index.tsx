@@ -15,7 +15,8 @@ interface ISceneProps {
   height: number;
   voxelIndex?: number;
   wireframe?: boolean;
-  regressedCoordinates?: number[];
+  markerCoordinates?: number[][];
+  markerIndices?: number[];
   meshType: MeshType;
   hemi: HemisphereSide;
   uniqueKey?: string;
@@ -36,7 +37,7 @@ class Scene extends Component<ISceneProps, {}> {
   frameId?: any;
   voxelPosition: THREE.Vector3;
   hotspot: any;
-  regressedSphere?: THREE.Mesh;
+  markerSpheres?: THREE.Mesh[];
   gridHelper?: THREE.GridHelper;
   uniqueKey: string;
   mouseDownX?: number;
@@ -64,6 +65,7 @@ class Scene extends Component<ISceneProps, {}> {
     this.onMouseUp = this.onMouseUp.bind(this);
     this.updateHotspot = this.updateHotspot.bind(this);
     this.switchView = this.switchView.bind(this);
+    this.removeAndDisposeMarkers = this.removeAndDisposeMarkers.bind(this);
   }
 
   // Turn THREE.js loader into Promise
@@ -326,26 +328,66 @@ class Scene extends Component<ISceneProps, {}> {
       this.object.material.wireframe = this.props.wireframe;
     }
 
-    // Update regressedSphere coordinates
-    if (this.props.regressedCoordinates !== prevProps.regressedCoordinates) {
+    // Update markers when coordinates or indices change
+    if (
+      this.props.markerCoordinates !== prevProps.markerCoordinates ||
+      this.props.markerIndices !== prevProps.markerIndices
+    ) {
+      // Dispose and overwrite current markers
+      this.removeAndDisposeMarkers();
+      this.markerSpheres = [];
+
+      // Concatenate coordinates
+      const coordinates_list = [] as number[][];
+      // Compute x,y,z coordinates from voxel indices
+      if (this.props.markerIndices && this.props.markerIndices.length >= 0) {
+        for (let i = 0; i < this.props.markerIndices.length; i++) {
+          const vertex = new THREE.Vector3();
+          vertex.fromBufferAttribute(
+            this.object.geometry.getAttribute("position"),
+            this.props.markerIndices[i]
+          );
+          this.object.localToWorld(vertex);
+          coordinates_list.push([vertex.x, vertex.y, vertex.z]);
+        }
+      }
+      // Add coordinates given in props
       if (
-        this.regressedSphere &&
-        this.props.regressedCoordinates &&
-        this.props.regressedCoordinates.length >= 3
+        this.props.markerCoordinates &&
+        this.props.markerCoordinates.length >= 0
       ) {
-        const vertex = new THREE.Vector3(
-          this.props.regressedCoordinates[0],
-          this.props.regressedCoordinates[1],
-          this.props.regressedCoordinates[2]
-        );
-        this.object.localToWorld(vertex);
-        this.regressedSphere.visible = true;
-        this.regressedSphere.position.copy(vertex);
-      } else if (
-        this.regressedSphere &&
-        this.props.regressedCoordinates === undefined
-      ) {
-        this.regressedSphere.visible = false;
+        for (let i = 0; i < this.props.markerCoordinates.length; i++) {
+          const coordinates = this.props.markerCoordinates[i];
+          coordinates_list.push([
+            coordinates[0],
+            coordinates[1],
+            coordinates[2],
+          ]);
+        }
+      }
+
+      // Iterate through marker coordinates to add markers to scene
+      if (coordinates_list.length >= 0) {
+        for (let i = 0; i < coordinates_list.length; i++) {
+          const coordinates = coordinates_list[i];
+          const vertex = new THREE.Vector3(
+            coordinates[0],
+            coordinates[1],
+            coordinates[2]
+          );
+
+          // Add sphere marker with located at given coordinates
+          const geometry = new THREE.SphereGeometry(2);
+          const material = new THREE.MeshBasicMaterial({
+            color: Colors.VERMILION5,
+          });
+          const marker = new THREE.Mesh(geometry, material);
+          marker.position.copy(vertex);
+          this.scene.add(marker);
+          this.object.localToWorld(vertex);
+
+          this.markerSpheres.push(marker);
+        }
       }
     }
   }
@@ -383,13 +425,6 @@ class Scene extends Component<ISceneProps, {}> {
     // Add hotspot to track selected vertex
     this.hotspot = document.getElementById(`hotspot-${this.uniqueKey}`);
 
-    // Add sphere with coordinates coming from a regression model
-    const geometry = new THREE.SphereGeometry(2);
-    const material = new THREE.MeshBasicMaterial({ color: Colors.VERMILION5 });
-    const sphere = new THREE.Mesh(geometry, material);
-    sphere.visible = false;
-    scene.add(sphere);
-
     // Add main object to scene
     scene.add(object);
 
@@ -424,7 +459,6 @@ class Scene extends Component<ISceneProps, {}> {
     this.camera = camera;
     this.object = object;
     this.spotLight = spotLight;
-    this.regressedSphere = sphere;
     this.gridHelper = gridHelper;
     this.controls = controls;
 
@@ -539,7 +573,6 @@ class Scene extends Component<ISceneProps, {}> {
   }
 
   switchView(event: any) {
-    console.log(this.container.matches(":hover"));
     // E
     if (
       (event.isComposing || event.keyCode === 69) &&
@@ -640,6 +673,25 @@ class Scene extends Component<ISceneProps, {}> {
     }
   }
 
+  removeAndDisposeMarkers() {
+    if (this.markerSpheres !== undefined && this.markerSpheres.length > 0) {
+      for (let i = 0; i < this.markerSpheres.length; i++) {
+        const marker = this.markerSpheres[i];
+        // Remove marker
+        this.scene.remove(marker);
+        // Dispose attributes
+        marker.geometry.dispose();
+        if (marker.material instanceof THREE.Material) {
+          marker.material.dispose();
+        } else {
+          marker.material.forEach((element) => {
+            element.dispose();
+          });
+        }
+      }
+    }
+  }
+
   componentWillUnmount() {
     // Remove events
     window.removeEventListener("resize", this.handleWindowResize);
@@ -660,16 +712,7 @@ class Scene extends Component<ISceneProps, {}> {
     }
     this.object.geometry.dispose();
     this.object.material.dispose();
-    if (this.regressedSphere) {
-      this.regressedSphere.geometry.dispose();
-      if (this.regressedSphere.material instanceof THREE.Material) {
-        this.regressedSphere.material.dispose();
-      } else {
-        this.regressedSphere.material.forEach((element) => {
-          element.dispose();
-        });
-      }
-    }
+    this.removeAndDisposeMarkers();
     this.controls.dispose();
     this.renderer.dispose();
     this.renderer.forceContextLoss();

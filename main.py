@@ -10,6 +10,7 @@ import api.fmri_image
 # whose data might not be publicly available
 import api.regressed_coordinates
 import api.correlation_maps
+import api.knn_maps
 
 # Custom utils
 import custom_utils.setup as setup

@@ -10,9 +10,7 @@ import TextualLoader from "components/textualLoader";
 import { ActionLabel, Orientation, Subject } from "constants/index";
 import { eel } from "App";
 
-const RegressionExplorer = () => {
-  const [model, setModel] = useState<string>();
-  const [models, setModels] = useState<string[]>([]);
+const KnnExplorer = () => {
   const [subjectLabels, setSubjectLabels] = useState<string[]>([]);
   const [contrastLabels, setContrastLabels] = useState<string[]>([]);
   const [taskLabels, setTaskLabels] = useState<string[]>([]);
@@ -21,15 +19,13 @@ const RegressionExplorer = () => {
   const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
   const [loadingFingerprint, setLoadingFingerprint] = useState(false);
   const [meanFingerprint, setMeanFingerprint] = useState(false);
-  const [errorMap, setErrorMap] = useState<number[] | undefined>();
-  const [loadingContrastMap, setLoadingErrorMap] = useState(false);
+  const [knnIndices, setKnnIndices] = useState<number[]>([]);
+  const [distanceMap, setDistanceMap] = useState<number[] | undefined>();
+  const [loadingContrastMap, setLoadingDistanceMap] = useState(false);
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [wireframe, setWireframe] = useState(true);
-  const [regressedCoordinates, setRegressedCoordinates] = useState<
-    number[] | undefined
-  >();
 
-  const initialSubject: Subject = { index: 10, label: "sub-15" };
+  const initialSubject: Subject = { index: 0, label: "sub-01" };
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
     let n = subjectLabels.length;
@@ -58,18 +54,14 @@ const RegressionExplorer = () => {
       const contrastLabels = eel.get_contrast_labels()();
       const tasks = eel.get_tasks()();
       const subjectLabels = eel.get_subjects()();
-      const models = eel.get_regression_models()();
 
       // Wait for all data to be loaded before setting app state
-      Promise.all([contrastLabels, tasks, subjectLabels, models]).then(
-        (values) => {
-          setContrastLabels(values[0]);
-          setTaskLabels(values[1].map((x: any) => x[0]));
-          setTaskCounts(values[1].map((x: any) => x[1]));
-          setSubjectLabels(values[2]);
-          setModels(values[3]);
-        }
-      );
+      Promise.all([contrastLabels, tasks, subjectLabels]).then((values) => {
+        setContrastLabels(values[0]);
+        setTaskLabels(values[1].map((x: any) => x[0]));
+        setTaskCounts(values[1].map((x: any) => x[1]));
+        setSubjectLabels(values[2]);
+      });
     };
 
     fetchAllData();
@@ -89,6 +81,7 @@ const RegressionExplorer = () => {
         },
       },
     ];
+
     keyPressEvents.forEach((keyPressEvent: any) => {
       window.addEventListener("keydown", (event) => {
         if (event.isComposing || event.keyCode === keyPressEvent.keyCode) {
@@ -108,45 +101,35 @@ const RegressionExplorer = () => {
     };
   }, [initialSubject.label]);
 
-  // On subjectLabels & models change
+  // On subjectLabels change
   useEffect(() => {
-    if (subjectLabels.length > 0 && models.length > 0) {
+    if (subjectLabels.length > 0) {
       setSubject({ payload: 0 });
-      setModel(models[0]);
     }
-  }, [subjectLabels, models]);
+  }, [subjectLabels]);
 
   // Update on subject change
   useEffect(() => {
-    if (subject.label !== undefined && model !== undefined) {
-      setLoadingErrorMap(true);
-      eel.get_regressed_coordinates_error(
-        model,
-        subject.label
-      )((error: number[]) => {
-        setErrorMap(error);
-        setLoadingErrorMap(false);
+    if (subject.index !== undefined) {
+      setLoadingDistanceMap(true);
+      eel.get_knn_distance(subject.index)((distance: number[]) => {
+        setDistanceMap(distance);
+        setLoadingDistanceMap(false);
       });
     }
-  }, [subject.label, model]);
+  }, [subject.index]);
 
-  // Update coordinates on voxelIndex change
+  // Update neighbours on voxelIndex change
   useEffect(() => {
-    // Get regressed coordinates on voxelIndex change
-    if (
-      voxelIndex !== undefined &&
-      model !== undefined &&
-      subject.label !== undefined
-    ) {
-      eel.get_regressed_coordinates(
-        model,
-        subject.label,
+    if (subject.index !== undefined && voxelIndex !== undefined) {
+      eel.get_knn(
+        subject.index,
         voxelIndex
-      )((coordinates: number[]) => {
-        setRegressedCoordinates(coordinates);
+      )((knn_indices: number[]) => {
+        setKnnIndices(knn_indices);
       });
     }
-  }, [voxelIndex, subject.label, model]);
+  }, [voxelIndex, subject.index]);
 
   useEffect(() => {
     // Get activation fingerprint for this voxel
@@ -204,16 +187,6 @@ const RegressionExplorer = () => {
       <InfoPanel
         rows={[
           {
-            label: "Model",
-            inputs: [
-              {
-                value: model,
-                values: models,
-                onChangeCallback: (newValue: string) => setModel(newValue),
-              },
-            ],
-          },
-          {
             label: "Subject",
             inputs: [
               {
@@ -235,12 +208,12 @@ const RegressionExplorer = () => {
         ]}
       />
       {loadingContrastMap ? (
-        <TextualLoader text="Loading error map..." />
+        <TextualLoader text="Loading distance map..." />
       ) : null}
       <div className="scene">
         <Colorbar
-          vmin={errorMap ? Math.min(...errorMap) : undefined}
-          vmax={errorMap ? Math.max(...errorMap) : undefined}
+          vmin={distanceMap ? Math.min(...distanceMap) : undefined}
+          vmax={distanceMap ? Math.max(...distanceMap) : undefined}
         />
         <ParentSize className="scene-container" debounceTime={10}>
           {({ width: sceneWidth, height: sceneHeight }) => (
@@ -249,13 +222,9 @@ const RegressionExplorer = () => {
                 setVoxelIndex(voxelIndex);
               }}
               voxelIndex={voxelIndex}
-              surfaceMap={errorMap}
+              surfaceMap={distanceMap}
               wireframe={wireframe}
-              markerCoordinates={
-                regressedCoordinates !== undefined
-                  ? [regressedCoordinates]
-                  : undefined
-              }
+              markerIndices={knnIndices}
               width={sceneWidth}
               height={sceneHeight}
             />
@@ -312,4 +281,4 @@ const RegressionExplorer = () => {
   );
 };
 
-export default RegressionExplorer;
+export default KnnExplorer;
