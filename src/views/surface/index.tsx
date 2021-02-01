@@ -318,7 +318,7 @@ const SurfaceExplorer = () => {
         {sharedState && loadingContrastMap ? (
           <TextualLoader text="Loading surface map..." />
         ) : null}
-        <Colorbar vmin={-10} vmax={10} />
+        <Colorbar vmin={-10} vmax={10} unit="Z-Score" />
         <PanesButtons
           addPaneCallback={() => {
             setPanes({ type: "add" });

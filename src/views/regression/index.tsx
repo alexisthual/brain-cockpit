@@ -241,6 +241,7 @@ const RegressionExplorer = () => {
         <Colorbar
           vmin={errorMap ? Math.min(...errorMap) : undefined}
           vmax={errorMap ? Math.max(...errorMap) : undefined}
+          unit="Voxels"
         />
         <ParentSize className="scene-container" debounceTime={10}>
           {({ width: sceneWidth, height: sceneHeight }) => (

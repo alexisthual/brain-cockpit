@@ -214,6 +214,7 @@ const KnnExplorer = () => {
         <Colorbar
           vmin={distanceMap ? Math.min(...distanceMap) : undefined}
           vmax={distanceMap ? Math.max(...distanceMap) : undefined}
+          unit="Voxels"
         />
         <ParentSize className="scene-container" debounceTime={10}>
           {({ width: sceneWidth, height: sceneHeight }) => (

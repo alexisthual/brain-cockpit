@@ -3,6 +3,7 @@ import { AxisLeft } from "@visx/axis";
 import { Group } from "@visx/group";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import { scaleLinear } from "@visx/scale";
+import { Text } from "@visx/text";
 import React, { useEffect, useMemo, useRef } from "react";
 
 import "./style.scss";
@@ -21,6 +22,7 @@ interface ColorbarProps {
   nUniqueValues?: number;
   maxHeight?: number;
   colormap?: (i: number) => number[];
+  unit?: string;
 }
 
 interface Props extends ColorbarProps {
@@ -36,6 +38,7 @@ const Colorbar = ({
   nUniqueValues,
   maxHeight = 300,
   colormap = defaultColorMap,
+  unit,
 }: Props) => {
   const canvasEl = useRef<HTMLCanvasElement>(null);
   const margin = {
@@ -96,7 +99,14 @@ const Colorbar = ({
 
   return (
     <>
-      <svg height={height} width={(width * 3) / 4}>
+      <svg height={height} width={(width * 3) / 4} className="colorbar-info">
+        {unit !== undefined ? (
+          <Group top={offset} left={margin.left}>
+            <Text className="unit" textAnchor="middle" verticalAnchor="end">
+              {unit}
+            </Text>
+          </Group>
+        ) : null}
         <Group top={margin.top + offset} left={margin.left}>
           <AxisLeft
             axisClassName="axis"
@@ -131,6 +141,7 @@ const ColorbarWrapper = ({
   nUniqueValues,
   maxHeight,
   colormap,
+  unit,
 }: ColorbarProps) => {
   return (
     <div className="colorbar">
@@ -144,6 +155,7 @@ const ColorbarWrapper = ({
             height={height}
             width={width}
             colormap={colormap}
+            unit={unit}
           />
         )}
       </ParentSize>
