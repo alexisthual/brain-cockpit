@@ -2283,6 +2283,28 @@
     prop-types "^15.7.2"
     reduce-css-calc "^1.3.0"
 
+"@vx/drag@^0.0.199":
+  version "0.0.199"
+  resolved "https://registry.yarnpkg.com/@vx/drag/-/drag-0.0.199.tgz#5d6231f0a593a01edb02eb890417eda66be3fe92"
+  integrity sha512-biCLuHTW4b3tcOViJNQY/AHVTQ7w2uF25DMmBW2m8quhqlmIO2zqeaXovEuFYoNXIGIiBAKvQIB8ashSdzpM/Q==
+  dependencies:
+    "@types/react" "*"
+    "@vx/event" "0.0.199"
+    prop-types "^15.5.10"
+
+"@vx/event@0.0.199":
+  version "0.0.199"
+  resolved "https://registry.yarnpkg.com/@vx/event/-/event-0.0.199.tgz#f8cc129fe3a6dfd9aa416cce4c0c2d843ad01fec"
+  integrity sha512-y/5z9hBGQ4XDfruGObzk3vFsafJyUmUea9X9JWpMNqD8uyHzgmitNtGxcno0zUXjJAUv65ALHPmcxdLzsEMfsQ==
+  dependencies:
+    "@types/react" "*"
+    "@vx/point" "0.0.199"
+
+"@vx/point@0.0.199":
+  version "0.0.199"
+  resolved "https://registry.yarnpkg.com/@vx/point/-/point-0.0.199.tgz#2ae16d99ca8d351fe09857533ba1e9c995696706"
+  integrity sha512-8mlOHgaCqT8qKhMSAA5U7tsBdOQBku7DIJ5fteTWeZt6OOafVSGvfT8LjphN8NA1xbY3ZY3L1bn9ZnZurYHDJQ==
+
 "@webassemblyjs/ast@1.9.0":
   version "1.9.0"
   resolved "https://registry.yarnpkg.com/@webassemblyjs/ast/-/ast-1.9.0.tgz#bd850604b4042459a5a41cd7d338cbed695ed964"

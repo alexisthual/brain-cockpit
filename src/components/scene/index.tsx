@@ -1,4 +1,5 @@
 import { Colors } from "@blueprintjs/core";
+import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import React, { Component } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -6,9 +7,10 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 import { HemisphereSide, MeshType, View } from "constants/index";
+import { Hotspots, IHotspot } from "./hotspots";
 import "./style.scss";
 
-interface ISceneProps {
+interface IProps {
   clickedVoxelCallback?: any;
   surfaceMap?: number[];
   width: number;
@@ -24,9 +26,16 @@ interface ISceneProps {
   lowThresholdMax?: number;
   highThresholdMin?: number;
   highThresholdMax?: number;
+  hotspots?: IHotspot[];
 }
 
-class Scene extends Component<ISceneProps, {}> {
+interface IState {
+  voxelX?: number;
+  voxelY?: number;
+  voxelPosition?: THREE.Vector3;
+}
+
+class Scene extends Component<IProps, IState> {
   container?: any;
   renderer?: any;
   scene?: any;
@@ -35,8 +44,6 @@ class Scene extends Component<ISceneProps, {}> {
   spotLight?: any;
   controls?: any;
   frameId?: any;
-  voxelPosition: THREE.Vector3;
-  hotspot: any;
   markerSpheres?: THREE.Mesh[];
   gridHelper?: THREE.GridHelper;
   uniqueKey: string;
@@ -48,13 +55,12 @@ class Scene extends Component<ISceneProps, {}> {
     hemi: HemisphereSide.LEFT,
   };
 
-  constructor(props: ISceneProps) {
+  constructor(props: IProps) {
     super(props);
     this.state = {};
 
     this.uniqueKey =
       this.props.uniqueKey ?? Math.trunc(1e6 * Math.random()).toString();
-    this.voxelPosition = new THREE.Vector3();
     this.start = this.start.bind(this);
     this.animate = this.animate.bind(this);
     this.renderScene = this.renderScene.bind(this);
@@ -252,7 +258,7 @@ class Scene extends Component<ISceneProps, {}> {
     this.setupScene(object as THREE.Object3D);
   }
 
-  async componentDidUpdate(prevProps: ISceneProps) {
+  async componentDidUpdate(prevProps: IProps) {
     // Update height and width
     if (
       prevProps.width !== this.props.width ||
@@ -421,9 +427,6 @@ class Scene extends Component<ISceneProps, {}> {
     let ambLight = new THREE.AmbientLight(Colors.WHITE, 1);
     ambLight.position.set(5, 3, 5);
     camera.add(ambLight);
-
-    // Add hotspot to track selected vertex
-    this.hotspot = document.getElementById(`hotspot-${this.uniqueKey}`);
 
     // Add main object to scene
     scene.add(object);
@@ -627,23 +630,9 @@ class Scene extends Component<ISceneProps, {}> {
         this.props.voxelIndex
       );
       this.object.localToWorld(vertex);
-      this.voxelPosition.copy(vertex);
-
-      // Update opacity
-      if (this.props.voxelIndex !== undefined) {
-        const meshDistance = this.camera.position.distanceTo(
-          this.object.position
-        );
-        const spriteDistance = this.camera.position.distanceTo(
-          this.voxelPosition
-        );
-        this.hotspot.style.opacity = spriteDistance > meshDistance ? 0.25 : 1;
-      } else {
-        this.hotspot.style.opacity = 0;
-      }
 
       // Update hotspot position
-      const vector = this.voxelPosition.clone();
+      const vector = new THREE.Vector3().copy(vertex);
       const canvas = this.renderer.domElement;
       vector.project(this.camera);
       vector.x = Math.round(
@@ -652,8 +641,16 @@ class Scene extends Component<ISceneProps, {}> {
       vector.y = Math.round(
         (0.5 - vector.y / 2) * (canvas.height / window.devicePixelRatio)
       );
-      this.hotspot.style.top = `${vector.y}px`;
-      this.hotspot.style.left = `${vector.x}px`;
+      if (vector.x !== this.state.voxelX || vector.y !== this.state.voxelY) {
+        this.setState((state, props) => {
+          return {
+            ...state,
+            voxelX: vector.x,
+            voxelY: vector.y,
+            voxelPosition: new THREE.Vector3().copy(vertex),
+          };
+        });
+      }
     }
   }
 
@@ -734,23 +731,42 @@ class Scene extends Component<ISceneProps, {}> {
           overflow: "hidden",
         }}
       >
-        <div
-          id={`hotspot-${this.uniqueKey}`}
-          className="hotspot"
+        <ParentSize
+          debounceTime={10}
           style={{
-            visibility:
-              this.props.voxelIndex !== undefined ? "visible" : "hidden",
+            height: "100%",
+            width: "100%",
+            position: "absolute",
+            pointerEvents: "none",
           }}
         >
-          <p>
-            <strong>Voxel {this.props.voxelIndex}</strong>
-          </p>
-          <p>
-            ({this.voxelPosition.x.toFixed(1)},{" "}
-            {this.voxelPosition.y.toFixed(1)}, {this.voxelPosition.z.toFixed(1)}
-            )
-          </p>
-        </div>
+          {({ width: parentWidth, height: parentHeight }) => (
+            <Hotspots
+              hotspots={[
+                ...(this.props.voxelIndex !== undefined
+                  ? [
+                      {
+                        id: "selected_voxel",
+                        xPointer: this.state.voxelX,
+                        yPointer: this.state.voxelY,
+                        header: `Voxel ${this.props.voxelIndex}`,
+                        description: this.state.voxelPosition
+                          ? `(${this.state.voxelPosition.x.toFixed(
+                              1
+                            )}, ${this.state.voxelPosition.y.toFixed(
+                              1
+                            )}, ${this.state.voxelPosition.z.toFixed(1)})`
+                          : undefined,
+                      },
+                    ]
+                  : []),
+                ...(this.props.hotspots ?? []),
+              ]}
+              height={parentHeight}
+              width={parentWidth}
+            />
+          )}
+        </ParentSize>
       </div>
     );
   }

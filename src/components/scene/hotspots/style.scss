@@ -1,0 +1,47 @@
+@import "~@blueprintjs/core/lib/scss/variables";
+
+.hotspots {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  z-index: 3;
+  // Allow clicking through svg
+  pointer-events: none;
+  user-select: none;
+  touch-action: none;
+
+  circle.hotspot-pointer {
+    stroke-width: 2px;
+    stroke: $gray1;
+    fill: $light-gray5;
+  }
+
+  line.hotspot-line {
+    stroke-width: 1px;
+    stroke: $gray1;
+  }
+
+  .hotspot-label {
+    pointer-events: auto;
+
+    rect.hotspot-back {
+      fill: $light-gray4;
+      stroke-width: 1px;
+      stroke: $gray1;
+    }
+
+    text {
+      fill: $dark-gray5;
+      pointer-events: none;
+
+      &.hotspot-header {
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      &.hotspot-description {
+        font-size: 11px;
+      }
+    }
+  }
+}
