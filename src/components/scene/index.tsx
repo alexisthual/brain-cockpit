@@ -72,6 +72,7 @@ class Scene extends Component<IProps, IState> {
     this.updateHotspot = this.updateHotspot.bind(this);
     this.switchView = this.switchView.bind(this);
     this.removeAndDisposeMarkers = this.removeAndDisposeMarkers.bind(this);
+    this.projectCoordinates = this.projectCoordinates.bind(this);
   }
 
   // Turn THREE.js loader into Promise
@@ -621,32 +622,43 @@ class Scene extends Component<IProps, IState> {
     this.updateHotspot();
   }
 
+  projectCoordinates(voxelIndex: number) {
+    const vertex = new THREE.Vector3();
+    vertex.fromBufferAttribute(
+      this.object.geometry.getAttribute("position"),
+      voxelIndex
+    );
+    this.object.localToWorld(vertex);
+
+    const projectedVertex = new THREE.Vector3().copy(vertex);
+    const canvas = this.renderer.domElement;
+    projectedVertex.project(this.camera);
+    projectedVertex.x = Math.round(
+      (0.5 + projectedVertex.x / 2) * (canvas.width / window.devicePixelRatio)
+    );
+    projectedVertex.y = Math.round(
+      (0.5 - projectedVertex.y / 2) * (canvas.height / window.devicePixelRatio)
+    );
+
+    return [projectedVertex, vertex];
+  }
+
   updateHotspot() {
     if (this.props.voxelIndex) {
       // Compute selected voxel's position
-      const vertex = new THREE.Vector3();
-      vertex.fromBufferAttribute(
-        this.object.geometry.getAttribute("position"),
+      const [projectedVertex, vertex] = this.projectCoordinates(
         this.props.voxelIndex
       );
-      this.object.localToWorld(vertex);
 
-      // Update hotspot position
-      const vector = new THREE.Vector3().copy(vertex);
-      const canvas = this.renderer.domElement;
-      vector.project(this.camera);
-      vector.x = Math.round(
-        (0.5 + vector.x / 2) * (canvas.width / window.devicePixelRatio)
-      );
-      vector.y = Math.round(
-        (0.5 - vector.y / 2) * (canvas.height / window.devicePixelRatio)
-      );
-      if (vector.x !== this.state.voxelX || vector.y !== this.state.voxelY) {
+      if (
+        projectedVertex.x !== this.state.voxelX ||
+        projectedVertex.y !== this.state.voxelY
+      ) {
         this.setState((state, props) => {
           return {
             ...state,
-            voxelX: vector.x,
-            voxelY: vector.y,
+            voxelX: projectedVertex.x,
+            voxelY: projectedVertex.y,
             voxelPosition: new THREE.Vector3().copy(vertex),
           };
         });
@@ -760,7 +772,28 @@ class Scene extends Component<IProps, IState> {
                       },
                     ]
                   : []),
-                ...(this.props.hotspots ?? []),
+                ...(this.props.hotspots
+                  ? this.props.hotspots.map((hotspot: IHotspot) => {
+                      if (hotspot.voxelIndex !== undefined) {
+                        const [
+                          projectedVertex,
+                          vertex,
+                        ] = this.projectCoordinates(hotspot.voxelIndex);
+                        return {
+                          ...hotspot,
+                          xPointer: projectedVertex.x,
+                          yPointer: projectedVertex.y,
+                          description: vertex
+                            ? `(${vertex.x.toFixed(1)}, ${vertex.y.toFixed(
+                                1
+                              )}, ${vertex.z.toFixed(1)})`
+                            : undefined,
+                        };
+                      }
+
+                      return hotspot;
+                    })
+                  : []),
               ]}
               height={parentHeight}
               width={parentWidth}

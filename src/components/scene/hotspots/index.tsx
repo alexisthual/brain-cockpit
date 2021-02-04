@@ -5,6 +5,7 @@ import "./style.scss";
 
 export interface IHotspot {
   id?: string;
+  voxelIndex?: number;
   xPointer?: number;
   yPointer?: number;
   header?: string;
@@ -119,7 +120,7 @@ export const Hotspots = ({ hotspots, width, height }: Props) => {
           key={`hotspot-${hotspot.id ?? index}`}
           xPointer={hotspot.xPointer}
           yPointer={hotspot.yPointer}
-          xLabel={200}
+          xLabel={100}
           yLabel={200 + 50 * index}
           header={hotspot.header}
           description={hotspot.description}
