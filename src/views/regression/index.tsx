@@ -242,7 +242,7 @@ const RegressionExplorer = () => {
           colormap={colormaps["viridis"]}
           vmin={errorMap ? Math.min(...errorMap) : undefined}
           vmax={errorMap ? Math.max(...errorMap) : undefined}
-          unit="Voxels"
+          unit="mm"
         />
         <ParentSize className="scene-container" debounceTime={10}>
           {({ width: sceneWidth, height: sceneHeight }) => (
