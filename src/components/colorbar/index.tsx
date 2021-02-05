@@ -4,24 +4,22 @@ import { Group } from "@visx/group";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import { scaleLinear } from "@visx/scale";
 import { Text } from "@visx/text";
+import chroma from "chroma-js";
 import React, { useEffect, useMemo, useRef } from "react";
 
 import "./style.scss";
+import { colormaps } from "constants/index";
 
 const colorString = require("color-string");
 
-const defaultColorMap = (x: number, light: number = 0.2) => [
-  255 * (light + (1 - light) * Math.exp(-0.5 * ((x - 0.75) / 0.15) ** 2)),
-  255 * (light + (1 - light) * Math.exp(-0.5 * ((x - 0.5) / 0.15) ** 2)),
-  255 * (light + (1 - light) * Math.exp(-0.5 * ((x - 0.25) / 0.15) ** 2)),
-];
+const defaultColorMap = colormaps["sequential"];
 
 interface ColorbarProps {
   vmin?: number;
   vmax?: number;
   nUniqueValues?: number;
   maxHeight?: number;
-  colormap?: (i: number) => number[];
+  colormap?: chroma.Scale;
   unit?: string;
 }
 
@@ -73,7 +71,7 @@ const Colorbar = ({
         for (let c = 0; c < nUniqueValues; c++) {
           for (let i = 0; i <= h / nUniqueValues; i++) {
             ctx.beginPath();
-            ctx.fillStyle = colorString.to.rgb(colormap(1 - c / nUniqueValues));
+            ctx.fillStyle = colormap(1 - c / nUniqueValues).css();
             ctx.fillRect(0, (c * h) / nUniqueValues + i, width, 1);
           }
         }
@@ -82,7 +80,7 @@ const Colorbar = ({
       else {
         for (let i = 0; i <= h; i++) {
           ctx.beginPath();
-          ctx.fillStyle = colorString.to.rgb(colormap(1 - i / h));
+          ctx.fillStyle = colormap(1 - i / h).css();
           ctx.fillRect(0, i, width, 1);
         }
       }

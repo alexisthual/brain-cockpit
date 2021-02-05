@@ -1,12 +1,13 @@
 import { Colors } from "@blueprintjs/core";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
+import chroma from "chroma-js";
 import React, { Component } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
-import { HemisphereSide, MeshType, View } from "constants/index";
+import { colormaps, HemisphereSide, MeshType, View } from "constants/index";
 import { Hotspots, IHotspot } from "./hotspots";
 import "./style.scss";
 
@@ -27,6 +28,7 @@ interface IProps {
   highThresholdMin?: number;
   highThresholdMax?: number;
   hotspots?: IHotspot[];
+  colormap: chroma.Scale;
 }
 
 interface IState {
@@ -53,6 +55,7 @@ class Scene extends Component<IProps, IState> {
   static defaultProps = {
     meshType: MeshType.PIAL,
     hemi: HemisphereSide.LEFT,
+    colormap: colormaps["sequential"],
   };
 
   constructor(props: IProps) {
@@ -128,6 +131,7 @@ class Scene extends Component<IProps, IState> {
     object: any,
     wireframe: boolean = false,
     surfaceMap: number[] | undefined = undefined,
+    colormap: chroma.Scale | undefined = undefined,
     lowThresholdMin: number | undefined = undefined,
     lowThresholdMax: number | undefined = undefined,
     highThresholdMin: number | undefined = undefined,
@@ -141,10 +145,11 @@ class Scene extends Component<IProps, IState> {
         new THREE.BufferAttribute(new Float32Array(count * 3), 3)
       );
     }
-    if (surfaceMap !== undefined) {
+    if (surfaceMap !== undefined && colormap !== undefined) {
       object = Scene.coloriseFromSurfaceMap(
         object,
         surfaceMap,
+        colormap,
         lowThresholdMin,
         lowThresholdMax,
         highThresholdMin,
@@ -195,6 +200,7 @@ class Scene extends Component<IProps, IState> {
   static coloriseFromSurfaceMap(
     object: any,
     surfaceMap: number[],
+    colormap: chroma.Scale,
     lowThresholdMin: number | undefined,
     lowThresholdMax: number | undefined,
     highThresholdMin: number | undefined,
@@ -205,9 +211,18 @@ class Scene extends Component<IProps, IState> {
     const colors = object.geometry.attributes.color;
     const min = Math.min(...surfaceMap);
     const max = Math.max(...surfaceMap);
-    const light = 0.2;
+
     for (let i = 0; i < count; i++) {
-      const a = (surfaceMap[i] - min) / (max - min);
+      // Get and scale voxelIntensity
+      let voxelIntensity = (surfaceMap[i] - min) / (max - min);
+      if (lowThresholdMin !== undefined && highThresholdMax !== undefined) {
+        // In case thresholds are defined, voxelIntensity should be scaled
+        // according to them
+        voxelIntensity =
+          (surfaceMap[i] - lowThresholdMin) /
+          (highThresholdMax - lowThresholdMin);
+      }
+
       if (
         (lowThresholdMin !== undefined &&
           lowThresholdMin <= surfaceMap[i] &&
@@ -223,9 +238,9 @@ class Scene extends Component<IProps, IState> {
           highThresholdMax === undefined)
       ) {
         color.setRGB(
-          light + (1 - light) * Math.exp(-0.5 * ((a - 0.75) / 0.15) ** 2),
-          light + (1 - light) * Math.exp(-0.5 * ((a - 0.5) / 0.15) ** 2),
-          light + (1 - light) * Math.exp(-0.5 * ((a - 0.25) / 0.15) ** 2)
+          colormap(voxelIntensity).get("rgb.r") / 255,
+          colormap(voxelIntensity).get("rgb.g") / 255,
+          colormap(voxelIntensity).get("rgb.b") / 255
         );
       } else {
         color.setRGB(
@@ -251,6 +266,7 @@ class Scene extends Component<IProps, IState> {
       object,
       this.props.wireframe,
       this.props.surfaceMap,
+      this.props.colormap,
       this.props.lowThresholdMin,
       this.props.lowThresholdMax,
       this.props.highThresholdMin,
@@ -320,6 +336,7 @@ class Scene extends Component<IProps, IState> {
         this.object = Scene.coloriseFromSurfaceMap(
           this.object,
           this.props.surfaceMap,
+          this.props.colormap,
           this.props.lowThresholdMin,
           this.props.lowThresholdMax,
           this.props.highThresholdMin,

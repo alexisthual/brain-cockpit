@@ -13,6 +13,7 @@ import TextualLoader from "components/textualLoader";
 import {
   ActionLabel,
   ActionPane,
+  colormaps,
   Contrast,
   HemisphereSide,
   MeshType,
@@ -318,7 +319,12 @@ const SurfaceExplorer = () => {
         {sharedState && loadingContrastMap ? (
           <TextualLoader text="Loading surface map..." />
         ) : null}
-        <Colorbar vmin={-10} vmax={10} unit="Z-Score" />
+        <Colorbar
+          colormap={colormaps["diverging"]}
+          vmin={-10}
+          vmax={10}
+          unit="Z-Score"
+        />
         <PanesButtons
           addPaneCallback={() => {
             setPanes({ type: "add" });

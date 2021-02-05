@@ -7,7 +7,7 @@ import InfoPanel from "components/infoPanel";
 import PanelButtons from "components/infoPanel/buttons";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
-import { ActionLabel, Orientation, Subject } from "constants/index";
+import { ActionLabel, colormaps, Orientation, Subject } from "constants/index";
 import { eel } from "App";
 
 const KnnExplorer = () => {
@@ -212,6 +212,7 @@ const KnnExplorer = () => {
       ) : null}
       <div className="scene">
         <Colorbar
+          colormap={colormaps["magma"]}
           vmin={distanceMap ? Math.min(...distanceMap) : undefined}
           vmax={distanceMap ? Math.max(...distanceMap) : undefined}
           unit="Voxels"
@@ -222,6 +223,7 @@ const KnnExplorer = () => {
               clickedVoxelCallback={(voxelIndex: number) => {
                 setVoxelIndex(voxelIndex);
               }}
+              colormap={colormaps["magma"]}
               voxelIndex={voxelIndex}
               surfaceMap={distanceMap}
               wireframe={wireframe}

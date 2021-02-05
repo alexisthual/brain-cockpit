@@ -176,8 +176,6 @@ const CutsExplorer = () => {
 
   const color1 = Colors.VERMILION1;
   const color2 = Colors.GOLD5;
-  const colormap = (i: number) =>
-    colorString.get.rgb(interpolate([color1, color2])(i));
 
   return (
     <div className="slice-container">
@@ -354,7 +352,6 @@ const CutsExplorer = () => {
           </ParentSize>
         </div>
         <Colorbar
-          colormap={colormap}
           vmin={contThreshold ? contRange[1] * contThreshold : contRange[0]}
           vmax={contRange[1]}
         />

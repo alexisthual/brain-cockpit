@@ -14,6 +14,7 @@ import TextualLoader from "components/textualLoader";
 import {
   ActionLabel,
   Contrast,
+  colormaps,
   HemisphereSide,
   MeshType,
   Subject,
@@ -326,6 +327,7 @@ const ScenePane = ({
                 setVoxelIndex(voxelIndex);
               }
             }}
+            colormap={colormaps["diverging"]}
             voxelIndex={sharedState ? sharedVoxelIndex : voxelIndex}
             surfaceMap={sharedState ? sharedSurfaceMap : surfaceMap}
             meshType={sharedState ? sharedMeshType : meshType}
