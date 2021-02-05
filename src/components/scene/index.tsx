@@ -160,12 +160,11 @@ class Scene extends Component<IProps, IState> {
     }
 
     const material = new THREE.MeshPhongMaterial({
-      color: Colors.LIGHT_GRAY1,
+      color: Colors.GRAY5,
       flatShading: true,
       vertexColors: true,
       shininess: 0,
       wireframe: wireframe,
-      wireframeLinewidth: 0.3,
     });
 
     // Create mesh

@@ -212,7 +212,7 @@ const KnnExplorer = () => {
       ) : null}
       <div className="scene">
         <Colorbar
-          colormap={colormaps["magma"]}
+          colormap={colormaps["viridis"]}
           vmin={distanceMap ? Math.min(...distanceMap) : undefined}
           vmax={distanceMap ? Math.max(...distanceMap) : undefined}
           unit="Voxels"
@@ -223,7 +223,7 @@ const KnnExplorer = () => {
               clickedVoxelCallback={(voxelIndex: number) => {
                 setVoxelIndex(voxelIndex);
               }}
-              colormap={colormaps["magma"]}
+              colormap={colormaps["viridis"]}
               voxelIndex={voxelIndex}
               surfaceMap={distanceMap}
               wireframe={wireframe}

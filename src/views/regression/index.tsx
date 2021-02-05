@@ -7,7 +7,7 @@ import InfoPanel from "components/infoPanel";
 import PanelButtons from "components/infoPanel/buttons";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
-import { ActionLabel, Orientation, Subject } from "constants/index";
+import { ActionLabel, colormaps, Orientation, Subject } from "constants/index";
 import { eel } from "App";
 
 const RegressionExplorer = () => {
@@ -239,6 +239,7 @@ const RegressionExplorer = () => {
       ) : null}
       <div className="scene">
         <Colorbar
+          colormap={colormaps["viridis"]}
           vmin={errorMap ? Math.min(...errorMap) : undefined}
           vmax={errorMap ? Math.max(...errorMap) : undefined}
           unit="Voxels"
@@ -249,6 +250,7 @@ const RegressionExplorer = () => {
               clickedVoxelCallback={(voxelIndex: number) => {
                 setVoxelIndex(voxelIndex);
               }}
+              colormap={colormaps["viridis"]}
               voxelIndex={voxelIndex}
               surfaceMap={errorMap}
               wireframe={wireframe}

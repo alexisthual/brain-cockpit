@@ -13,6 +13,7 @@ import TextualLoader from "components/textualLoader";
 import {
   ActionLabel,
   ActionPane,
+  colormaps,
   Metric,
   Orientation,
   Subject,
@@ -280,7 +281,7 @@ const FunctionalDistanceExplorer = () => {
         {loadingSurfaceMap ? (
           <TextualLoader text="Loading surface map..." />
         ) : null}
-        <Colorbar nUniqueValues={10} />
+        <Colorbar colormap={colormaps["viridis"]} nUniqueValues={10} />
         <PanesButtons
           addPaneCallback={() => {
             setPanes({ type: "add" });

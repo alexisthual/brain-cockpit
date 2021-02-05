@@ -12,6 +12,7 @@ import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
 import {
   ActionLabel,
+  colormaps,
   HemisphereSide,
   SurfaceMapType,
   Metric,
@@ -229,6 +230,7 @@ const ScenePane = ({
                 setVoxelIndex(voxelIndex);
               }
             }}
+            colormap={colormaps["viridis"]}
             voxelIndex={sharedState ? sharedVoxelIndex : voxelIndex}
             surfaceMap={sharedState ? sharedSurfaceMap : surfaceMap}
             hemi={HemisphereSide.LEFT}
