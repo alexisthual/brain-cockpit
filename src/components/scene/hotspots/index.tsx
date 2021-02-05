@@ -37,6 +37,7 @@ const Hotspot = ({
 }: HotspotProps) => {
   const lineRef = useRef<SVGLineElement>(null);
   const labelWidth = 120;
+  const labelHeight = 40;
   const padding = 7;
   const lineHeight = 12;
 
@@ -47,10 +48,10 @@ const Hotspot = ({
         ref={lineRef}
         x1={xPointer}
         y1={yPointer}
-        x2={xLabel}
-        y2={yLabel}
+        x2={xLabel + labelWidth / 2}
+        y2={yLabel + labelHeight / 2}
       />
-      <circle className="hotspot-pointer" cx={xPointer} cy={yPointer} r={3} />
+      <circle className="hotspot-pointer" cx={xPointer} cy={yPointer} r={4} />
       <g className="hotspot-label">
         <Drag
           height={height}
@@ -75,8 +76,8 @@ const Hotspot = ({
                   x={xLabel}
                   y={yLabel}
                   width={labelWidth}
-                  height={40}
-                  rx={2}
+                  height={labelHeight}
+                  rx={3}
                   transform={`translate(${dx}, ${dy})`}
                   onMouseMove={dragMove}
                   onMouseUp={dragEnd}

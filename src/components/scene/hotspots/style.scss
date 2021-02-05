@@ -12,8 +12,8 @@
 
   circle.hotspot-pointer {
     stroke-width: 2px;
-    stroke: $gray1;
-    fill: $light-gray5;
+    stroke: $light-gray5;
+    fill: $gray1;
   }
 
   line.hotspot-line {
@@ -25,9 +25,7 @@
     pointer-events: auto;
 
     rect.hotspot-back {
-      fill: $light-gray4;
-      stroke-width: 1px;
-      stroke: $gray1;
+      fill: $light-gray2;
     }
 
     text {
