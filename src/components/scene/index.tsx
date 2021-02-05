@@ -380,12 +380,9 @@ class Scene extends Component<IProps, IState> {
         this.props.markerCoordinates.length >= 0
       ) {
         for (let i = 0; i < this.props.markerCoordinates.length; i++) {
-          const coordinates = this.props.markerCoordinates[i];
-          coordinates_list.push([
-            coordinates[0],
-            coordinates[1],
-            coordinates[2],
-          ]);
+          const vertex = new THREE.Vector3(...this.props.markerCoordinates[i]);
+          this.object.localToWorld(vertex);
+          coordinates_list.push([vertex.x, vertex.y, vertex.z]);
         }
       }
 
