@@ -10,8 +10,6 @@ import React, { useEffect, useMemo, useRef } from "react";
 import "./style.scss";
 import { colormaps } from "constants/index";
 
-const colorString = require("color-string");
-
 const defaultColorMap = colormaps["sequential"];
 
 interface ColorbarProps {

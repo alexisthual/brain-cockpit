@@ -1,7 +1,6 @@
 import { Button, Colors, Slider } from "@blueprintjs/core";
 import { Select } from "@blueprintjs/select";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
-import interpolate from "color-interpolate";
 import React, { useEffect, useState } from "react";
 
 import { eel } from "App";
@@ -13,8 +12,6 @@ import Timeseries from "components/timeseries";
 import { stringRenderer } from "constants/index";
 
 import "./style.scss";
-
-const colorString = require("color-string");
 
 interface Position {
   x: number;
