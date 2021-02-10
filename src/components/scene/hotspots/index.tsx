@@ -10,6 +10,7 @@ export interface IHotspot {
   yPointer?: number;
   header?: string;
   description?: string;
+  side?: "left" | "right";
 }
 
 interface HotspotProps extends IHotspot {
@@ -25,6 +26,12 @@ interface Props {
   height: number;
 }
 
+const labelWidth = 120;
+const labelHeight = 40;
+const padding = 7;
+const lineHeight = 12;
+const labelMargin = 5;
+
 const Hotspot = ({
   xLabel = 200,
   yLabel = 200,
@@ -36,10 +43,6 @@ const Hotspot = ({
   height,
 }: HotspotProps) => {
   const lineRef = useRef<SVGLineElement>(null);
-  const labelWidth = 120;
-  const labelHeight = 40;
-  const padding = 7;
-  const lineHeight = 12;
 
   return (
     <>
@@ -121,8 +124,11 @@ export const Hotspots = ({ hotspots, width, height }: Props) => {
           key={`hotspot-${hotspot.id ?? index}`}
           xPointer={hotspot.xPointer}
           yPointer={hotspot.yPointer}
-          xLabel={100}
-          yLabel={200 + 50 * index}
+          xLabel={hotspot.side === "right" ? width - 100 - labelWidth : 100}
+          yLabel={
+            (labelHeight + labelMargin) * index +
+            (hotspot.side === "right" ? labelMargin : 150)
+          }
           header={hotspot.header}
           description={hotspot.description}
           height={height}

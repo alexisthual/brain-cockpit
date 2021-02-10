@@ -252,13 +252,22 @@ const KnnExplorer = () => {
               height={sceneHeight}
               hotspots={
                 knnIndices.length > 0
-                  ? [
-                      {
-                        id: "knn-1",
-                        voxelIndex: knnIndices[0],
-                        header: `KNN-1 (${knnIndices[0]})`,
-                      },
-                    ]
+                  ? meanAcrossSubjects
+                    ? knnIndices.map(
+                        (voxelIndex: number, subjectIndex: number) => ({
+                          id: `knn-${voxelIndex}`,
+                          voxelIndex: voxelIndex,
+                          header: `NN ${subjectLabels[subjectIndex]}`,
+                          side: "right",
+                        })
+                      )
+                    : [
+                        {
+                          id: "knn-1",
+                          voxelIndex: knnIndices[0],
+                          header: `KNN-1 (${knnIndices[0]})`,
+                        },
+                      ]
                   : undefined
               }
             />
