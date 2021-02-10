@@ -1,4 +1,4 @@
-from api.surface_contrasts import n_voxels
+from api.surface_contrasts import n_voxels, subjects
 import custom_utils.setup as setup
 from datetime import datetime
 from distutils.util import strtobool
@@ -8,12 +8,6 @@ import numpy as np
 import os
 import pandas as pd
 from tqdm import tqdm
-
-# Load or set subjects depending on being in dev or prod
-if setup.load_arguments().env == "development":
-    subjects = ["sub-01"]
-else:
-    from api.surface_contrasts import subjects
 
 # Load environment variables
 setup.load_env()
@@ -67,6 +61,17 @@ def get_knn(subject, voxel_index):
             f"[{datetime.now()}] get_knn for subject {subjects[subject]}, voxel {voxel_index}"
         )
     return (knn[subjects[subject]][voxel_index, :]).tolist()
+
+
+@eel.expose
+def get_knn_all_subjects(voxel_index):
+    if DEBUG:
+        print(
+            f"[{datetime.now()}] get_knn_all_subjects for voxel {voxel_index}"
+        )
+
+    print([knn[subject][voxel_index, 0] for subject in subjects])
+    return [knn[subject][voxel_index, 0] for subject in subjects]
 
 
 @eel.expose

@@ -12,6 +12,7 @@ import { eel } from "App";
 
 const KnnExplorer = () => {
   const [subjectLabels, setSubjectLabels] = useState<string[]>([]);
+  const [meanAcrossSubjects, setMeanAcrossSubjects] = useState(false);
   const [contrastLabels, setContrastLabels] = useState<string[]>([]);
   const [taskLabels, setTaskLabels] = useState<string[]>([]);
   const [taskCounts, setTaskCounts] = useState<number[]>([]);
@@ -110,29 +111,40 @@ const KnnExplorer = () => {
 
   // Update on subject change
   useEffect(() => {
-    if (subject.index !== undefined) {
-      setLoadingDistanceMap(true);
+    setLoadingDistanceMap(true);
+    if (meanAcrossSubjects) {
+      eel.get_knn_distance_mean()((distance: number[]) => {
+        setDistanceMap(distance);
+        setLoadingDistanceMap(false);
+      });
+    } else if (subject.index !== undefined) {
       eel.get_knn_distance(subject.index)((distance: number[]) => {
         setDistanceMap(distance);
         setLoadingDistanceMap(false);
       });
     }
-  }, [subject.index]);
+  }, [subject.index, meanAcrossSubjects]);
 
   // Update neighbours on voxelIndex change
   useEffect(() => {
-    if (subject.index !== undefined && voxelIndex !== undefined) {
-      eel.get_knn(
-        subject.index,
-        voxelIndex
-      )((knn_indices: number[]) => {
-        setKnnIndices(knn_indices);
-      });
+    if (voxelIndex !== undefined) {
+      if (meanAcrossSubjects) {
+        eel.get_knn_all_subjects(voxelIndex)((knn_indices: number[]) => {
+          setKnnIndices(knn_indices);
+        });
+      } else if (subject.index !== undefined) {
+        eel.get_knn(
+          subject.index,
+          voxelIndex
+        )((knn_indices: number[]) => {
+          setKnnIndices(knn_indices);
+        });
+      }
     }
-  }, [voxelIndex, subject.index]);
+  }, [voxelIndex, subject.index, meanAcrossSubjects]);
 
   useEffect(() => {
-    // Get activation fingerprint for this voxel
+    // Get activation fingerprint for selected voxel
     setLoadingFingerprint(true);
     if (voxelIndex !== undefined) {
       if (meanFingerprint) {
@@ -194,6 +206,14 @@ const KnnExplorer = () => {
                 values: subjectLabels,
                 onChangeCallback: (newValue: string) =>
                   setSubject({ payload: subjectLabels.indexOf(newValue) }),
+              },
+              {
+                value: meanAcrossSubjects,
+                onChangeCallback: () =>
+                  setMeanAcrossSubjects(!meanAcrossSubjects),
+                iconActive: "group-objects",
+                iconInactive: "ungroup-objects",
+                title: "Mean across subjects",
               },
             ],
           },
