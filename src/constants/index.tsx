@@ -6,6 +6,11 @@ export const colormaps = {
   // import bokey.palettes as bp
   // bp.plasma(4)
   // Using too many colors in bezier crashes the app
+  batlow: chroma
+    .bezier(["#011959", "#205E61", "#7F8133", "#F19D6B", "#FACCFA"])
+    .scale()
+    .mode("lab")
+    .correctLightness(),
   plasma: chroma
     .bezier(["#0C0786", "#9B179E", "#EC7853", "#EFF821"])
     .scale()
