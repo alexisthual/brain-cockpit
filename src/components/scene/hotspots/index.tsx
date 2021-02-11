@@ -127,7 +127,7 @@ export const Hotspots = ({ hotspots, width, height }: Props) => {
           xLabel={hotspot.side === "right" ? width - 100 - labelWidth : 100}
           yLabel={
             (labelHeight + labelMargin) * index +
-            (hotspot.side === "right" ? labelMargin : 150)
+            (hotspot.side === "right" ? labelMargin : 200)
           }
           header={hotspot.header}
           description={hotspot.description}
