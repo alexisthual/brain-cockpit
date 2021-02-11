@@ -159,13 +159,29 @@ class Scene extends Component<IProps, IState> {
       object = Scene.coloriseFromRandomMap(object);
     }
 
-    const material = new THREE.MeshPhongMaterial({
-      color: Colors.GRAY5,
-      flatShading: true,
-      vertexColors: true,
-      shininess: 0,
-      wireframe: wireframe,
-    });
+    const material = [
+      new THREE.MeshPhongMaterial({
+        color: "rgb(207, 207, 207)",
+        flatShading: true,
+        vertexColors: true,
+        shininess: 0,
+        wireframe: wireframe,
+      }),
+      new THREE.MeshStandardMaterial({
+        // color: "rgb(207, 207, 207)",
+        flatShading: true,
+        vertexColors: true,
+        roughness: 1.0,
+        metalness: 0.4,
+        wireframe: wireframe,
+      }),
+      new THREE.MeshBasicMaterial({
+        // color: "rgb(207, 207, 207)",
+        flatShading: true,
+        vertexColors: true,
+        wireframe: wireframe,
+      }),
+    ][1];
 
     // Create mesh
     const mesh = new THREE.Mesh(object.geometry, material);
