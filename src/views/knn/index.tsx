@@ -255,7 +255,7 @@ const KnnExplorer = () => {
                   ? meanAcrossSubjects
                     ? knnIndices.map(
                         (voxelIndex: number, subjectIndex: number) => ({
-                          id: `knn-${voxelIndex}`,
+                          id: `knn-mean-${subjectIndex}`,
                           voxelIndex: voxelIndex,
                           header: `NN ${subjectLabels[subjectIndex]}`,
                           side: "right",
@@ -263,9 +263,10 @@ const KnnExplorer = () => {
                       )
                     : [
                         {
-                          id: "knn-1",
+                          id: "nn-1",
                           voxelIndex: knnIndices[0],
-                          header: `KNN-1 (${knnIndices[0]})`,
+                          header: `NN-1 (${knnIndices[0]})`,
+                          side: "right",
                         },
                       ]
                   : undefined
