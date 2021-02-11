@@ -330,7 +330,7 @@ const ContrastFingerprint = ({
                   <Bar
                     className="value-bar"
                     key={`bar-${label}`}
-                    fill={delta >= 0 ? Colors.RED5 : Colors.BLUE5}
+                    fill={delta >= 0 ? Colors.GREEN5 : Colors.VIOLET5}
                     x={barX}
                     width={barWidth}
                     y={barY}
