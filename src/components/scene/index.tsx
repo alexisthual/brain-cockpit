@@ -278,6 +278,15 @@ class Scene extends Component<IProps, IState> {
           colormap(lowThresholdMin).get("rgb.g") / 255,
           colormap(lowThresholdMin).get("rgb.b") / 255
         );
+      } else if (
+        lowThresholdMax === undefined &&
+        highThresholdMin === undefined
+      ) {
+        color.setRGB(
+          colormap(voxelIntensity).get("rgb.r") / 255,
+          colormap(voxelIntensity).get("rgb.g") / 255,
+          colormap(voxelIntensity).get("rgb.b") / 255
+        );
       } else {
         color.setRGB(
           0.57 + 0.08 * Math.random(),

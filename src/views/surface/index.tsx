@@ -42,6 +42,7 @@ const SurfaceExplorer = () => {
   const [lowThresholdMax, setLowThresholdMax] = useState(-3);
   const [highThresholdMin, setHighThresholdMin] = useState(3);
   const [highThresholdMax, setHighThresholdMax] = useState(10);
+  const [filterSurface, setFilterSurface] = useState(false);
 
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
@@ -329,6 +330,10 @@ const SurfaceExplorer = () => {
           addPaneCallback={() => {
             setPanes({ type: "add" });
           }}
+          filterSurface={filterSurface}
+          filterSurfaceCallback={() => {
+            setFilterSurface(!filterSurface);
+          }}
           sharedState={sharedState}
           sharedStateCallback={() => {
             setSharedState(!sharedState);
@@ -427,8 +432,8 @@ const SurfaceExplorer = () => {
                 sharedMeshType={meshType}
                 sharedHemi={hemi}
                 lowThresholdMin={lowThresholdMin}
-                lowThresholdMax={lowThresholdMax}
-                highThresholdMin={highThresholdMin}
+                lowThresholdMax={filterSurface ? lowThresholdMax : undefined}
+                highThresholdMin={filterSurface ? highThresholdMin : undefined}
                 highThresholdMax={highThresholdMax}
               />
             );
