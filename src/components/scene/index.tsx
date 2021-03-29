@@ -230,6 +230,7 @@ class Scene extends Component<IProps, IState> {
     for (let i = 0; i < count; i++) {
       // Get and scale voxelIntensity
       let voxelIntensity = (surfaceMap[i] - min) / (max - min);
+
       if (lowThresholdMin !== undefined && highThresholdMax !== undefined) {
         // In case thresholds are defined, voxelIntensity should be scaled
         // according to them
@@ -256,6 +257,26 @@ class Scene extends Component<IProps, IState> {
           colormap(voxelIntensity).get("rgb.r") / 255,
           colormap(voxelIntensity).get("rgb.g") / 255,
           colormap(voxelIntensity).get("rgb.b") / 255
+        );
+      } else if (
+        // Threshold colormap with max value
+        highThresholdMax !== undefined &&
+        surfaceMap[i] >= highThresholdMax
+      ) {
+        color.setRGB(
+          colormap(highThresholdMax).get("rgb.r") / 255,
+          colormap(highThresholdMax).get("rgb.g") / 255,
+          colormap(highThresholdMax).get("rgb.b") / 255
+        );
+      } else if (
+        // Threshold colormap with min value
+        lowThresholdMin !== undefined &&
+        surfaceMap[i] <= lowThresholdMin
+      ) {
+        color.setRGB(
+          colormap(lowThresholdMin).get("rgb.r") / 255,
+          colormap(lowThresholdMin).get("rgb.g") / 255,
+          colormap(lowThresholdMin).get("rgb.b") / 255
         );
       } else {
         color.setRGB(
