@@ -517,7 +517,6 @@ class Scene extends Component<IProps, IState> {
       this.props.gradientMap !== undefined &&
       this.props.gradientMap !== prevProps.gradientMap
     ) {
-      console.log("update gradient");
       this.gradient.update(this.props.gradientMap);
     }
   }

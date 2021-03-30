@@ -143,7 +143,6 @@ export default class Gradient extends THREE.Mesh {
     const std = Math.sqrt(
       gradientMap.reduce((a, b) => (b - mean) ** 2 + a, 0) / gradientMap.length
     );
-    console.log(mean, std);
 
     gradientMap.forEach((edge: number, index: number) => {
       const vertex = new THREE.Vector3();
@@ -151,10 +150,6 @@ export default class Gradient extends THREE.Mesh {
         this.originalMesh.geometry.getAttribute("tangent"),
         index
       );
-
-      if (index % 10000 === 0) {
-        console.log(vertex, edge);
-      }
 
       // Set new orientation depending on sign of edge
       let originalVector = null;

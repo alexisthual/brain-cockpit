@@ -295,7 +295,6 @@ const SurfaceExplorer = () => {
           subject.index,
           contrast.index
         )((gradientMap: number[]) => {
-          console.log("loaded gradient map");
           setGradientMap(gradientMap);
           setLoadingGradientMap(false);
         });
