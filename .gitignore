@@ -11,3 +11,4 @@ public/assets/*
 __pycache__
 .sync-config.cson
 build
+.vscode
