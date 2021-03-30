@@ -33,6 +33,9 @@ const SurfaceExplorer = () => {
   const [contrastMap, setContrastMap] = useState<number[] | undefined>();
   const [loadingContrastMap, setLoadingContrastMap] = useState(false);
   const [meanContrastMap, setMeanContrastMap] = useState(false);
+  const [gradientMap, setGradientMap] = useState<number[] | undefined>();
+  const [loadingGradientMap, setLoadingGradientMap] = useState(false);
+  const [meanGradientMap, setMeanGradientMap] = useState(false);
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [wireframe, setWireframe] = useState(false);
   const [meshType, setMeshType] = useState(MeshType.PIAL);
@@ -284,8 +287,23 @@ const SurfaceExplorer = () => {
       } else {
         setLoadingContrastMap(false);
       }
+
+      setLoadingGradientMap(true);
+      if (meanGradientMap) {
+      } else if (subject.index !== undefined) {
+        eel.get_contrast_gradient(
+          subject.index,
+          contrast.index
+        )((gradientMap: number[]) => {
+          console.log("loaded gradient map");
+          setGradientMap(gradientMap);
+          setLoadingGradientMap(false);
+        });
+      } else {
+        setLoadingGradientMap(false);
+      }
     }
-  }, [subject, contrast, meanContrastMap, hemi]);
+  }, [subject, contrast, meanContrastMap, meanGradientMap, hemi]);
 
   // Update fingerprint when voxelIndex or subjectIndex change
   useEffect(() => {
@@ -424,6 +442,7 @@ const SurfaceExplorer = () => {
                 sharedContrast={contrast}
                 sharedSurfaceMap={contrastMap}
                 sharedMeanSurfaceMap={meanContrastMap}
+                sharedGradientMap={gradientMap}
                 sharedVoxelIndex={voxelIndex}
                 setSharedVoxelIndex={(newVoxelIndex: number) => {
                   setVoxelIndex(newVoxelIndex);

@@ -30,6 +30,7 @@ interface Props {
   sharedContrast?: Contrast;
   sharedSurfaceMap?: number[];
   sharedMeanSurfaceMap: boolean;
+  sharedGradientMap?: number[];
   sharedVoxelIndex?: number;
   setSharedVoxelIndex?: (voxelIndex: number) => void;
   sharedWireframe: boolean;
@@ -50,6 +51,7 @@ const ScenePane = ({
   sharedContrast,
   sharedSurfaceMap,
   sharedMeanSurfaceMap = false,
+  sharedGradientMap,
   sharedVoxelIndex,
   setSharedVoxelIndex = () => {},
   sharedWireframe = false,
@@ -64,6 +66,9 @@ const ScenePane = ({
   const [surfaceMap, setSurfaceMap] = useState<number[] | undefined>();
   const [loadingSurfaceMap, setLoadingSurfaceMap] = useState(false);
   const [meanSurfaceMap, setMeanSurfaceMap] = useState(false);
+  const [gradientMap, setGradientMap] = useState<number[] | undefined>();
+  const [loadingGradientMap, setLoadingGradientMap] = useState(false);
+  const [meanGradientMap, setMeanGradientMap] = useState(false);
   const [wireframe] = useState(false);
   const [meshType, setMeshType] = useState(MeshType.PIAL);
   const [hemi, setHemi] = useState(HemisphereSide.LEFT);
@@ -241,8 +246,22 @@ const ScenePane = ({
       } else {
         setLoadingSurfaceMap(false);
       }
+
+      setLoadingGradientMap(true);
+      if (meanGradientMap) {
+      } else if (subject.index !== undefined) {
+        eel.get_contrast_gradient(
+          subject.index,
+          contrast.index
+        )((gradientMap: number[]) => {
+          setGradientMap(gradientMap);
+          setLoadingGradientMap(false);
+        });
+      } else {
+        setLoadingGradientMap(false);
+      }
     }
-  }, [subject, contrast, meanSurfaceMap, hemi]);
+  }, [subject, contrast, meanSurfaceMap, meanGradientMap, hemi]);
 
   return (
     <div className="scene" ref={panelEl}>
@@ -330,6 +349,7 @@ const ScenePane = ({
             colormap={colormaps["diverging_temperature"]}
             voxelIndex={sharedState ? sharedVoxelIndex : voxelIndex}
             surfaceMap={sharedState ? sharedSurfaceMap : surfaceMap}
+            gradientMap={sharedState ? sharedGradientMap : gradientMap}
             meshType={sharedState ? sharedMeshType : meshType}
             hemi={sharedState ? sharedHemi : hemi}
             wireframe={sharedState ? sharedWireframe : wireframe}

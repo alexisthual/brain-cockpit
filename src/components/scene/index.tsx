@@ -9,11 +9,13 @@ import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtil
 
 import { colormaps, HemisphereSide, MeshType, View } from "constants/index";
 import { Hotspots, IHotspot } from "./hotspots";
+import Gradient from "./gradient";
 import "./style.scss";
 
 interface IProps {
   clickedVoxelCallback?: any;
   surfaceMap?: number[];
+  gradientMap?: number[];
   width: number;
   height: number;
   voxelIndex?: number;
@@ -51,6 +53,7 @@ class Scene extends Component<IProps, IState> {
   uniqueKey: string;
   mouseDownX?: number;
   mouseDownY?: number;
+  gradient: any;
 
   static defaultProps = {
     meshType: MeshType.PIAL,
@@ -109,6 +112,48 @@ class Scene extends Component<IProps, IState> {
         const loadLeft = Scene.load(`/assets/fsaverage_${meshType}_left.gltf`);
         const loadRight = Scene.load(
           `/assets/fsaverage_${meshType}_right.gltf`
+        );
+
+        // Merge them in a common Mesh
+        return Promise.all([loadLeft, loadRight]).then((values: any) => {
+          const mergedBufferGeometries = BufferGeometryUtils.mergeBufferGeometries(
+            [
+              values[0].scene.children[0].geometry,
+              values[1].scene.children[0].geometry,
+            ]
+          );
+
+          const mesh = new THREE.Mesh(mergedBufferGeometries);
+
+          return mesh;
+        });
+    }
+  }
+
+  static loadGradientMesh(
+    meshType: MeshType = MeshType.PIAL,
+    hemisphereSide: HemisphereSide = HemisphereSide.LEFT
+  ) {
+    switch (hemisphereSide) {
+      case HemisphereSide.LEFT:
+        return Scene.load(`/assets/edges_fsaverage_${meshType}_left.gltf`).then(
+          (gltf: any) => {
+            return gltf.scene.children[0] as any;
+          }
+        );
+      case HemisphereSide.RIGHT:
+        return Scene.load(
+          `/assets/edges_fsaverage_${meshType}_right.gltf`
+        ).then((gltf: any) => {
+          return gltf.scene.children[0] as any;
+        });
+      case HemisphereSide.BOTH:
+        // Load both meshes
+        const loadLeft = Scene.load(
+          `/assets/edges_fsaverage_${meshType}_left.gltf`
+        );
+        const loadRight = Scene.load(
+          `/assets/edges_fsaverage_${meshType}_right.gltf`
         );
 
         // Merge them in a common Mesh
@@ -317,7 +362,8 @@ class Scene extends Component<IProps, IState> {
       this.props.highThresholdMin,
       this.props.highThresholdMax
     );
-    this.setupScene(object as THREE.Object3D);
+
+    await this.setupScene(object as THREE.Object3D);
   }
 
   async componentDidUpdate(prevProps: IProps) {
@@ -388,7 +434,15 @@ class Scene extends Component<IProps, IState> {
           this.props.highThresholdMax
         );
       } else if (this.props.surfaceMap.length > 0) {
-        console.warn("surfacemap and current mesh have different lengths");
+        console.warn(
+          `surfacemap and current mesh have different lengths: ${
+            this.props.surfaceMap.length
+          } !== ${
+            this.object !== undefined
+              ? this.object.geometry.attributes.position.count
+              : null
+          }`
+        );
       }
     }
 
@@ -456,14 +510,22 @@ class Scene extends Component<IProps, IState> {
         }
       }
     }
+
+    // Update gradient
+    if (
+      this.gradient !== undefined &&
+      this.props.gradientMap !== undefined &&
+      this.props.gradientMap !== prevProps.gradientMap
+    ) {
+      console.log("update gradient");
+      this.gradient.update(this.props.gradientMap);
+    }
   }
 
-  setupScene(object: THREE.Object3D) {
+  async setupScene(object: THREE.Object3D) {
     // Initialise renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.shadowMap.enabled = true;
-    renderer.gammaFactor = 2.2;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     // Initialise scene
@@ -484,19 +546,27 @@ class Scene extends Component<IProps, IState> {
     spotLight.position.set(45, 50, 15);
     camera.add(spotLight);
 
-    let ambLight = new THREE.AmbientLight(Colors.WHITE, 1);
+    let ambLight = new THREE.AmbientLight(Colors.WHITE, 1.2);
     ambLight.position.set(5, 3, 5);
-    camera.add(ambLight);
+    scene.add(ambLight);
 
     // Add main object to scene
     scene.add(object);
+
+    const gradientMesh = await Scene.loadGradientMesh(
+      this.props.meshType,
+      this.props.hemi
+    );
+
+    const gradient = new Gradient(gradientMesh, this.props.gradientMap);
+    scene.add(gradient);
 
     // Add grid helper
     const gridHelper = new THREE.GridHelper(
       500,
       20,
-      Colors.GRAY5,
-      Colors.LIGHT_GRAY1
+      new THREE.Color(Colors.GRAY5),
+      new THREE.Color(Colors.LIGHT_GRAY1)
     );
     gridHelper.translateY(-70);
     scene.add(gridHelper);
@@ -521,7 +591,7 @@ class Scene extends Component<IProps, IState> {
     this.scene = scene;
     this.camera = camera;
     this.object = object;
-    this.spotLight = spotLight;
+    this.gradient = gradient;
     this.gridHelper = gridHelper;
     this.controls = controls;
 
@@ -677,8 +747,8 @@ class Scene extends Component<IProps, IState> {
   }
 
   renderScene() {
-    this.renderer.render(this.scene, this.camera);
     this.updateHotspot();
+    this.renderer.render(this.scene, this.camera);
   }
 
   projectCoordinates(voxelIndex: number) {
