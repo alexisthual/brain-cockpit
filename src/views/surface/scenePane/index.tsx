@@ -327,7 +327,7 @@ const ScenePane = ({
                 setVoxelIndex(voxelIndex);
               }
             }}
-            colormap={colormaps["diverging"]}
+            colormap={colormaps["diverging_temperature"]}
             voxelIndex={sharedState ? sharedVoxelIndex : voxelIndex}
             surfaceMap={sharedState ? sharedSurfaceMap : surfaceMap}
             meshType={sharedState ? sharedMeshType : meshType}

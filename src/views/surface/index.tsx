@@ -321,7 +321,7 @@ const SurfaceExplorer = () => {
           <TextualLoader text="Loading surface map..." />
         ) : null}
         <Colorbar
-          colormap={colormaps["diverging"]}
+          colormap={colormaps["diverging_temperature"]}
           vmin={-10}
           vmax={10}
           unit="Z-Score"

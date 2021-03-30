@@ -34,7 +34,12 @@ export const colormaps = {
     .correctLightness(),
   diverging: chroma
     // .bezier(["#e66101", "#fdb863", "#d4d0d0", "#b2abd2", "#5e3c99"])
-    .bezier(["#7b3294", "#c2a5cf", "#f7f7f7", "#a6dba0", "#008837"])
+    .bezier(["#7b3294", "#c2a5cf", "#d4d0d0", "#a6dba0", "#008837"])
+    .scale()
+    .padding(-0.3)
+    .mode("lab"),
+  diverging_temperature: chroma
+    .bezier(["#0571b0", "#92c5de", "#c4c4c4", "#f4a582", "#ca0020"])
     .scale()
     .padding(-0.3)
     .mode("lab"),
