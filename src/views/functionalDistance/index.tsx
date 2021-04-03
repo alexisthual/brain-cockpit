@@ -48,6 +48,8 @@ const FunctionalDistanceExplorer = () => {
   const [wireframe, setWireframe] = useState(false);
   const [sharedState, setSharedState] = useState(true);
 
+  const colormapName = "single_diverging_heat_r";
+
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
     let n = subjectLabels.length;
@@ -281,7 +283,7 @@ const FunctionalDistanceExplorer = () => {
         {loadingSurfaceMap ? (
           <TextualLoader text="Loading surface map..." />
         ) : null}
-        <Colorbar colormap={colormaps["viridis"]} nUniqueValues={10} />
+        <Colorbar colormap={colormaps[colormapName]} />
         <PanesButtons
           addPaneCallback={() => {
             setPanes({ type: "add" });
@@ -355,6 +357,7 @@ const FunctionalDistanceExplorer = () => {
                 closeCallback={() => {
                   setPanes({ type: "remove", payload: paneId });
                 }}
+                colormapName={colormapName}
                 sharedSurfaceMap={surfaceMap}
                 sharedVoxelIndex={voxelIndex}
                 setSharedVoxelIndex={(newVoxelIndex: number) => {

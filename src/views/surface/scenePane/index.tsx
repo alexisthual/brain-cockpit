@@ -23,6 +23,7 @@ import PaneButtons from "./buttons";
 
 interface Props {
   closeCallback: () => void;
+  colormapName?: string;
   subjectLabels: string[];
   contrastLabels: string[];
   sharedState: boolean;
@@ -44,6 +45,7 @@ interface Props {
 
 const ScenePane = ({
   closeCallback = () => {},
+  colormapName = "plasma",
   subjectLabels = [],
   contrastLabels = [],
   sharedState = false,
@@ -346,7 +348,7 @@ const ScenePane = ({
                 setVoxelIndex(voxelIndex);
               }
             }}
-            colormap={colormaps["diverging_temperature"]}
+            colormap={colormaps[colormapName]}
             voxelIndex={sharedState ? sharedVoxelIndex : voxelIndex}
             surfaceMap={sharedState ? sharedSurfaceMap : surfaceMap}
             gradientMap={sharedState ? sharedGradientMap : gradientMap}

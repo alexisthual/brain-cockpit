@@ -47,6 +47,8 @@ const SurfaceExplorer = () => {
   const [highThresholdMax, setHighThresholdMax] = useState(10);
   const [filterSurface, setFilterSurface] = useState(false);
 
+  const colormapName = "diverging_temperature";
+
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
     let n = subjectLabels.length;
@@ -338,7 +340,7 @@ const SurfaceExplorer = () => {
           <TextualLoader text="Loading surface map..." />
         ) : null}
         <Colorbar
-          colormap={colormaps["diverging_temperature"]}
+          colormap={colormaps[colormapName]}
           vmin={-10}
           vmax={10}
           unit="Z-Score"
@@ -434,6 +436,7 @@ const SurfaceExplorer = () => {
                 closeCallback={() => {
                   setPanes({ type: "remove", payload: paneId });
                 }}
+                colormapName={colormapName}
                 subjectLabels={subjectLabels}
                 contrastLabels={contrastLabels}
                 sharedState={sharedState}

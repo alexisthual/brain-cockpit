@@ -16,6 +16,11 @@ export const colormaps = {
     .scale()
     .mode("lab")
     .correctLightness(),
+  plasma_r: chroma
+    .bezier(["#EFF821", "#EC7853", "#9B179E", "#0C0786"])
+    .scale()
+    .mode("lab")
+    .correctLightness(),
   magma: chroma
     .bezier(["#000003", "#711F81", "#F0605D", "#FBFCBF"])
     .scale()
@@ -41,7 +46,15 @@ export const colormaps = {
     .bezier(["#0571b0", "#92c5de", "#c4c4c4", "#f4a582", "#ca0020"])
     .scale()
     .mode("lab"),
-};
+  single_diverging_heat: chroma
+    .bezier(["#c4c4c4", "#f4a582", "#ca0020"])
+    .scale()
+    .mode("lab"),
+  single_diverging_heat_r: chroma
+    .bezier(["#ca0020", "#f4a582", "#c4c4c4"])
+    .scale()
+    .mode("lab"),
+} as Record<string, chroma.Scale>;
 
 export enum View {
   LATERAL = "lateral",

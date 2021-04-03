@@ -22,6 +22,7 @@ import PaneButtons from "./buttons";
 
 interface Props {
   closeCallback: () => void;
+  colormapName?: string;
   subjectLabels: string[];
   sharedState: boolean;
   sharedSubject?: Subject;
@@ -40,6 +41,7 @@ interface Props {
 
 const ScenePane = ({
   closeCallback = () => {},
+  colormapName = "single_diverging_heat",
   subjectLabels = [],
   sharedState = false,
   sharedSubject,
@@ -230,7 +232,7 @@ const ScenePane = ({
                 setVoxelIndex(voxelIndex);
               }
             }}
-            colormap={colormaps["viridis"]}
+            colormap={colormaps[colormapName]}
             voxelIndex={sharedState ? sharedVoxelIndex : voxelIndex}
             surfaceMap={sharedState ? sharedSurfaceMap : surfaceMap}
             hemi={HemisphereSide.LEFT}

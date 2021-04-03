@@ -26,6 +26,8 @@ const KnnExplorer = () => {
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [wireframe, setWireframe] = useState(true);
 
+  const colormapName = "plasma_r";
+
   const initialSubject: Subject = { index: 0, label: "sub-01" };
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;
@@ -232,7 +234,7 @@ const KnnExplorer = () => {
       ) : null}
       <div className="scene">
         <Colorbar
-          colormap={colormaps["batlow"]}
+          colormap={colormaps[colormapName]}
           vmin={distanceMap ? Math.min(...distanceMap) : undefined}
           vmax={distanceMap ? Math.max(...distanceMap) : undefined}
           unit="Voxels"
@@ -243,7 +245,7 @@ const KnnExplorer = () => {
               clickedVoxelCallback={(voxelIndex: number) => {
                 setVoxelIndex(voxelIndex);
               }}
-              colormap={colormaps["batlow"]}
+              colormap={colormaps[colormapName]}
               voxelIndex={voxelIndex}
               surfaceMap={distanceMap}
               wireframe={wireframe}
