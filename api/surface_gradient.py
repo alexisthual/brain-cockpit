@@ -60,10 +60,6 @@ if REACT_APP_CONDITIONS_VIEW and os.path.exists(CONDITIONS_DATA_PATH):
     )
     n_subjects, n_contrasts = len(subjects), len(contrasts)
 
-    # TODO: remove
-    subjects = subjects[:1]
-    n_subjects = 1
-
     ## Load functional data for all subjects
     print("Loading contrast gradients...")
     gradients_per_subject = load_gradients(df, subjects, contrasts)
@@ -84,6 +80,5 @@ def get_contrast_gradient(subject_index, contrast_index, hemi="left"):
     gradient = gradients_per_subject[subject_index][contrast_index]
     edges = triu(gradient).tocsr()
     edges.sort_indices()
-    print(edges.has_sorted_indices)
 
     return edges.data.tolist()
