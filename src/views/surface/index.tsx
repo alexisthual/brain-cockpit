@@ -44,6 +44,7 @@ const SurfaceExplorer = () => {
   const [gradientAverageMap, setGradientAverageMap] = useState<
     number[][] | undefined
   >();
+  const [showGridHelper, setShowGridHelper] = useState(true);
 
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [wireframe, setWireframe] = useState(false);
@@ -382,6 +383,8 @@ const SurfaceExplorer = () => {
           sharedStateCallback={() => setSharedState(!sharedState)}
           showGradient={showGradient}
           showGradientCallback={() => setShowGradient((showGradient + 1) % 3)}
+          showGridHelper={showGridHelper}
+          showGridHelperCallback={() => setShowGridHelper(!showGridHelper)}
         />
         {sharedState ? (
           <InfoPanel
@@ -486,6 +489,7 @@ const SurfaceExplorer = () => {
                 lowThresholdMax={filterSurface ? lowThresholdMax : undefined}
                 highThresholdMin={filterSurface ? highThresholdMin : undefined}
                 highThresholdMax={highThresholdMax}
+                showGridHelper={showGridHelper}
               />
             );
           })}

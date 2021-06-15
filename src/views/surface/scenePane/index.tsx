@@ -42,6 +42,7 @@ interface Props {
   lowThresholdMax?: number;
   highThresholdMin?: number;
   highThresholdMax?: number;
+  showGridHelper?: boolean;
 }
 
 const ScenePane = ({
@@ -65,6 +66,7 @@ const ScenePane = ({
   lowThresholdMax,
   highThresholdMin,
   highThresholdMax,
+  showGridHelper,
 }: Props) => {
   const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
   const [surfaceMap, setSurfaceMap] = useState<number[] | undefined>();
@@ -365,6 +367,7 @@ const ScenePane = ({
             lowThresholdMax={lowThresholdMax}
             highThresholdMin={highThresholdMin}
             highThresholdMax={highThresholdMax}
+            showGridHelper={showGridHelper}
           />
         )}
       </ParentSize>

@@ -11,6 +11,8 @@ interface Props {
   sharedStateCallback: () => void;
   showGradient?: number;
   showGradientCallback?: () => void;
+  showGridHelper?: boolean;
+  showGridHelperCallback?: () => void;
 }
 
 const PanesButtons = ({
@@ -21,9 +23,17 @@ const PanesButtons = ({
   sharedStateCallback = () => {},
   showGradient,
   showGradientCallback = () => {},
+  showGridHelper,
+  showGridHelperCallback = () => {},
 }: Props) => {
   return (
     <div className="panes-buttons">
+      <Button
+        active={showGridHelper}
+        icon={"grid"}
+        onClick={showGridHelperCallback}
+        outlined
+      />
       {showGradient !== undefined ? (
         <Button
           active={showGradient > 0}

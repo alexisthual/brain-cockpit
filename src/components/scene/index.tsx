@@ -32,6 +32,7 @@ interface IProps {
   highThresholdMax?: number;
   hotspots?: IHotspot[];
   colormap: chroma.Scale;
+  showGridHelper?: boolean;
 }
 
 interface IState {
@@ -498,6 +499,11 @@ class Scene extends Component<IProps, IState> {
       }
     }
 
+    // Show or hide grid helper
+    if (this.gridHelper !== undefined) {
+      this.gridHelper.visible = this.props.showGridHelper ?? true;
+    }
+
     // Update gradient
     // In case both gradient and gradient norms are available,
     // give priority to gradient.
@@ -620,7 +626,8 @@ class Scene extends Component<IProps, IState> {
       new THREE.Color(Colors.LIGHT_GRAY1)
     );
     gridHelper.translateY(-70);
-    // scene.add(gridHelper);
+    gridHelper.visible = this.props.showGridHelper ?? true;
+    scene.add(gridHelper);
 
     // Orbit controls setup
     let controls = new OrbitControls(camera, renderer.domElement);
