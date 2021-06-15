@@ -10,10 +10,10 @@ from scipy.sparse import coo_matrix, triu
 from tqdm import tqdm
 
 import custom_utils.setup as setup
-from api.surface_contrasts import select_subjects_and_contrasts
+from api.surface_contrasts import parse_conditions_db
 
 # Load environment variables
-setup.load_env()
+args = setup.load_env()
 
 DEBUG = os.getenv("DEBUG")
 
@@ -21,8 +21,7 @@ DEBUG = os.getenv("DEBUG")
 REACT_APP_CONDITIONS_VIEW = bool(
     strtobool(os.getenv("REACT_APP_CONDITIONS_VIEW"))
 )
-CONDITIONS_DATA_PATH = os.getenv("CONDITIONS_DATA_PATH")
-AVAILABLE_CONTRASTS_PATH = os.getenv("AVAILABLE_CONTRASTS_PATH")
+AVAILABLE_GIFTI_FILES_DB = os.getenv("AVAILABLE_GIFTI_FILES_DB")
 EXPERIMENT_DATA_PATH = os.getenv("EXPERIMENT_DATA_PATH")
 GRADIENTS_DATA_PATH = os.getenv("GRADIENTS_DATA_PATH")
 
@@ -63,12 +62,11 @@ subjects, contrasts, n_contrasts_by_task = [], [], []
 n_subjects, n_contrasts = 0, 0
 n_voxels = 0
 
-if REACT_APP_CONDITIONS_VIEW and os.path.exists(CONDITIONS_DATA_PATH):
+if REACT_APP_CONDITIONS_VIEW and os.path.exists(AVAILABLE_GIFTI_FILES_DB):
     ## Load selected subjects and contrasts
-    df = pd.read_csv(AVAILABLE_CONTRASTS_PATH)
-    subjects, contrasts, n_contrasts_by_task = select_subjects_and_contrasts(
-        df, available_contrasts_path=AVAILABLE_CONTRASTS_PATH
-    )
+    df = pd.read_csv(AVAILABLE_GIFTI_FILES_DB)
+
+    subjects, contrasts, n_contrasts_by_task = parse_conditions_db(df)
     n_subjects, n_contrasts = len(subjects), len(contrasts)
 
     ## Load functional data for all subjects
@@ -76,7 +74,12 @@ if REACT_APP_CONDITIONS_VIEW and os.path.exists(CONDITIONS_DATA_PATH):
     (
         gradient_norms_per_subject,
         gradients_averaged_per_subject,
-    ) = load_gradients(df, subjects, contrasts)
+    ) = load_gradients(
+        df,
+        # Load gradients for all subjects only in production
+        subjects if args.env == "production" else ["sub-01"],
+        contrasts,
+    )
 
 
 @eel.expose

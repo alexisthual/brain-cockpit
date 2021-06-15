@@ -17,8 +17,7 @@ DEBUG = os.getenv("DEBUG")
 REACT_APP_CONDITIONS_VIEW = bool(
     strtobool(os.getenv("REACT_APP_CONDITIONS_VIEW"))
 )
-CONDITIONS_DATA_PATH = os.getenv("CONDITIONS_DATA_PATH")
-AVAILABLE_CONTRASTS_PATH = os.getenv("AVAILABLE_CONTRASTS_PATH")
+AVAILABLE_GIFTI_FILES_DB = os.getenv("AVAILABLE_GIFTI_FILES_DB")
 
 # IBC contrasts exploration
 
@@ -26,28 +25,37 @@ AVAILABLE_CONTRASTS_PATH = os.getenv("AVAILABLE_CONTRASTS_PATH")
 ## Util functions
 
 
-def select_subjects_and_contrasts(
-    df, available_contrasts_path=AVAILABLE_CONTRASTS_PATH
-):
+def parse_conditions_db(df):
     """
-    Preselects subjects having enough contrasts
-    before filtering out contrasts which exists for all these subjects
-    and returns all these as python lists.
+    Given a DataFrame containing all available gifti files,
+    preselects subjects with enough contrasts,
+    contrasts which exists for all these subjects,
+    and tasks from which these contrasts are taken.
+
+    Inputs
+    ------
+    df: DataFrame
+        each row points to an available gifti file
+        and specifies the subject, contrast, resolution, etc
+
+    Outputs
+    -------
+    subjects: list of strings
+    contrasts: list of string
+    tasks: list of string
     """
-
-    df = pd.read_csv(available_contrasts_path)
-
+    # Select subjects with enough contrasts
     grouped_by_subject = df.groupby(["subject"])["contrast"].nunique()
     selected_subjects = grouped_by_subject[
         grouped_by_subject > 100
     ].index.values
 
+    # Select contrasts available for all selected subjects
     grouped_by_contrast = df.groupby(["contrast", "task"])["subject"].unique()
     grouped_by_contrast = grouped_by_contrast.sort_index(
         level=["task", "contrast"]
     )
     grouped_by_contrast = grouped_by_contrast.reset_index()
-
     mask = [
         np.array_equal(
             np.intersect1d(subjects, selected_subjects), selected_subjects
@@ -93,29 +101,42 @@ def load_subject_fmri(df, subject, unique_contrasts):
     paths_lh = []
     paths_rh = []
 
+    # Iterate through every selected contrast
     for contrast in unique_contrasts:
+        # Select lines with matching contrast and subject
         mask = (df.contrast == contrast).values * (
             df.subject == subject
         ).values
+
+        # Among selected lines, add "path" of last row to list.
+        # Indeed, it might be that a given tuple
+        # (subject, task, contrast) corresponds to several rows
+        # because the same contrast might have been acquired
+        # multiple times.
+        # We deal with this by sorting selected rows by "session"
+        # and choosing the last row is equivalent to choosing
+        # the latest acquired contrast.
         paths_lh.append(
-            os.path.join(
-                CONDITIONS_DATA_PATH,
-                df.loc[mask].loc[df.side == "lh"].path.values[-1],
-            )
+            df.loc[mask]
+            .loc[df.side == "lh"]
+            .sort_values(by=["session"])
+            .path.values[-1]
         )
         paths_rh.append(
-            os.path.join(
-                CONDITIONS_DATA_PATH,
-                df.loc[mask].loc[df.side == "rh"].path.values[-1],
-            )
+            df.loc[mask]
+            .loc[df.side == "rh"]
+            .sort_values(by=["session"])
+            .path.values[-1]
         )
 
+    # Load all images
     Xr = np.array(
         [nib.load(texture).darrays[0].data for texture in list(paths_rh)]
     )
     Xl = np.array(
         [nib.load(texture).darrays[0].data for texture in list(paths_lh)]
     )
+
     # impute Nans by 0
     Xl[np.isnan(Xl)] = 0
     Xr[np.isnan(Xr)] = 0
@@ -147,12 +168,11 @@ n_subjects, n_contrasts = 0, 0
 X = np.empty((0, 0))
 n_voxels = 0
 
-if REACT_APP_CONDITIONS_VIEW and os.path.exists(CONDITIONS_DATA_PATH):
+if REACT_APP_CONDITIONS_VIEW and os.path.exists(AVAILABLE_GIFTI_FILES_DB):
     ## Load selected subjects and contrasts
-    df = pd.read_csv(AVAILABLE_CONTRASTS_PATH)
-    subjects, contrasts, n_contrasts_by_task = select_subjects_and_contrasts(
-        df, available_contrasts_path=AVAILABLE_CONTRASTS_PATH
-    )
+    df = pd.read_csv(AVAILABLE_GIFTI_FILES_DB)
+
+    subjects, contrasts, n_contrasts_by_task = parse_conditions_db(df)
     n_subjects, n_contrasts = len(subjects), len(contrasts)
 
     ## Load functional data for all subjects
