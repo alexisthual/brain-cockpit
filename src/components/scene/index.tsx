@@ -9,13 +9,14 @@ import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtil
 
 import { colormaps, HemisphereSide, MeshType, View } from "constants/index";
 import { Hotspots, IHotspot } from "./hotspots";
-import Gradient from "./gradient";
+import { GradientNorms, Gradient } from "./gradient";
 import "./style.scss";
 
 interface IProps {
   clickedVoxelCallback?: any;
   surfaceMap?: number[];
-  gradientMap?: number[];
+  gradientNorms?: number[];
+  gradient?: number[][];
   width: number;
   height: number;
   voxelIndex?: number;
@@ -54,6 +55,7 @@ class Scene extends Component<IProps, IState> {
   mouseDownX?: number;
   mouseDownY?: number;
   gradient: any;
+  edgesMesh?: THREE.Mesh;
 
   static defaultProps = {
     meshType: MeshType.PIAL,
@@ -204,29 +206,14 @@ class Scene extends Component<IProps, IState> {
       object = Scene.coloriseFromRandomMap(object);
     }
 
-    const material = [
-      new THREE.MeshPhongMaterial({
-        color: "rgb(207, 207, 207)",
-        flatShading: true,
-        vertexColors: true,
-        shininess: 0,
-        wireframe: wireframe,
-      }),
-      new THREE.MeshStandardMaterial({
-        // color: "rgb(207, 207, 207)",
-        flatShading: true,
-        vertexColors: true,
-        roughness: 1.0,
-        metalness: 0.4,
-        wireframe: wireframe,
-      }),
-      new THREE.MeshBasicMaterial({
-        // color: "rgb(207, 207, 207)",
-        flatShading: true,
-        vertexColors: true,
-        wireframe: wireframe,
-      }),
-    ][1];
+    const material = new THREE.MeshStandardMaterial({
+      // color: "rgb(207, 207, 207)",
+      flatShading: true,
+      vertexColors: true,
+      roughness: 1.0,
+      metalness: 0.4,
+      wireframe: wireframe,
+    });
 
     // Create mesh
     const mesh = new THREE.Mesh(object.geometry, material);
@@ -247,9 +234,9 @@ class Scene extends Component<IProps, IState> {
 
     for (let i = 0; i < count; i++) {
       color.setRGB(
-        0.5 + 0.2 * Math.random(),
-        0.5 + 0.2 * Math.random(),
-        0.5 + 0.2 * Math.random()
+        0.5 + 0.1 * Math.random(),
+        0.5 + 0.1 * Math.random(),
+        0.5 + 0.1 * Math.random()
       );
       colors.setXYZ(i, color.r, color.g, color.b);
     }
@@ -512,12 +499,67 @@ class Scene extends Component<IProps, IState> {
     }
 
     // Update gradient
+    // In case both gradient and gradient norms are available,
+    // give priority to gradient.
     if (
-      this.gradient !== undefined &&
-      this.props.gradientMap !== undefined &&
-      this.props.gradientMap !== prevProps.gradientMap
+      this.props.gradient !== undefined &&
+      this.props.gradient !== prevProps.gradient
     ) {
-      this.gradient.update(this.props.gradientMap);
+      console.log("should update gradient");
+      if (this.gradient === undefined) {
+        const gradient = new Gradient(this.object, this.props.gradient);
+        this.scene.add(gradient);
+        this.gradient = gradient;
+      } else {
+        if (this.props.gradient.length !== this.gradient.nVertices) {
+          // Either there was previously a GradientNorms being displayed...
+          this.scene.remove(this.gradient);
+          const gradient = new Gradient(this.object, this.props.gradient);
+          this.scene.add(gradient);
+          this.gradient = gradient;
+        } else {
+          // ...Or there was a Gradient
+          this.gradient.update(this.props.gradient);
+        }
+      }
+    } else if (
+      this.props.gradientNorms !== undefined &&
+      this.props.gradientNorms !== prevProps.gradientNorms
+    ) {
+      console.log("shoud update gradient norms");
+      // Load edges mesh if need be
+      if (this.edgesMesh === undefined) {
+        this.edgesMesh = await Scene.loadGradientMesh(
+          this.props.meshType,
+          this.props.hemi
+        );
+      }
+
+      if (this.gradient === undefined) {
+        console.log("this.gradient is undefined");
+        const gradient = new GradientNorms(
+          this.edgesMesh,
+          this.props.gradientNorms
+        );
+        this.scene.add(gradient);
+        this.gradient = gradient;
+      } else {
+        if (this.props.gradientNorms.length !== this.gradient.nVertices) {
+          console.log("previous was Gradient");
+          // Either there was previously a Gradient being displayed...
+          this.scene.remove(this.gradient);
+          const gradient = new GradientNorms(
+            this.edgesMesh,
+            this.props.gradientNorms
+          );
+          this.scene.add(gradient);
+          this.gradient = gradient;
+        } else {
+          console.log("previous was GradientNorms");
+          // ...Or there was a GradientNorms
+          this.gradient.update(this.props.gradientNorms);
+        }
+      }
     }
   }
 
@@ -552,13 +594,23 @@ class Scene extends Component<IProps, IState> {
     // Add main object to scene
     scene.add(object);
 
-    const gradientMesh = await Scene.loadGradientMesh(
-      this.props.meshType,
-      this.props.hemi
-    );
+    if (this.props.gradient !== undefined) {
+      const gradient = new Gradient(this.object, this.props.gradient);
+      scene.add(gradient);
+      this.gradient = gradient;
+    } else if (this.props.gradientNorms !== undefined) {
+      this.edgesMesh = await Scene.loadGradientMesh(
+        this.props.meshType,
+        this.props.hemi
+      );
 
-    const gradient = new Gradient(gradientMesh, this.props.gradientMap);
-    scene.add(gradient);
+      const gradient = new GradientNorms(
+        this.edgesMesh,
+        this.props.gradientNorms
+      );
+      scene.add(gradient);
+      this.gradient = gradient;
+    }
 
     // Add grid helper
     const gridHelper = new THREE.GridHelper(
@@ -568,7 +620,7 @@ class Scene extends Component<IProps, IState> {
       new THREE.Color(Colors.LIGHT_GRAY1)
     );
     gridHelper.translateY(-70);
-    scene.add(gridHelper);
+    // scene.add(gridHelper);
 
     // Orbit controls setup
     let controls = new OrbitControls(camera, renderer.domElement);
@@ -590,7 +642,6 @@ class Scene extends Component<IProps, IState> {
     this.scene = scene;
     this.camera = camera;
     this.object = object;
-    this.gradient = gradient;
     this.gridHelper = gridHelper;
     this.controls = controls;
 

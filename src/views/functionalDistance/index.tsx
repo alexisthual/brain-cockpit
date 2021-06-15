@@ -48,7 +48,7 @@ const FunctionalDistanceExplorer = () => {
   const [wireframe, setWireframe] = useState(false);
   const [sharedState, setSharedState] = useState(true);
 
-  const colormapName = "single_diverging_heat_r";
+  const colormapName = "magma_r";
 
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
     let newIndex = state.index;

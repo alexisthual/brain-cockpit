@@ -31,7 +31,8 @@ interface Props {
   sharedContrast?: Contrast;
   sharedSurfaceMap?: number[];
   sharedMeanSurfaceMap: boolean;
-  sharedGradientMap?: number[];
+  sharedGradientNorms?: number[];
+  sharedGradient?: number[][];
   sharedVoxelIndex?: number;
   setSharedVoxelIndex?: (voxelIndex: number) => void;
   sharedWireframe: boolean;
@@ -53,7 +54,8 @@ const ScenePane = ({
   sharedContrast,
   sharedSurfaceMap,
   sharedMeanSurfaceMap = false,
-  sharedGradientMap,
+  sharedGradientNorms,
+  sharedGradient,
   sharedVoxelIndex,
   setSharedVoxelIndex = () => {},
   sharedWireframe = false,
@@ -68,7 +70,8 @@ const ScenePane = ({
   const [surfaceMap, setSurfaceMap] = useState<number[] | undefined>();
   const [loadingSurfaceMap, setLoadingSurfaceMap] = useState(false);
   const [meanSurfaceMap, setMeanSurfaceMap] = useState(false);
-  const [gradientMap, setGradientMap] = useState<number[] | undefined>();
+  const [gradientNorms, setGradientMap] = useState<number[] | undefined>();
+  const [gradient, setGradient] = useState<number[][] | undefined>();
   const [loadingGradientMap, setLoadingGradientMap] = useState(false);
   const [meanGradientMap, setMeanGradientMap] = useState(false);
   const [wireframe] = useState(false);
@@ -249,19 +252,19 @@ const ScenePane = ({
         setLoadingSurfaceMap(false);
       }
 
-      setLoadingGradientMap(true);
-      if (meanGradientMap) {
-      } else if (subject.index !== undefined) {
-        eel.get_contrast_gradient(
-          subject.index,
-          contrast.index
-        )((gradientMap: number[]) => {
-          setGradientMap(gradientMap);
-          setLoadingGradientMap(false);
-        });
-      } else {
-        setLoadingGradientMap(false);
-      }
+      // setLoadingGradientMap(true);
+      // if (meanGradientMap) {
+      // } else if (subject.index !== undefined) {
+      //   eel.get_contrast_gradient_norms(
+      //     subject.index,
+      //     contrast.index
+      //   )((gradientNorms: number[]) => {
+      //     setGradientMap(gradientNorms);
+      //     setLoadingGradientMap(false);
+      //   });
+      // } else {
+      //   setLoadingGradientMap(false);
+      // }
     }
   }, [subject, contrast, meanSurfaceMap, meanGradientMap, hemi]);
 
@@ -351,7 +354,8 @@ const ScenePane = ({
             colormap={colormaps[colormapName]}
             voxelIndex={sharedState ? sharedVoxelIndex : voxelIndex}
             surfaceMap={sharedState ? sharedSurfaceMap : surfaceMap}
-            gradientMap={sharedState ? sharedGradientMap : gradientMap}
+            gradientNorms={sharedState ? sharedGradientNorms : gradientNorms}
+            gradient={sharedState ? sharedGradient : gradient}
             meshType={sharedState ? sharedMeshType : meshType}
             hemi={sharedState ? sharedHemi : hemi}
             wireframe={sharedState ? sharedWireframe : wireframe}

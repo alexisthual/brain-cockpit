@@ -33,9 +33,18 @@ const SurfaceExplorer = () => {
   const [contrastMap, setContrastMap] = useState<number[] | undefined>();
   const [loadingContrastMap, setLoadingContrastMap] = useState(false);
   const [meanContrastMap, setMeanContrastMap] = useState(false);
-  const [gradientMap, setGradientMap] = useState<number[] | undefined>();
+  // Variable to show gradients.
+  // 0 = don't show
+  // 1 = show on mesh
+  // 2 = show averaged
+  const [showGradient, setShowGradient] = useState(0);
+  const [gradientNorms, setGradientNorms] = useState<number[] | undefined>();
   const [loadingGradientMap, setLoadingGradientMap] = useState(false);
   const [meanGradientMap, setMeanGradientMap] = useState(false);
+  const [gradientAverageMap, setGradientAverageMap] = useState<
+    number[][] | undefined
+  >();
+
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [wireframe, setWireframe] = useState(false);
   const [meshType, setMeshType] = useState(MeshType.PIAL);
@@ -291,20 +300,38 @@ const SurfaceExplorer = () => {
       }
 
       setLoadingGradientMap(true);
-      if (meanGradientMap) {
-      } else if (subject.index !== undefined) {
-        eel.get_contrast_gradient(
-          subject.index,
-          contrast.index
-        )((gradientMap: number[]) => {
-          setGradientMap(gradientMap);
-          setLoadingGradientMap(false);
-        });
-      } else {
-        setLoadingGradientMap(false);
+      switch (showGradient) {
+        case 2:
+          if (subject.index !== undefined) {
+            eel.get_contrast_gradient_norms(
+              subject.index,
+              contrast.index
+            )((gradientNorms: number[]) => {
+              console.log("got gradient norms");
+              console.log(gradientNorms);
+              setGradientNorms(gradientNorms);
+              setLoadingGradientMap(false);
+            });
+          }
+          break;
+        case 1:
+          if (subject.index !== undefined) {
+            eel.get_contrast_gradient_averaged(
+              subject.index,
+              contrast.index
+            )((gradient: number[][]) => {
+              console.log("got gradient");
+              console.log(gradient);
+              setGradientAverageMap(gradient);
+              setLoadingGradientMap(false);
+            });
+          }
+          break;
+        default:
+          break;
       }
     }
-  }, [subject, contrast, meanContrastMap, meanGradientMap, hemi]);
+  }, [subject, contrast, meanContrastMap, meanGradientMap, hemi, showGradient]);
 
   // Update fingerprint when voxelIndex or subjectIndex change
   useEffect(() => {
@@ -350,13 +377,11 @@ const SurfaceExplorer = () => {
             setPanes({ type: "add" });
           }}
           filterSurface={filterSurface}
-          filterSurfaceCallback={() => {
-            setFilterSurface(!filterSurface);
-          }}
+          filterSurfaceCallback={() => setFilterSurface(!filterSurface)}
           sharedState={sharedState}
-          sharedStateCallback={() => {
-            setSharedState(!sharedState);
-          }}
+          sharedStateCallback={() => setSharedState(!sharedState)}
+          showGradient={showGradient}
+          showGradientCallback={() => setShowGradient((showGradient + 1) % 3)}
         />
         {sharedState ? (
           <InfoPanel
@@ -444,7 +469,12 @@ const SurfaceExplorer = () => {
                 sharedContrast={contrast}
                 sharedSurfaceMap={contrastMap}
                 sharedMeanSurfaceMap={meanContrastMap}
-                sharedGradientMap={gradientMap}
+                sharedGradientNorms={
+                  showGradient === 2 ? gradientNorms : undefined
+                }
+                sharedGradient={
+                  showGradient === 1 ? gradientAverageMap : undefined
+                }
                 sharedVoxelIndex={voxelIndex}
                 setSharedVoxelIndex={(newVoxelIndex: number) => {
                   setVoxelIndex(newVoxelIndex);

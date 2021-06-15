@@ -26,6 +26,11 @@ export const colormaps = {
     .scale()
     .mode("lab")
     .correctLightness(),
+  magma_r: chroma
+    .bezier(["#FBFCBF", "#F0605D", "#711F81", "#000003"])
+    .scale()
+    .mode("lab")
+    .correctLightness(),
   viridis: chroma
     .bezier(["#440154", "#30678D", "#35B778", "#FDE724"])
     .scale()

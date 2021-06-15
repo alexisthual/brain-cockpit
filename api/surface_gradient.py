@@ -29,20 +29,31 @@ GRADIENTS_DATA_PATH = os.getenv("GRADIENTS_DATA_PATH")
 
 ## Util functions
 def load_gradients(df, subjects, unique_contrasts):
-    gradients_per_subject = list()
+    gradient_norms_per_subject = list()
+    gradients_averaged_per_subject = list()
 
     for subject in subjects:
         gradient = np.load(
             os.path.join(
                 EXPERIMENT_DATA_PATH,
                 GRADIENTS_DATA_PATH,
-                f"gradient_{subject}.npy",
+                f"gradient_left_{subject}.npy",
             ),
             allow_pickle=True,
         )
-        gradients_per_subject.append(gradient)
+        gradient_norms_per_subject.append(gradient)
 
-    return gradients_per_subject
+        gradient_averaged = np.load(
+            os.path.join(
+                EXPERIMENT_DATA_PATH,
+                GRADIENTS_DATA_PATH,
+                f"gradient_averaged_left_{subject}.npy",
+            ),
+            allow_pickle=True,
+        )
+        gradients_averaged_per_subject.append(gradient_averaged)
+
+    return gradient_norms_per_subject, gradients_averaged_per_subject
 
 
 # Load gradients
@@ -62,11 +73,14 @@ if REACT_APP_CONDITIONS_VIEW and os.path.exists(CONDITIONS_DATA_PATH):
 
     ## Load functional data for all subjects
     print("Loading contrast gradients...")
-    gradients_per_subject = load_gradients(df, subjects, contrasts)
+    (
+        gradient_norms_per_subject,
+        gradients_averaged_per_subject,
+    ) = load_gradients(df, subjects, contrasts)
 
 
 @eel.expose
-def get_contrast_gradient(subject_index, contrast_index, hemi="left"):
+def get_contrast_gradient_norms(subject_index, contrast_index, hemi="left"):
     """
     Return gradient intensity along edges of the fsaverage mesh.
     Edges are deduplicated. Order of appearence is determined by
@@ -74,11 +88,27 @@ def get_contrast_gradient(subject_index, contrast_index, hemi="left"):
     """
     if DEBUG:
         print(
-            f"[{datetime.now()}] get_contrast_gradient {contrasts[contrast_index]} for {subjects[subject_index]}, {hemi} hemi"
+            f"[{datetime.now()}] get_contrast_gradient_norms {contrasts[contrast_index]} for {subjects[subject_index]}, {hemi} hemi"
         )
 
-    gradient = gradients_per_subject[subject_index][contrast_index]
+    gradient = gradient_norms_per_subject[subject_index][contrast_index]
     edges = triu(gradient).tocsr()
     edges.sort_indices()
 
     return edges.data.tolist()
+
+
+@eel.expose
+def get_contrast_gradient_averaged(subject_index, contrast_index, hemi="left"):
+    """
+    Returns an array of size (n_voxels, 3) which associates each fsaverage voxel i
+    with a vector representing the mean of all gradient vectors along edges i -> j.
+    """
+    if DEBUG:
+        print(
+            f"[{datetime.now()}] get_contrast_gradient_averaged {contrasts[contrast_index]} for {subjects[subject_index]}, {hemi} hemi"
+        )
+
+    gradient = gradients_averaged_per_subject[subject_index][contrast_index]
+
+    return gradient.data.tolist()

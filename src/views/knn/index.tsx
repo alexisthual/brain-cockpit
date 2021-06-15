@@ -26,7 +26,7 @@ const KnnExplorer = () => {
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [wireframe, setWireframe] = useState(true);
 
-  const colormapName = "plasma_r";
+  const colormapName = "magma_r";
 
   const initialSubject: Subject = { index: 0, label: "sub-01" };
   const subjectReducer = (state: Subject, action: ActionLabel): Subject => {

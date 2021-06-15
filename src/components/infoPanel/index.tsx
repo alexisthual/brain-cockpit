@@ -27,15 +27,16 @@ interface IProps {
 const InfoPanel = ({ rows }: IProps) => {
   return (
     <div className="info-panel">
-      {rows.map((row: InfoPanelRow) => (
-        <div className="info-panel-row" key={`info-panel-row-${row.label}`}>
+      {rows.map((row: InfoPanelRow, rowIndex: number) => (
+        <div className="info-panel-row" key={`info-panel-row-${rowIndex}`}>
           <div className="header-item-label">{row.label}</div>
           <div className="header-item-value">
             <ButtonGroup>
-              {row.inputs.map((input: InfoPanelInput, index: number) => (
+              {row.inputs.map((input: InfoPanelInput, inputIndex: number) => (
                 <>
                   {input.values ? (
                     <Select<string>
+                      key={`input-${inputIndex}`}
                       filterable={false}
                       items={input.values}
                       itemRenderer={stringRenderer}
@@ -52,6 +53,7 @@ const InfoPanel = ({ rows }: IProps) => {
                     </Select>
                   ) : input.onChangeCallback ? (
                     <Button
+                      key={`input-${inputIndex}`}
                       active={input.value as boolean | undefined}
                       icon={
                         input.value
@@ -63,11 +65,10 @@ const InfoPanel = ({ rows }: IProps) => {
                           input.onChangeCallback();
                         }
                       }}
-                      outlined
                       title={input.title}
                     />
                   ) : (
-                    <>{input.value}</>
+                    <span key={`input-${inputIndex}`}>{input.value}</span>
                   )}
                 </>
               ))}

@@ -9,6 +9,8 @@ interface Props {
   filterSurfaceCallback: () => void;
   sharedState: boolean;
   sharedStateCallback: () => void;
+  showGradient?: number;
+  showGradientCallback?: () => void;
 }
 
 const PanesButtons = ({
@@ -17,9 +19,19 @@ const PanesButtons = ({
   filterSurfaceCallback = () => {},
   sharedState,
   sharedStateCallback = () => {},
+  showGradient,
+  showGradientCallback = () => {},
 }: Props) => {
   return (
     <div className="panes-buttons">
+      {showGradient !== undefined ? (
+        <Button
+          active={showGradient > 0}
+          icon={showGradient === 2 ? "flow-review-branch" : "arrow-top-right"}
+          onClick={showGradientCallback}
+          outlined
+        />
+      ) : null}
       <Button
         active={filterSurface}
         icon={"filter"}
