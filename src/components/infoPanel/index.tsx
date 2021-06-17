@@ -1,7 +1,7 @@
 import { Button, ButtonGroup, Colors, Icon, MenuItem } from "@blueprintjs/core";
 import { IconName } from "@blueprintjs/icons";
 import { Select } from "@blueprintjs/select";
-import React from "react";
+import React, { useState } from "react";
 
 import {
   ContrastLabel,
@@ -63,7 +63,15 @@ const contrastLabelRenderer = (
   );
 };
 
+const contrastLabelPredicate = (query: string, item: ContrastLabel) => {
+  return `${item.task}${item.contrast}`.indexOf(query) > -1;
+};
+
 const InfoPanel = ({ rows }: IProps) => {
+  const [contrastQuery, setContrastQuery] = useState<string | undefined>(
+    undefined
+  );
+
   return (
     <div className="info-panel">
       {rows.map((row: InfoPanelRow, rowIndex: number) => (
@@ -117,14 +125,22 @@ const InfoPanel = ({ rows }: IProps) => {
                     element = (
                       <Select<ContrastLabel>
                         key={`input-${inputIndex}`}
-                        filterable={false}
-                        items={input.values ?? []}
+                        itemPredicate={contrastLabelPredicate}
                         itemRenderer={contrastLabelRenderer}
+                        items={input.values ?? []}
+                        noResults={
+                          <MenuItem disabled={true} text="No results." />
+                        }
                         onItemSelect={(newItem: ContrastLabel) => {
                           if (input.onChangeCallback) {
                             input.onChangeCallback(newItem);
                           }
                         }}
+                        onQueryChange={(query: string) => {
+                          console.log(query);
+                          setContrastQuery(query);
+                        }}
+                        query={contrastQuery}
                       >
                         <Button
                           rightIcon="double-caret-vertical"

@@ -135,6 +135,8 @@ const ScenePane = ({
   // L
   const incrementContrast = useCallback(
     (event: any) => {
+      if (event.target.matches("input")) return;
+
       if (event.isComposing || event.keyCode === 76) {
         if (!sharedState) {
           setContrast({ type: "increment" });
@@ -151,6 +153,8 @@ const ScenePane = ({
   // J
   const decrementContrast = useCallback(
     (event: any) => {
+      if (event.target.matches("input")) return;
+
       if (event.isComposing || event.keyCode === 74) {
         if (!sharedState) {
           setContrast({ type: "decrement" });
@@ -167,6 +171,8 @@ const ScenePane = ({
   // I
   const incrementSubject = useCallback(
     (event: any) => {
+      if (event.target.matches("input")) return;
+
       if (event.isComposing || event.keyCode === 73) {
         if (!sharedState && !meanSurfaceMap) {
           setSubject({ type: "increment" });
@@ -183,6 +189,8 @@ const ScenePane = ({
   // K
   const decrementSubject = useCallback(
     (event: any) => {
+      if (event.target.matches("input")) return;
+
       if (event.isComposing || event.keyCode === 75) {
         if (!sharedState && !meanSurfaceMap) {
           setSubject({ type: "decrement" });
@@ -215,6 +223,8 @@ const ScenePane = ({
   // X
   const closePane = useCallback(
     (event: any) => {
+      if (event.target.matches("input")) return;
+
       if (
         (event.isComposing || event.keyCode === 88) &&
         panelEl.current !== null &&

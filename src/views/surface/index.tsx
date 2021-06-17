@@ -156,6 +156,8 @@ const SurfaceExplorer = () => {
   // L
   const incrementContrast = useCallback(
     (event: any) => {
+      if (event.target.matches("input")) return;
+
       if (event.isComposing || event.keyCode === 76) {
         if (sharedState) {
           setContrast({ type: "increment" });
@@ -172,6 +174,8 @@ const SurfaceExplorer = () => {
   // J
   const decrementContrast = useCallback(
     (event: any) => {
+      if (event.target.matches("input")) return;
+
       if (event.isComposing || event.keyCode === 74) {
         if (sharedState) {
           setContrast({ type: "decrement" });
@@ -188,6 +192,8 @@ const SurfaceExplorer = () => {
   // I
   const incrementSubject = useCallback(
     (event: any) => {
+      if (event.target.matches("input")) return;
+
       if (event.isComposing || event.keyCode === 73) {
         if (sharedState && !meanContrastMap) {
           setSubject({ type: "increment" });
@@ -204,6 +210,8 @@ const SurfaceExplorer = () => {
   // K
   const decrementSubject = useCallback(
     (event: any) => {
+      if (event.target.matches("input")) return;
+
       if (event.isComposing || event.keyCode === 75) {
         if (sharedState && !meanContrastMap) {
           setSubject({ type: "decrement" });
@@ -220,6 +228,8 @@ const SurfaceExplorer = () => {
   // U
   const toggleMeanContrastMap = useCallback(
     (event: any) => {
+      if (event.target.matches("input")) return;
+
       if (event.isComposing || event.keyCode === 85) {
         if (sharedState) {
           setMeanContrastMap((prevMeanContrastMap) => !prevMeanContrastMap);
@@ -236,6 +246,8 @@ const SurfaceExplorer = () => {
   // O
   const toggleMeanFingerprint = useCallback(
     (event: any) => {
+      if (event.target.matches("input")) return;
+
       if (event.isComposing || event.keyCode === 79) {
         if (sharedState) {
           setMeanFingerprint((prevMeanFingerprint) => !prevMeanFingerprint);
@@ -252,6 +264,8 @@ const SurfaceExplorer = () => {
   // W
   const toggleWireframe = useCallback(
     (event: any) => {
+      if (event.target.matches("input")) return;
+
       if (event.isComposing || event.keyCode === 87) {
         if (sharedState) {
           setWireframe((prevWireframe) => !prevWireframe);
@@ -267,6 +281,8 @@ const SurfaceExplorer = () => {
 
   // N
   const addPane = useCallback((event: any) => {
+    if (event.target.matches("input")) return;
+
     if (event.isComposing || event.keyCode === 78) {
       setPanes({ type: "add" });
     }
