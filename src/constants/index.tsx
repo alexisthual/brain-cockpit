@@ -83,6 +83,10 @@ export type ContrastLabel = {
   contrast: string;
 };
 
+export const contrastLabelToId = (label: ContrastLabel) => {
+  return `${label.task}-${label.contrast}`;
+};
+
 export interface Subject {
   index: number;
   label: string;

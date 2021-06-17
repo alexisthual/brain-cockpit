@@ -5,7 +5,7 @@ import React, { useEffect, useReducer, useState } from "react";
 import Colorbar from "components/colorbar";
 import ContrastFingerprint from "components/contrastFingerprint";
 import DistanceBars from "./distanceBars";
-import InfoPanel from "components/infoPanel";
+import InfoPanel, { InputType } from "components/infoPanel";
 import PanelButtons from "components/infoPanel/buttons";
 import PanesButtons from "./panesButtons";
 import ScenePane from "./scenePane";
@@ -296,6 +296,7 @@ const FunctionalDistanceExplorer = () => {
                 label: "Metric",
                 inputs: [
                   {
+                    inputType: InputType.SELECT_STRING,
                     value: metric,
                     values: Object.keys(Metric),
                     onChangeCallback: (newValue: string) =>
@@ -307,6 +308,7 @@ const FunctionalDistanceExplorer = () => {
                 label: "Surface Type",
                 inputs: [
                   {
+                    inputType: InputType.SELECT_STRING,
                     value: surfaceMapType,
                     values: Object.keys(SurfaceMapType),
                     onChangeCallback: (newValue: string) =>
@@ -320,12 +322,14 @@ const FunctionalDistanceExplorer = () => {
                 label: "Subject",
                 inputs: [
                   {
+                    inputType: InputType.SELECT_STRING,
                     value: subject.label,
                     values: subjectLabels,
                     onChangeCallback: (newValue: string) =>
                       setSubject({ payload: subjectLabels.indexOf(newValue) }),
                   },
                   {
+                    inputType: InputType.BUTTON,
                     value: meanSurfaceMap,
                     onChangeCallback: () => setMeanSurfaceMap(!meanSurfaceMap),
                     iconActive: "group-objects",
@@ -338,6 +342,7 @@ const FunctionalDistanceExplorer = () => {
                 label: "Voxel",
                 inputs: [
                   {
+                    inputType: InputType.LABEL,
                     value: voxelIndex ? voxelIndex.toString() : undefined,
                   },
                 ],

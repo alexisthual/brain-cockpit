@@ -8,7 +8,7 @@ import React, {
 } from "react";
 
 import { eel } from "App";
-import InfoPanel from "components/infoPanel";
+import InfoPanel, { InputType } from "components/infoPanel";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
 import {
@@ -281,6 +281,7 @@ const ScenePane = ({
               label: "Mesh Type",
               inputs: [
                 {
+                  inputType: InputType.SELECT_STRING,
                   value: sharedState ? sharedMeshType : meshType,
                   values: Object.keys(MeshType),
                   onChangeCallback: (newValue: string) =>
@@ -292,6 +293,7 @@ const ScenePane = ({
               label: "Hemi",
               inputs: [
                 {
+                  inputType: InputType.SELECT_STRING,
                   value: sharedState ? sharedHemi : hemi,
                   values: Object.keys(HemisphereSide),
                   onChangeCallback: (newValue: string) =>
@@ -305,12 +307,14 @@ const ScenePane = ({
               label: "Subject",
               inputs: [
                 {
+                  inputType: InputType.SELECT_STRING,
                   value: subject.label,
                   values: subjectLabels,
                   onChangeCallback: (newValue: string) =>
                     setSubject({ payload: subjectLabels.indexOf(newValue) }),
                 },
                 {
+                  inputType: InputType.BUTTON,
                   value: meanSurfaceMap,
                   onChangeCallback: () => setMeanSurfaceMap(!meanSurfaceMap),
                   iconActive: "group-objects",
@@ -323,6 +327,7 @@ const ScenePane = ({
               label: "Contrast",
               inputs: [
                 {
+                  inputType: InputType.SELECT_STRING,
                   value:
                     contrast.label !== undefined
                       ? contrast.label.contrast
@@ -343,6 +348,7 @@ const ScenePane = ({
               label: "Voxel",
               inputs: [
                 {
+                  inputType: InputType.LABEL,
                   value: voxelIndex ? voxelIndex.toString() : undefined,
                 },
               ],

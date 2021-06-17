@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useReducer, useState } from "react";
 import { eel } from "App";
 import Colorbar from "components/colorbar";
 import ContrastFingerprint from "components/contrastFingerprint";
-import InfoPanel from "components/infoPanel";
+import InfoPanel, { InputType } from "components/infoPanel";
 import PanelButtons from "components/infoPanel/buttons";
 import PanesButtons from "./panesButtons";
 import ScenePane from "./scenePane";
@@ -394,6 +394,7 @@ const SurfaceExplorer = () => {
                 label: "Mesh Type",
                 inputs: [
                   {
+                    inputType: InputType.SELECT_STRING,
                     value: meshType,
                     values: Object.keys(MeshType),
                     onChangeCallback: (newValue: string) =>
@@ -405,6 +406,7 @@ const SurfaceExplorer = () => {
                 label: "Hemi",
                 inputs: [
                   {
+                    inputType: InputType.SELECT_STRING,
                     value: hemi,
                     values: Object.keys(HemisphereSide),
                     onChangeCallback: (newValue: string) =>
@@ -418,12 +420,14 @@ const SurfaceExplorer = () => {
                 label: "Subject",
                 inputs: [
                   {
+                    inputType: InputType.SELECT_STRING,
                     value: subject.label,
                     values: subjectLabels,
                     onChangeCallback: (newValue: string) =>
                       setSubject({ payload: subjectLabels.indexOf(newValue) }),
                   },
                   {
+                    inputType: InputType.BUTTON,
                     value: meanContrastMap,
                     onChangeCallback: () =>
                       setMeanContrastMap(!meanContrastMap),
@@ -437,18 +441,15 @@ const SurfaceExplorer = () => {
                 label: "Contrast",
                 inputs: [
                   {
+                    inputType: InputType.SELECT_CONTRAST,
                     value:
                       contrast.label !== undefined
                         ? contrast.label.contrast
                         : undefined,
-                    values: contrastLabels.map(
-                      (label: ContrastLabel) => label.contrast
-                    ),
-                    onChangeCallback: (newValue: string) =>
+                    values: contrastLabels,
+                    onChangeCallback: (newValue: ContrastLabel) =>
                       setContrast({
-                        payload: contrastLabels
-                          .map((label: ContrastLabel) => label.contrast)
-                          .indexOf(newValue),
+                        payload: contrastLabels.indexOf(newValue),
                       }),
                   },
                 ],
@@ -457,6 +458,7 @@ const SurfaceExplorer = () => {
                 label: "Voxel",
                 inputs: [
                   {
+                    inputType: InputType.LABEL,
                     value: voxelIndex ? voxelIndex.toString() : undefined,
                   },
                 ],

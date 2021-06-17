@@ -3,7 +3,7 @@ import ParentSize from "@visx/responsive/lib/components/ParentSize";
 
 import Colorbar from "components/colorbar";
 import ContrastFingerprint from "components/contrastFingerprint";
-import InfoPanel from "components/infoPanel";
+import InfoPanel, { InputType } from "components/infoPanel";
 import PanelButtons from "components/infoPanel/buttons";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
@@ -206,6 +206,7 @@ const RegressionExplorer = () => {
             label: "Model",
             inputs: [
               {
+                inputType: InputType.SELECT_STRING,
                 value: model,
                 values: models,
                 onChangeCallback: (newValue: string) => setModel(newValue),
@@ -216,6 +217,7 @@ const RegressionExplorer = () => {
             label: "Subject",
             inputs: [
               {
+                inputType: InputType.SELECT_STRING,
                 value: subject.label,
                 values: subjectLabels,
                 onChangeCallback: (newValue: string) =>
@@ -227,6 +229,7 @@ const RegressionExplorer = () => {
             label: "Voxel",
             inputs: [
               {
+                inputType: InputType.LABEL,
                 value: voxelIndex ? voxelIndex.toString() : undefined,
               },
             ],

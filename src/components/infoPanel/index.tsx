@@ -1,14 +1,26 @@
-import { Button, ButtonGroup } from "@blueprintjs/core";
+import { Button, ButtonGroup, Colors, Icon, MenuItem } from "@blueprintjs/core";
 import { IconName } from "@blueprintjs/icons";
 import { Select } from "@blueprintjs/select";
 import React from "react";
 
-import { stringRenderer } from "constants/index";
+import {
+  ContrastLabel,
+  contrastLabelToId,
+  stringRenderer,
+} from "constants/index";
 import "./style.scss";
 
+export enum InputType {
+  BUTTON = "button",
+  LABEL = "label",
+  SELECT_STRING = "select_string",
+  SELECT_CONTRAST = "select_contrast",
+}
+
 interface InfoPanelInput {
-  value?: string | boolean;
-  values?: string[];
+  inputType: InputType;
+  value?: string | ContrastLabel | boolean;
+  values?: any[];
   onChangeCallback?: any;
   iconActive?: IconName;
   iconInactive?: IconName;
@@ -24,6 +36,33 @@ interface IProps {
   rows: InfoPanelRow[];
 }
 
+const contrastLabelToSpan = (label: ContrastLabel) => {
+  return (
+    <span>
+      <span className={"menu-item-category"}>{label.task}</span>
+      <Icon icon="chevron-right" color={Colors.GRAY5} />
+      <span>{label.contrast}</span>
+    </span>
+  );
+};
+
+const contrastLabelRenderer = (
+  label: ContrastLabel,
+  { handleClick, modifiers, query }: any
+) => {
+  if (!modifiers.matchesPredicate) {
+    return null;
+  }
+
+  return (
+    <MenuItem
+      key={`menu-item-${contrastLabelToId(label)}`}
+      onClick={handleClick}
+      text={contrastLabelToSpan(label)}
+    />
+  );
+};
+
 const InfoPanel = ({ rows }: IProps) => {
   return (
     <div className="info-panel">
@@ -32,46 +71,84 @@ const InfoPanel = ({ rows }: IProps) => {
           <div className="header-item-label">{row.label}</div>
           <div className="header-item-value">
             <ButtonGroup>
-              {row.inputs.map((input: InfoPanelInput, inputIndex: number) => (
-                <div key={`info-panel-item-${inputIndex}`}>
-                  {input.values ? (
-                    <Select<string>
-                      key={`input-${inputIndex}`}
-                      filterable={false}
-                      items={input.values}
-                      itemRenderer={stringRenderer}
-                      onItemSelect={(newItem: string) => {
-                        if (input.onChangeCallback) {
-                          input.onChangeCallback(newItem);
-                        }
-                      }}
-                    >
+              {row.inputs.map((input: InfoPanelInput, inputIndex: number) => {
+                let element;
+                switch (input.inputType) {
+                  case InputType.BUTTON:
+                    element = (
                       <Button
-                        rightIcon="double-caret-vertical"
-                        text={input.value}
-                      />
-                    </Select>
-                  ) : input.onChangeCallback ? (
-                    <Button
-                      key={`input-${inputIndex}`}
-                      active={input.value as boolean | undefined}
-                      icon={
-                        input.value
-                          ? input.iconActive
-                          : input.iconInactive ?? input.iconActive
-                      }
-                      onClick={() => {
-                        if (input.onChangeCallback) {
-                          input.onChangeCallback();
+                        key={`input-${inputIndex}`}
+                        active={input.value as boolean | undefined}
+                        icon={
+                          input.value
+                            ? input.iconActive
+                            : input.iconInactive ?? input.iconActive
                         }
-                      }}
-                      title={input.title}
-                    />
-                  ) : (
-                    <span key={`input-${inputIndex}`}>{input.value}</span>
-                  )}
-                </div>
-              ))}
+                        onClick={() => {
+                          if (input.onChangeCallback) {
+                            input.onChangeCallback();
+                          }
+                        }}
+                        title={input.title}
+                      />
+                    );
+                    break;
+                  case InputType.SELECT_STRING:
+                    element = (
+                      <Select<string>
+                        key={`input-${inputIndex}`}
+                        filterable={false}
+                        items={input.values ?? []}
+                        itemRenderer={stringRenderer}
+                        onItemSelect={(newItem: string) => {
+                          if (input.onChangeCallback) {
+                            input.onChangeCallback(newItem);
+                          }
+                        }}
+                      >
+                        <Button
+                          rightIcon="double-caret-vertical"
+                          text={input.value}
+                        />
+                      </Select>
+                    );
+                    break;
+                  case InputType.SELECT_CONTRAST:
+                    element = (
+                      <Select<ContrastLabel>
+                        key={`input-${inputIndex}`}
+                        filterable={false}
+                        items={input.values ?? []}
+                        itemRenderer={contrastLabelRenderer}
+                        onItemSelect={(newItem: ContrastLabel) => {
+                          if (input.onChangeCallback) {
+                            input.onChangeCallback(newItem);
+                          }
+                        }}
+                      >
+                        <Button
+                          rightIcon="double-caret-vertical"
+                          text={input.value}
+                        />
+                      </Select>
+                    );
+                    break;
+                  case InputType.LABEL:
+                    element = (
+                      <span key={`input-${inputIndex}`}>{input.value}</span>
+                    );
+                    break;
+                  default:
+                    element = (
+                      <span key={`input-${inputIndex}`}>{input.value}</span>
+                    );
+                    break;
+                }
+
+                return (
+                  <div key={`info-panel-item-${inputIndex}`}>{element}</div>
+                );
+              })}
             </ButtonGroup>
           </div>
         </div>

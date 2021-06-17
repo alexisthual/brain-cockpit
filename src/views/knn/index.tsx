@@ -3,7 +3,7 @@ import ParentSize from "@visx/responsive/lib/components/ParentSize";
 
 import Colorbar from "components/colorbar";
 import ContrastFingerprint from "components/contrastFingerprint";
-import InfoPanel from "components/infoPanel";
+import InfoPanel, { InputType } from "components/infoPanel";
 import PanelButtons from "components/infoPanel/buttons";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
@@ -205,12 +205,14 @@ const KnnExplorer = () => {
             label: "Subject",
             inputs: [
               {
+                inputType: InputType.SELECT_STRING,
                 value: subject.label,
                 values: subjectLabels,
                 onChangeCallback: (newValue: string) =>
                   setSubject({ payload: subjectLabels.indexOf(newValue) }),
               },
               {
+                inputType: InputType.BUTTON,
                 value: meanAcrossSubjects,
                 onChangeCallback: () =>
                   setMeanAcrossSubjects(!meanAcrossSubjects),
@@ -224,6 +226,7 @@ const KnnExplorer = () => {
             label: "Voxel",
             inputs: [
               {
+                inputType: InputType.LABEL,
                 value: voxelIndex ? voxelIndex.toString() : undefined,
               },
             ],
