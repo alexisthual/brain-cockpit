@@ -75,8 +75,13 @@ export enum Orientation {
 
 export interface Contrast {
   index: number;
-  label: string;
+  label: ContrastLabel;
 }
+
+export type ContrastLabel = {
+  task: string;
+  contrast: string;
+};
 
 export interface Subject {
   index: number;
@@ -121,7 +126,7 @@ export function stringRenderer(
     return null;
   }
 
-  return <MenuItem key={`menuitem-${str}`} onClick={handleClick} text={str} />;
+  return <MenuItem key={`menu-item-${str}`} onClick={handleClick} text={str} />;
 }
 
 export type ActionLabel = {

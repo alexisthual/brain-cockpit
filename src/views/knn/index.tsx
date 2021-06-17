@@ -7,15 +7,19 @@ import InfoPanel from "components/infoPanel";
 import PanelButtons from "components/infoPanel/buttons";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
-import { ActionLabel, colormaps, Orientation, Subject } from "constants/index";
+import {
+  ActionLabel,
+  colormaps,
+  ContrastLabel,
+  Orientation,
+  Subject,
+} from "constants/index";
 import { eel } from "App";
 
 const KnnExplorer = () => {
   const [subjectLabels, setSubjectLabels] = useState<string[]>([]);
   const [meanAcrossSubjects, setMeanAcrossSubjects] = useState(false);
-  const [contrastLabels, setContrastLabels] = useState<string[]>([]);
-  const [taskLabels, setTaskLabels] = useState<string[]>([]);
-  const [taskCounts, setTaskCounts] = useState<number[]>([]);
+  const [contrastLabels, setContrastLabels] = useState<ContrastLabel[]>([]);
   const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
   const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
   const [loadingFingerprint, setLoadingFingerprint] = useState(false);
@@ -54,16 +58,13 @@ const KnnExplorer = () => {
   useEffect(() => {
     const fetchAllData = async () => {
       // Load static data
-      const contrastLabels = eel.get_contrast_labels()();
-      const tasks = eel.get_tasks()();
       const subjectLabels = eel.get_subjects()();
+      const contrastLabels = eel.get_contrast_labels()();
 
       // Wait for all data to be loaded before setting app state
-      Promise.all([contrastLabels, tasks, subjectLabels]).then((values) => {
-        setContrastLabels(values[0]);
-        setTaskLabels(values[1].map((x: any) => x[0]));
-        setTaskCounts(values[1].map((x: any) => x[1]));
-        setSubjectLabels(values[2]);
+      Promise.all([subjectLabels, contrastLabels]).then((values) => {
+        setSubjectLabels(values[0]);
+        setContrastLabels(values[1]);
       });
     };
 
@@ -313,8 +314,6 @@ const KnnExplorer = () => {
                     : Orientation.VERTICAL
                 }
                 contrastLabels={contrastLabels}
-                taskLabels={taskLabels}
-                taskCounts={taskCounts}
                 fingerprint={contrastFingerprint}
                 width={fingerprintWidth}
                 height={fingerprintHeight}

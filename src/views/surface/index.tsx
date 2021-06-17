@@ -15,6 +15,7 @@ import {
   ActionPane,
   colormaps,
   Contrast,
+  ContrastLabel,
   HemisphereSide,
   MeshType,
   Orientation,
@@ -23,9 +24,7 @@ import {
 
 const SurfaceExplorer = () => {
   const [subjectLabels, setSubjectLabels] = useState<string[]>([]);
-  const [contrastLabels, setContrastLabels] = useState<string[]>([]);
-  const [taskLabels, setTaskLabels] = useState<string[]>([]);
-  const [taskCounts, setTaskCounts] = useState<number[]>([]);
+  const [contrastLabels, setContrastLabels] = useState<ContrastLabel[]>([]);
   const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
   const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
   const [loadingFingerprint, setLoadingFingerprint] = useState(false);
@@ -130,14 +129,16 @@ const SurfaceExplorer = () => {
       // Load static data
       const subjectLabels = eel.get_subjects()();
       const contrastLabels = eel.get_contrast_labels()();
-      const tasks = eel.get_tasks()();
 
       // Wait for all data to be loaded before setting app state
-      Promise.all([subjectLabels, contrastLabels, tasks]).then((values) => {
+      Promise.all([subjectLabels, contrastLabels]).then((values) => {
         setSubjectLabels(values[0]);
-        setContrastLabels(values[1]);
-        setTaskLabels(values[2].map((x: any) => x[0]));
-        setTaskCounts(values[2].map((x: any) => x[1]));
+        setContrastLabels(
+          values[1].map((label: any) => ({
+            task: label[0],
+            contrast: label[1],
+          }))
+        );
         if (values[0].length > 0) {
           setSubject({ payload: 0 });
         }
@@ -347,8 +348,8 @@ const SurfaceExplorer = () => {
         eel.get_voxel_fingerprint(
           subject.index,
           voxelIndex
-        )((contrastFingerprint: number[]) => {
-          setContrastFingerprint(contrastFingerprint);
+        )((contrastFingerprint: string) => {
+          setContrastFingerprint(JSON.parse(contrastFingerprint));
           setLoadingFingerprint(false);
         });
       } else {
@@ -436,11 +437,18 @@ const SurfaceExplorer = () => {
                 label: "Contrast",
                 inputs: [
                   {
-                    value: contrast.label,
-                    values: contrastLabels,
+                    value:
+                      contrast.label !== undefined
+                        ? contrast.label.contrast
+                        : undefined,
+                    values: contrastLabels.map(
+                      (label: ContrastLabel) => label.contrast
+                    ),
                     onChangeCallback: (newValue: string) =>
                       setContrast({
-                        payload: contrastLabels.indexOf(newValue),
+                        payload: contrastLabels
+                          .map((label: ContrastLabel) => label.contrast)
+                          .indexOf(newValue),
                       }),
                   },
                 ],
@@ -537,8 +545,6 @@ const SurfaceExplorer = () => {
                     : Orientation.VERTICAL
                 }
                 contrastLabels={contrastLabels}
-                taskLabels={taskLabels}
-                taskCounts={taskCounts}
                 fingerprint={contrastFingerprint}
                 width={fingerprintWidth}
                 height={fingerprintHeight}

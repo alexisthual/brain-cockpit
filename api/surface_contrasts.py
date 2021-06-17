@@ -2,11 +2,13 @@ from datetime import datetime
 from distutils.util import strtobool
 import dotenv
 import eel
+import json
 import nibabel as nib
 import numpy as np
 import os
 import pandas as pd
 from tqdm import tqdm
+import simplejson
 
 import custom_utils.setup as setup
 
@@ -18,6 +20,8 @@ REACT_APP_CONDITIONS_VIEW = bool(
     strtobool(os.getenv("REACT_APP_CONDITIONS_VIEW"))
 )
 AVAILABLE_GIFTI_FILES_DB = os.getenv("AVAILABLE_GIFTI_FILES_DB")
+
+n_voxels_hemi = 10242
 
 # IBC contrasts exploration
 
@@ -41,41 +45,35 @@ def parse_conditions_db(df):
     Outputs
     -------
     subjects: list of strings
-    contrasts: list of string
-    tasks: list of string
+    contrasts: list of (task, contrast) tuples
     """
-    # Select subjects with enough contrasts
-    grouped_by_subject = df.groupby(["subject"])["contrast"].nunique()
-    selected_subjects = grouped_by_subject[
-        grouped_by_subject > 100
-    ].index.values
-
-    # Select contrasts available for all selected subjects
-    grouped_by_contrast = df.groupby(["contrast", "task"])["subject"].unique()
-    grouped_by_contrast = grouped_by_contrast.sort_index(
-        level=["task", "contrast"]
+    # Select subjects
+    selected_subjects = np.array(
+        [
+            "sub-01",
+            "sub-04",
+            "sub-05",
+            "sub-06",
+            "sub-07",
+            "sub-09",
+            "sub-11",
+            "sub-12",
+            "sub-13",
+            "sub-14",
+            "sub-15",
+        ]
     )
-    grouped_by_contrast = grouped_by_contrast.reset_index()
-    mask = [
-        np.array_equal(
-            np.intersect1d(subjects, selected_subjects), selected_subjects
-        )
-        for subjects in grouped_by_contrast.subject
-    ]
-    selected_contrasts = grouped_by_contrast[mask]
-    selected_contrasts = selected_contrasts.reset_index()
 
-    selected_tasks = (
-        selected_contrasts.groupby(["task"])["contrast"]
+    # Select contrasts which are available for any of the selected subjects
+    selected_contrasts = (
+        df[df["subject"].isin(selected_subjects)]
+        .groupby(["task", "contrast"])["subject"]
         .nunique()
         .reset_index()
-    )
+        .sort_values(["task", "contrast"])[["task", "contrast"]]
+    ).values
 
-    return (
-        selected_subjects,
-        selected_contrasts.contrast.values,
-        selected_tasks.values,
-    )
+    return (selected_subjects, selected_contrasts)
 
 
 # Load FMRI data
@@ -88,7 +86,7 @@ def load_subject_fmri(df, subject, unique_contrasts):
         Database descriptor
     subject: string,
              subject identifier
-    unique_contrasts: list of strings,
+    unique_contrasts: list of (task, contrast) tuples,
                       Contrasts wanted
 
     Outputs:
@@ -102,44 +100,62 @@ def load_subject_fmri(df, subject, unique_contrasts):
     paths_rh = []
 
     # Iterate through every selected contrast
-    for contrast in unique_contrasts:
-        # Select lines with matching contrast and subject
-        mask = (df.contrast == contrast).values * (
-            df.subject == subject
-        ).values
-
-        # Among selected lines, add "path" of last row to list.
-        # Indeed, it might be that a given tuple
-        # (subject, task, contrast) corresponds to several rows
-        # because the same contrast might have been acquired
-        # multiple times.
-        # We deal with this by sorting selected rows by "session"
-        # and choosing the last row is equivalent to choosing
-        # the latest acquired contrast.
-        paths_lh.append(
-            df.loc[mask]
-            .loc[df.side == "lh"]
-            .sort_values(by=["session"])
-            .path.values[-1]
-        )
-        paths_rh.append(
-            df.loc[mask]
-            .loc[df.side == "rh"]
-            .sort_values(by=["session"])
-            .path.values[-1]
+    for task, contrast in unique_contrasts:
+        # Select db rows with matching subject and contrast
+        mask = (
+            (df.subject == subject).values
+            * (df.contrast == contrast).values
+            * (df.task == task).values
         )
 
-    # Load all images
-    Xr = np.array(
-        [nib.load(texture).darrays[0].data for texture in list(paths_rh)]
-    )
+        # It can be that there is no matching row
+        # because this contrast was not acquired for this subject
+        if len(df.loc[mask]) == 0:
+            paths_lh.append(None)
+            paths_rh.append(None)
+        # but otherwise, one adds the path to the matching contrast
+        # to our path lists
+        else:
+            # Among selected rows, add "path" of last row to path lists.
+            # Indeed, it might be that a given tuple
+            # (subject, task, contrast) corresponds to several rows
+            # because the same contrast might have been acquired
+            # multiple times.
+            # We deal with this by sorting selected rows by "session"
+            # and choosing the last row is equivalent to choosing
+            # the latest acquired contrast.
+            paths_lh.append(
+                df.loc[mask]
+                .loc[df.side == "lh"]
+                .sort_values(by=["session"])
+                .path.values[-1]
+            )
+            paths_rh.append(
+                df.loc[mask]
+                .loc[df.side == "rh"]
+                .sort_values(by=["session"])
+                .path.values[-1]
+            )
+
+    # Load all images available;
+    # for values of path that are None, simply return
+    # a numpy array of the size of the mesh filled with NaNs
     Xl = np.array(
-        [nib.load(texture).darrays[0].data for texture in list(paths_lh)]
+        [
+            nib.load(path_lh).darrays[0].data
+            if path_lh is not None
+            else np.full(n_voxels_hemi, np.nan)
+            for path_lh in list(paths_lh)
+        ]
     )
-
-    # impute Nans by 0
-    Xl[np.isnan(Xl)] = 0
-    Xr[np.isnan(Xr)] = 0
+    Xr = np.array(
+        [
+            nib.load(path_rh).darrays[0].data
+            if path_rh is not None
+            else np.full(n_voxels_hemi, np.nan)
+            for path_rh in list(paths_rh)
+        ]
+    )
 
     return Xl, Xr
 
@@ -148,7 +164,8 @@ def load_fmri(df, subjects, unique_contrasts):
     """
     Load data for a given list of subjects and contrasts.
 
-    Outputs:
+    Outputs
+    -------
     X: array of size (2*n_voxels_hemi * n_subjects, n_contrasts)
     """
 
@@ -163,7 +180,7 @@ def load_fmri(df, subjects, unique_contrasts):
 
 ## Init variables and load data if possible
 df = pd.DataFrame()
-subjects, contrasts, n_contrasts_by_task = [], [], []
+subjects, contrasts = [], []
 n_subjects, n_contrasts = 0, 0
 X = np.empty((0, 0))
 n_voxels = 0
@@ -172,13 +189,14 @@ if REACT_APP_CONDITIONS_VIEW and os.path.exists(AVAILABLE_GIFTI_FILES_DB):
     ## Load selected subjects and contrasts
     df = pd.read_csv(AVAILABLE_GIFTI_FILES_DB)
 
-    subjects, contrasts, n_contrasts_by_task = parse_conditions_db(df)
+    subjects, contrasts = parse_conditions_db(df)
     n_subjects, n_contrasts = len(subjects), len(contrasts)
 
     ## Load functional data for all subjects
-    print("Loading contrasts...")
+    print(f"Loading {n_contrasts} contrasts...", end=" ")
     X = load_fmri(df, subjects, contrasts)
     n_voxels = X.shape[0] // n_subjects
+    print(f"OK")
 
 # Expose functions for exploring contrasts
 @eel.expose
@@ -196,26 +214,22 @@ def get_contrast_labels():
 
 
 @eel.expose
-def get_tasks():
-    if DEBUG:
-        print(f"[{datetime.now()}] get_tasks")
-    return n_contrasts_by_task.tolist()
-
-
-@eel.expose
 def get_voxel_fingerprint(subject_index, voxel_index):
     if DEBUG:
         print(
             f"[{datetime.now()}] get_voxel_fingerprint {voxel_index} for {subjects[subject_index]} ({subject_index})"
         )
-    return X[n_voxels * subject_index + voxel_index, :].tolist()
+
+    return simplejson.dumps(
+        X[n_voxels * subject_index + voxel_index, :].tolist(), ignore_nan=True
+    )
 
 
 @eel.expose
 def get_voxel_fingerprint_mean(voxel_index):
     if DEBUG:
         print(f"[{datetime.now()}] get_voxel_mean_fingerprint {voxel_index}")
-    mean = np.mean(
+    mean = np.nanmean(
         X[
             [
                 n_voxels * subject_index + voxel_index
@@ -263,7 +277,7 @@ def get_contrast_mean(contrast_index, hemi="both"):
     mean = []
 
     if hemi == "left":
-        mean = np.mean(
+        mean = np.nanmean(
             np.vstack(
                 [
                     X[
@@ -277,7 +291,7 @@ def get_contrast_mean(contrast_index, hemi="both"):
             axis=0,
         )
     elif hemi == "right":
-        mean = np.mean(
+        mean = np.nanmean(
             np.vstack(
                 [
                     X[
@@ -292,7 +306,7 @@ def get_contrast_mean(contrast_index, hemi="both"):
             axis=0,
         )
     elif hemi == "both":
-        mean = np.mean(
+        mean = np.nanmean(
             np.vstack(
                 [
                     X[

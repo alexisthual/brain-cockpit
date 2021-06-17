@@ -27,7 +27,7 @@ GRADIENTS_DATA_PATH = os.getenv("GRADIENTS_DATA_PATH")
 
 
 ## Util functions
-def load_gradients(df, subjects, unique_contrasts):
+def load_gradients(df, subjects):
     gradient_norms_per_subject = list()
     gradients_averaged_per_subject = list()
 
@@ -58,7 +58,7 @@ def load_gradients(df, subjects, unique_contrasts):
 # Load gradients
 ## Init variables and load data if possible
 df = pd.DataFrame()
-subjects, contrasts, n_contrasts_by_task = [], [], []
+subjects, contrasts = [], []
 n_subjects, n_contrasts = 0, 0
 n_voxels = 0
 
@@ -66,11 +66,11 @@ if REACT_APP_CONDITIONS_VIEW and os.path.exists(AVAILABLE_GIFTI_FILES_DB):
     ## Load selected subjects and contrasts
     df = pd.read_csv(AVAILABLE_GIFTI_FILES_DB)
 
-    subjects, contrasts, n_contrasts_by_task = parse_conditions_db(df)
+    subjects, contrasts = parse_conditions_db(df)
     n_subjects, n_contrasts = len(subjects), len(contrasts)
 
     ## Load functional data for all subjects
-    print("Loading contrast gradients...")
+    print(f"Loading {n_contrasts} contrast gradients...", end=" ")
     (
         gradient_norms_per_subject,
         gradients_averaged_per_subject,
@@ -78,8 +78,8 @@ if REACT_APP_CONDITIONS_VIEW and os.path.exists(AVAILABLE_GIFTI_FILES_DB):
         df,
         # Load gradients for all subjects only in production
         subjects if args.env == "production" else ["sub-01"],
-        contrasts,
     )
+    print("OK")
 
 
 @eel.expose

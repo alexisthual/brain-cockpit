@@ -3,17 +3,16 @@ import { Group } from "@visx/group";
 import { scaleBand, scaleLinear } from "@visx/scale";
 import { Bar } from "@visx/shape";
 import { Text } from "@visx/text";
+import _ from "lodash";
 import React, { useState } from "react";
 
-import { Contrast, Orientation } from "constants/index";
+import { Contrast, ContrastLabel, Orientation } from "constants/index";
 import OverlayLoader from "components/overlayLoader";
 import "./style.scss";
 
 interface Props {
   loading?: boolean;
-  contrastLabels: string[];
-  taskLabels?: string[];
-  taskCounts?: number[];
+  contrastLabels: ContrastLabel[];
   fingerprint: number[];
   width: number;
   height: number;
@@ -29,8 +28,6 @@ interface Props {
 const ContrastFingerprint = ({
   loading,
   contrastLabels,
-  taskLabels = [],
-  taskCounts = [],
   fingerprint,
   width,
   height,
@@ -69,13 +66,23 @@ const ContrastFingerprint = ({
     round: true,
   });
 
+  // Util function to convert ContrastLabel to id
+  // by concatenating its attributes into a single string
+  const labelToId = (label: ContrastLabel) => `${label.task}-${label.contrast}`;
   const labelScale = scaleBand<string>({
-    domain: contrastLabels,
+    domain: contrastLabels.map(labelToId),
     range: [0, orientation === Orientation.VERTICAL ? yMax : xMax],
     round: true,
   });
   labelScale.paddingInner(0.4);
   labelScale.paddingOuter(0);
+
+  // Compute task counts
+  const taskCounts = _.map(
+    _.values(_.groupBy(contrastLabels, "task")),
+    (contrasts: ContrastLabel[]) => contrasts.length
+  );
+  const taskLabels = _.keys(_.groupBy(contrastLabels, "task"));
 
   // Compute culumated sum for tasks
   const taskCumulatedSum: number[] = [];
@@ -180,12 +187,12 @@ const ContrastFingerprint = ({
                       className="task-line"
                       x1={valueScale(10) + labelMargin / 2}
                       y1={
-                        (labelScale(contrastLabels[0]) ?? 0) +
+                        (labelScale(labelToId(contrastLabels[0])) ?? 0) +
                         labelScale.step() * (taskCumulatedSum[index] + 0.2)
                       }
                       x2={valueScale(10) + labelMargin / 2}
                       y2={
-                        (labelScale(contrastLabels[0]) ?? 0) +
+                        (labelScale(labelToId(contrastLabels[0])) ?? 0) +
                         labelScale.step() *
                           (taskCumulatedSum[index] + count - 0.4)
                       }
@@ -197,7 +204,7 @@ const ContrastFingerprint = ({
                       verticalAnchor="middle"
                       x={valueScale(10) + labelMargin}
                       y={
-                        (labelScale(contrastLabels[0]) ?? 0) +
+                        (labelScale(labelToId(contrastLabels[0])) ?? 0) +
                         labelScale.step() *
                           (taskCumulatedSum[index] + count / 2)
                       }
@@ -217,12 +224,12 @@ const ContrastFingerprint = ({
                       key={`task-line-${taskLabels[index]}`}
                       className="task-line"
                       x1={
-                        (labelScale(contrastLabels[0]) ?? 0) +
+                        (labelScale(labelToId(contrastLabels[0])) ?? 0) +
                         labelScale.step() * (taskCumulatedSum[index] + 0.2)
                       }
                       y1={-6}
                       x2={
-                        (labelScale(contrastLabels[0]) ?? 0) +
+                        (labelScale(labelToId(contrastLabels[0])) ?? 0) +
                         labelScale.step() *
                           (taskCumulatedSum[index] + count - 0.4)
                       }
@@ -235,7 +242,7 @@ const ContrastFingerprint = ({
                       textAnchor="start"
                       verticalAnchor="middle"
                       x={
-                        (labelScale(contrastLabels[0]) ?? 0) +
+                        (labelScale(labelToId(contrastLabels[0])) ?? 0) +
                         labelScale.step() *
                           (taskCumulatedSum[index] + count / 2)
                       }
@@ -262,13 +269,13 @@ const ContrastFingerprint = ({
               switch (orientation) {
                 case Orientation.VERTICAL:
                   barHeight = labelScale.bandwidth();
-                  barY = labelScale(label);
+                  barY = labelScale(labelToId(label));
                   barWidth = delta > 0 ? delta : -delta;
                   barX = delta > 0 ? valueScale(0) : valueScale(value);
                   break;
                 case Orientation.HORIZONTAL:
                   barWidth = labelScale.bandwidth();
-                  barX = labelScale(label);
+                  barX = labelScale(labelToId(label));
                   barHeight = delta > 0 ? delta : -delta;
                   barY = delta > 0 ? valueScale(value) : valueScale(0);
                   break;
@@ -345,15 +352,17 @@ const ContrastFingerprint = ({
                     x={
                       orientation === Orientation.VERTICAL
                         ? -labelMargin
-                        : (labelScale(label) ?? 0) + labelScale.step() / 2
+                        : (labelScale(labelToId(label)) ?? 0) +
+                          labelScale.step() / 2
                     }
                     y={
                       orientation === Orientation.VERTICAL
-                        ? (labelScale(label) ?? 0) + labelScale.step() / 2
+                        ? (labelScale(labelToId(label)) ?? 0) +
+                          labelScale.step() / 2
                         : valueScale(-10) + labelMargin
                     }
                   >
-                    {label}
+                    {label.contrast}
                   </Text>
                 </Group>
               );

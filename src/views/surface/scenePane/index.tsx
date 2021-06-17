@@ -13,8 +13,9 @@ import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
 import {
   ActionLabel,
-  Contrast,
   colormaps,
+  Contrast,
+  ContrastLabel,
   HemisphereSide,
   MeshType,
   Subject,
@@ -25,7 +26,7 @@ interface Props {
   closeCallback: () => void;
   colormapName?: string;
   subjectLabels: string[];
-  contrastLabels: string[];
+  contrastLabels: ContrastLabel[];
   sharedState: boolean;
   sharedSubject?: Subject;
   sharedContrast?: Contrast;
@@ -322,10 +323,19 @@ const ScenePane = ({
               label: "Contrast",
               inputs: [
                 {
-                  value: contrast.label,
-                  values: contrastLabels,
+                  value:
+                    contrast.label !== undefined
+                      ? contrast.label.contrast
+                      : undefined,
+                  values: contrastLabels.map(
+                    (label: ContrastLabel) => label.contrast
+                  ),
                   onChangeCallback: (newValue: string) =>
-                    setContrast({ payload: contrastLabels.indexOf(newValue) }),
+                    setContrast({
+                      payload: contrastLabels
+                        .map((label: ContrastLabel) => label.contrast)
+                        .indexOf(newValue),
+                    }),
                 },
               ],
             },
