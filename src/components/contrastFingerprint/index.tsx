@@ -174,7 +174,7 @@ const ContrastFingerprint = ({
             <>
               {taskCounts.map((count: number, index: number) => {
                 return (
-                  <Group key={`task-info-${taskLabels[index]}`}>
+                  <Group key={`task-info-${taskLabels[index]}-${index}`}>
                     <line
                       key={`task-line-${taskLabels[index]}`}
                       className="task-line"
@@ -212,7 +212,7 @@ const ContrastFingerprint = ({
             <>
               {taskCounts.map((count: number, index: number) => {
                 return (
-                  <Group key={`task-info-${taskLabels[index]}`}>
+                  <Group key={`task-info-${taskLabels[index]}-${index}`}>
                     <line
                       key={`task-line-${taskLabels[index]}`}
                       className="task-line"
@@ -281,7 +281,7 @@ const ContrastFingerprint = ({
                         className={`background-bar ${
                           parity ? "dark" : "light"
                         }`}
-                        key={`background-bar-${label}`}
+                        key={`background-bar-${label}-${index}`}
                         x={valueScale(-10)}
                         width={valueScale(10)}
                         y={
@@ -297,7 +297,7 @@ const ContrastFingerprint = ({
                         className={`background-bar ${
                           parity ? "dark" : "light"
                         }`}
-                        key={`background-bar-${label}`}
+                        key={`background-bar-${label}-${index}`}
                         x={
                           (barX ?? 0) -
                           (labelScale.step() * labelScale.padding()) / 2
@@ -312,7 +312,7 @@ const ContrastFingerprint = ({
 
               return (
                 <Group
-                  key={`contarst-bar-${label}`}
+                  key={`contrast-bar-${label}-${index}`}
                   className={`contrast-bar ${
                     selectedContrast
                       ? index === selectedContrast.index

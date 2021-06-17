@@ -33,7 +33,7 @@ const InfoPanel = ({ rows }: IProps) => {
           <div className="header-item-value">
             <ButtonGroup>
               {row.inputs.map((input: InfoPanelInput, inputIndex: number) => (
-                <>
+                <div key={`info-panel-item-${inputIndex}`}>
                   {input.values ? (
                     <Select<string>
                       key={`input-${inputIndex}`}
@@ -70,7 +70,7 @@ const InfoPanel = ({ rows }: IProps) => {
                   ) : (
                     <span key={`input-${inputIndex}`}>{input.value}</span>
                   )}
-                </>
+                </div>
               ))}
             </ButtonGroup>
           </div>
