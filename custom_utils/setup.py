@@ -4,9 +4,7 @@ import os
 
 
 def load_arguments():
-    parser = argparse.ArgumentParser(
-        description="Brain-cockpit backend (eel server)"
-    )
+    parser = argparse.ArgumentParser(description="Brain-cockpit backend")
     parser.add_argument(
         "--env",
         default="development",

@@ -1,8 +1,9 @@
-import eel
 import os
 
 # API logic is implemented in /api
 # We here load these files as independent pieces of logic
+from api import app
+
 import api.surface_contrasts
 import api.surface_gradient
 import api.fmri_image
@@ -19,25 +20,5 @@ import custom_utils.setup as setup
 setup.load_env(verbose=True)
 REACT_APP_API_PORT = os.getenv("REACT_APP_API_PORT")
 
-
-@eel.expose
-def server_log(message):
-    print(message)
-
-
-# When all websockets are closed, the eel server shuts down.
-# One can prevent it from doing so (useful for development purposes).
-def no_stop(page, sockets):
-    pass
-
-
-print("Serving...")
-eel.init("src", [".tsx", ".ts", ".jsx", ".js", ".html"])
-eel.start(
-    {"port": 3000},
-    app=None,
-    mode=None,
-    close_callback=no_stop,
-    host="localhost",
-    port=REACT_APP_API_PORT,
-)
+if __name__ == "__main__":
+    app.run(debug=True, port=REACT_APP_API_PORT, use_reloader=True)

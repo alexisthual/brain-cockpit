@@ -1,7 +1,8 @@
+from api import app
 from datetime import datetime
 from distutils.util import strtobool
 import dotenv
-import eel
+from flask import jsonify, request
 import numpy as np
 import os
 import pandas as pd
@@ -45,33 +46,38 @@ if REACT_APP_EXPERIMENT_CORRELATION_VIEW and os.path.exists(
     mean_distance_map = np.mean(distance_maps, axis=0)
 
 
-@eel.expose
-def get_distance_map(subject_index, voxel_index):
+@app.route("/distance_map", methods=["GET"])
+def get_distance_map():
     """Exports array of shape n_voxels * n_voxels"""
+    subject_index = request.args.get("subject_index", type=int)
+    voxel_index = request.args.get("voxel_index", type=int)
 
     if DEBUG:
         print(
             f"[{datetime.now()}] get_distance_map for voxel {voxel_index} for {subjects[subject_index]}"
         )
 
-    return distance_maps[subject_index][voxel_index, :].tolist()
+    return jsonify(distance_maps[subject_index][voxel_index, :])
 
 
-@eel.expose
-def get_mean_distance_map(voxel_index):
+@app.route("/get_mean_distance_map", methods=["GET"])
+def get_mean_distance_map():
     """Exports array of shape n_voxels * n_voxels"""
+    voxel_index = request.args.get("voxel_index", type=int)
 
     if DEBUG:
         print(
             f"[{datetime.now()}] get_mean_distance_map for voxel {voxel_index}"
         )
 
-    return mean_distance_map[voxel_index, :].tolist()
+    return jsonify(mean_distance_map[voxel_index, :])
 
 
-@eel.expose
-def get_topographic_distance_to_m_functional_distance(subject_index, m):
+@app.route("/topographic_distance_to_m_functional_distance", methods=["GET"])
+def get_topographic_distance_to_m_functional_distance():
     """Exports array of shape n_voxels"""
+    subject_index = request.args.get("subject_index", type=int)
+    m = request.args.get("m", type=int)
 
     if DEBUG:
         print(
@@ -86,12 +92,15 @@ def get_topographic_distance_to_m_functional_distance(subject_index, m):
         axis=1,
     )
 
-    return surface_map.tolist()
+    return jsonify(surface_map)
 
 
-@eel.expose
-def get_mean_topographic_distance_to_m_functional_distance(m):
+@app.route(
+    "/mean_topographic_distance_to_m_functional_distance", methods=["GET"]
+)
+def get_mean_topographic_distance_to_m_functional_distance():
     """Exports array of shape n_voxels"""
+    m = request.args.get("m", type=int)
 
     if DEBUG:
         print(
@@ -110,7 +119,7 @@ def get_mean_topographic_distance_to_m_functional_distance(m):
     ]
     mean = np.mean(np.stack(surface_maps), axis=0)
 
-    return mean.tolist()
+    return jsonify(mean)
 
 
 ## Load functional distance means
@@ -136,27 +145,30 @@ if REACT_APP_EXPERIMENT_CORRELATION_VIEW and os.path.exists(
     )
 
 
-@eel.expose
-def get_mean_functional_distance(subject_index, voxel_index):
+@app.route("/mean_functional_distance", methods=["GET"])
+def get_mean_functional_distance():
     """Exports array of shape d_max"""
+    subject_index = request.args.get("subject_index", type=int)
+    voxel_index = request.args.get("voxel_index", type=int)
 
     if DEBUG:
         print(
             f"[{datetime.now()}] get_mean_functional_distance for voxel {voxel_index} for {subjects[subject_index]}"
         )
 
-    return mean_functional_distances[subject_index][voxel_index, :].tolist()
+    return jsonify(mean_functional_distances[subject_index][voxel_index, :])
 
 
-@eel.expose
-def get_mean_across_subjects_mean_functional_distance(voxel_index):
+@app.route("/mean_across_subjects_mean_functional_distance", methods=["GET"])
+def get_mean_across_subjects_mean_functional_distance():
     """Exports array of shape d_max"""
+    voxel_index = request.args.get("voxel_index", type=int)
 
     if DEBUG:
         print(
             f"[{datetime.now()}] get_mean_across_subjects_mean_functional_distance for voxel {voxel_index}"
         )
 
-    return mean_across_subjects_mean_function_distances[
-        voxel_index, :
-    ].tolist()
+    return jsonify(
+        mean_across_subjects_mean_function_distances[voxel_index, :]
+    )

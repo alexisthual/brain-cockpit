@@ -1,8 +1,9 @@
+from api import app
 from collections import defaultdict
 from datetime import datetime
 from distutils.util import strtobool
 import dotenv
-import eel
+from flask import jsonify, request
 import nibabel as nib
 from nilearn.image import load_img
 import numpy as np
@@ -66,114 +67,168 @@ if REACT_APP_SLICE_VIEW:
         )
 
 
-@eel.expose
+@app.route("/subject_list", methods=["GET"])
 def get_subject_list():
     if DEBUG:
         print(f"[{datetime.now()}] get_subject_list")
-    return subjects
+
+    return jsonify(subjects)
 
 
-@eel.expose
-def get_functional_image_names(subject):
+@app.route("/functional_image_names", methods=["GET"])
+def get_functional_image_names():
+    subject = request.args.get("subject", type=str)
+
     if DEBUG:
         print(
             f"[{datetime.now()}] get_functional_images_names for subject {subject}"
         )
-    return functional_image_names[subject]
+
+    return jsonify(functional_image_names[subject])
 
 
-@eel.expose
-def get_functional_range(subject, image):
+@app.route("/functional_range", methods=["GET"])
+def get_functional_range():
+    subject = request.args.get("subject", type=str)
+    image = request.args.get("image", type=int)
+
     if DEBUG:
         print(
             f"[{datetime.now()}] get_functional_range for subject {subject}, image {image}"
         )
     index = functional_image_names[subject].index(image)
-    return [
-        np.min(functional_images[subject][index]),
-        np.max(functional_images[subject][index]),
-    ]
+
+    return jsonify(
+        [
+            np.min(functional_images[subject][index]),
+            np.max(functional_images[subject][index]),
+        ]
+    )
 
 
-@eel.expose
-def get_functional_shape(subject, image):
+@app.route("/functional_shape", methods=["GET"])
+def get_functional_shape():
+    subject = request.args.get("subject", type=str)
+    image = request.args.get("image", type=int)
+
     if DEBUG:
         print(
             f"[{datetime.now()}] get_functional_shape for subject {subject}, image {image}"
         )
     index = functional_image_names[subject].index(image)
-    return list(functional_images[subject][index].shape)
+
+    return jsonify(list(functional_images[subject][index].shape))
 
 
-@eel.expose
-def get_voxel_timeseries(subject, image, x, y, z):
+@app.route("/voxel_timeseries", methods=["GET"])
+def get_voxel_timeseries():
+    subject = request.args.get("subject", type=str)
+    image = request.args.get("image", type=int)
+    x = request.args.get("x", type=int)
+    y = request.args.get("y", type=int)
+    z = request.args.get("z", type=int)
+
     if DEBUG:
         print(
             f"[{datetime.now()}] get_voxel_timeseries ({x}, {y}, {z}) for subject {subject}"
         )
     index = functional_image_names[subject].index(image)
-    return functional_images[subject][index][x, y, z, :].tolist()
+
+    return jsonify(functional_images[subject][index][x, y, z, :])
 
 
-@eel.expose
-def get_functional_sagital(subject, image, x, t=0):
+@app.route("/functional_sagital", methods=["GET"])
+def get_functional_sagital():
+    subject = request.args.get("subject", type=str)
+    image = request.args.get("image", type=int)
+    x = request.args.get("x", type=int)
+    t = request.args.get("t", default=0, type=int)
+
     if DEBUG:
         print(
             f"[{datetime.now()}] get_functional_sagital x={x}, t={t} for subject {subject}"
         )
     index = functional_image_names[subject].index(image)
-    return functional_images[subject][index][x, :, :, t].tolist()
+
+    return jsonify(functional_images[subject][index][x, :, :, t])
 
 
-@eel.expose
-def get_functional_coronal(subject, image, y, t=0):
+@app.route("/functional_coronal", methods=["GET"])
+def get_functional_coronal():
+    subject = request.args.get("subject", type=str)
+    image = request.args.get("image", type=int)
+    y = request.args.get("y", type=int)
+    t = request.args.get("t", default=0, type=int)
+
     if DEBUG:
         print(
             f"[{datetime.now()}] get_functional_coronal y={y}, t={t} for subject {subject}"
         )
     index = functional_image_names[subject].index(image)
-    return functional_images[subject][index][:, y, :, t].tolist()
+
+    return jsonify(functional_images[subject][index][:, y, :, t])
 
 
-@eel.expose
-def get_functional_horizontal(subject, image, z, t=0):
+@app.route("/functional_horizontal", methods=["GET"])
+def get_functional_horizontal():
+    subject = request.args.get("subject", type=str)
+    image = request.args.get("image", type=int)
+    z = request.args.get("z", type=int)
+    t = request.args.get("t", default=0, type=int)
+
     if DEBUG:
         print(
             f"[{datetime.now()}] get_functional_horizontal z={z}, t={t} for subject {subject}"
         )
     index = functional_image_names[subject].index(image)
-    return functional_images[subject][index][:, :, z, t].tolist()
+
+    return jsonify(functional_images[subject][index][:, :, z, t])
 
 
-@eel.expose
-def get_anatomical_shape(subject):
+@app.route("/anatomical_shape", methods=["GET"])
+def get_anatomical_shape():
+    subject = request.args.get("subject", type=str)
+
     if DEBUG:
         print(f"[{datetime.now()}] get_anatomical_shape for subject {subject}")
-    return list(anatomical_images[subject].shape)
+
+    return jsonify(list(anatomical_images[subject].shape))
 
 
-@eel.expose
-def get_anatomical_sagital(subject, x):
+@app.route("/anatomical_sagital", methods=["GET"])
+def get_anatomical_sagital():
+    subject = request.args.get("subject", type=str)
+    x = request.args.get("x", type=int)
+
     if DEBUG:
         print(
             f"[{datetime.now()}] get_anatomical_sagital x={x} for subject {subject}"
         )
-    return anatomical_images[subject][x, :, :].tolist()
+
+    return jsonify(anatomical_images[subject][x, :, :])
 
 
-@eel.expose
-def get_anatomical_coronal(subject, y):
+@app.route("/get_anatomical_coronal", methods=["GET"])
+def get_anatomical_coronal():
+    subject = request.args.get("subject", type=str)
+    y = request.args.get("y", type=int)
+
     if DEBUG:
         print(
             f"[{datetime.now()}] get_anatomical_coronal y={y} for subject {subject}"
         )
-        return anatomical_images[subject][:, y, :].tolist()
+
+    return jsonify(anatomical_images[subject][:, y, :])
 
 
-@eel.expose
-def get_anatomical_horizontal(subject, z):
+@app.route("/anatomical_horizontal", methods=["GET"])
+def get_anatomical_horizontal():
+    subject = request.args.get("subject", type=str)
+    z = request.args.get("z", type=int)
+
     if DEBUG:
         print(
             f"[{datetime.now()}] get_anatomical_horizontal z={z} for subject {subject}"
         )
-        return anatomical_images[subject][:, :, z].tolist()
+
+    return jsonify(anatomical_images[subject][:, :, z])

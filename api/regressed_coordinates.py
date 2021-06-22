@@ -1,7 +1,8 @@
+from api import app
 from datetime import datetime
 from distutils.util import strtobool
 import dotenv
-import eel
+from flask import jsonify, request
 import numpy as np
 import os
 import pandas as pd
@@ -27,11 +28,12 @@ MODELS = [
 ]
 
 
-@eel.expose
+@app.route("/regression_models", methods=["GET"])
 def get_regression_models():
     if DEBUG:
         print(f"[{datetime.now()}] get_regression_models")
-    return MODELS
+
+    return jsonify(MODELS)
 
 
 ## Load regressed coordinates
@@ -57,13 +59,18 @@ if (
         regressed_coordinates[model] = coordinates
 
 
-@eel.expose
-def get_regressed_coordinates(model, subject, voxel_index):
+@app.route("/regressed_coordinates", methods=["GET"])
+def get_regressed_coordinates():
+    model = request.args.get("model", type=str)
+    subject = request.args.get("subject", type=str)
+    voxel_index = request.args.get("voxel_index", type=int)
+
     if DEBUG:
         print(
             f"[{datetime.now()}] get_regressed_coordinates for model {model}, subject {subject}, voxel {voxel_index}"
         )
-    return (regressed_coordinates[model][subject][voxel_index, :]).tolist()
+
+    return jsonify(regressed_coordinates[model][subject][voxel_index, :])
 
 
 ## Load regressed coordinates error map
@@ -89,10 +96,13 @@ if (
         regressed_coordinates_error[model] = error
 
 
-@eel.expose
-def get_regressed_coordinates_error(model, subject):
+@app.route("/regressed_coordinates_error", methods=["GET"])
+def get_regressed_coordinates_error():
+    model = request.args.get("model", type=str)
+    subject = request.args.get("subject", type=str)
+
     if DEBUG:
         print(
             f"[{datetime.now()}] get_regressed_coordinates_error for model {model}, subject {subject}"
         )
-    return regressed_coordinates_error[model][subject].tolist()
+    return jsonify(regressed_coordinates_error[model][subject])

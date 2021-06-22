@@ -1,14 +1,14 @@
+from api import app
 from datetime import datetime
 from distutils.util import strtobool
 import dotenv
-import eel
-import json
+from flask import jsonify, request
 import nibabel as nib
 import numpy as np
 import os
 import pandas as pd
-from tqdm import tqdm
 import simplejson
+from tqdm import tqdm
 
 import custom_utils.setup as setup
 
@@ -199,34 +199,39 @@ if REACT_APP_CONDITIONS_VIEW and os.path.exists(AVAILABLE_GIFTI_FILES_DB):
     print(f"OK")
 
 # Expose functions for exploring contrasts
-@eel.expose
+@app.route("/subjects", methods=["GET"])
 def get_subjects():
     if DEBUG:
         print(f"[{datetime.now()}] get_subjects")
-    return subjects.tolist()
+
+    return jsonify(subjects)
 
 
-@eel.expose
+@app.route("/contrast_labels", methods=["GET"])
 def get_contrast_labels():
     if DEBUG:
         print(f"[{datetime.now()}] get_contrast_labels")
-    return contrasts.tolist()
+
+    return jsonify(contrasts)
 
 
-@eel.expose
-def get_voxel_fingerprint(subject_index, voxel_index):
+@app.route("/voxel_fingerprint", methods=["GET"])
+def get_voxel_fingerprint():
+    subject_index = request.args.get("subject_index", type=int)
+    voxel_index = request.args.get("voxel_index", type=int)
+
     if DEBUG:
         print(
             f"[{datetime.now()}] get_voxel_fingerprint {voxel_index} for {subjects[subject_index]} ({subject_index})"
         )
 
-    return simplejson.dumps(
-        X[n_voxels * subject_index + voxel_index, :].tolist(), ignore_nan=True
-    )
+    return jsonify(X[n_voxels * subject_index + voxel_index, :])
 
 
-@eel.expose
-def get_voxel_fingerprint_mean(voxel_index):
+@app.route("/voxel_fingerprint_mean", methods=["GET"])
+def get_voxel_fingerprint_mean():
+    voxel_index = request.args.get("voxel_index", type=int)
+
     if DEBUG:
         print(f"[{datetime.now()}] get_voxel_mean_fingerprint {voxel_index}")
     mean = np.nanmean(
@@ -239,11 +244,16 @@ def get_voxel_fingerprint_mean(voxel_index):
         ],
         axis=0,
     )
-    return mean.tolist()
+
+    return jsonify(mean)
 
 
-@eel.expose
-def get_contrast(subject_index, contrast_index, hemi="both"):
+@app.route("/contrast", methods=["GET"])
+def get_contrast():
+    subject_index = request.args.get("subject_index", type=int)
+    contrast_index = request.args.get("contrast_index", type=int)
+    hemi = request.args.get("hemi", default="left", type=str)
+
     if DEBUG:
         print(
             f"[{datetime.now()}] get_contrast {contrasts[contrast_index]} for {subjects[subject_index]}, {hemi} hemi"
@@ -252,26 +262,31 @@ def get_contrast(subject_index, contrast_index, hemi="both"):
     start_index = n_voxels * subject_index
 
     if hemi == "left":
-        return X[
-            start_index : start_index + n_voxels // 2, contrast_index
-        ].tolist()
+        return jsonify(
+            X[start_index : start_index + n_voxels // 2, contrast_index]
+        )
     elif hemi == "right":
-        return X[
-            start_index + n_voxels // 2 : start_index + n_voxels,
-            contrast_index,
-        ].tolist()
+        return jsonify(
+            X[
+                start_index + n_voxels // 2 : start_index + n_voxels,
+                contrast_index,
+            ]
+        )
     elif hemi == "both":
-        return X[start_index : start_index + n_voxels, contrast_index].tolist()
+        return jsonify(X[start_index : start_index + n_voxels, contrast_index])
     else:
         print(f"Unknown value for hemi: {hemi}")
-        return []
+        return jsonify([])
 
 
-@eel.expose
-def get_contrast_mean(contrast_index, hemi="both"):
+@app.route("/contrast_mean", methods=["GET"])
+def get_contrast_mean():
+    contrast_index = request.args.get("contrast_index", type=int)
+    hemi = request.args.get("hemi", default="left", type=str)
+
     if DEBUG:
         print(
-            f"[{datetime.now()}] get_contrast_mean {contrasts[contrast_index]} ({contrast_index})"
+            f"[{datetime.now()}] get_contrast_mean {contrasts[contrast_index]} ({contrast_index}), hemi {hemi}"
         )
 
     mean = []
@@ -322,4 +337,4 @@ def get_contrast_mean(contrast_index, hemi="both"):
     else:
         print(f"Unknown value for hemi: {hemi}")
 
-    return mean.tolist()
+    return jsonify(mean)

@@ -1,7 +1,8 @@
+from api import app
 from datetime import datetime
 from distutils.util import strtobool
 import dotenv
-import eel
+from flask import jsonify, request
 import nibabel as nib
 import numpy as np
 import os
@@ -82,13 +83,17 @@ if REACT_APP_CONDITIONS_VIEW and os.path.exists(AVAILABLE_GIFTI_FILES_DB):
     print("OK")
 
 
-@eel.expose
-def get_contrast_gradient_norms(subject_index, contrast_index, hemi="left"):
+@app.route("/contrast_gradient", methods=["GET"])
+def get_contrast_gradient():
     """
     Return gradient intensity along edges of the fsaverage mesh.
     Edges are deduplicated. Order of appearence is determined by
     the upper triangular portion of the connectivity matrix.
     """
+    subject_index = request.args.get("subject_index", type=int)
+    contrast_index = request.args.get("contrast_index", type=int)
+    hemi = request.args.get("hemi", default="left", type=str)
+
     if DEBUG:
         print(
             f"[{datetime.now()}] get_contrast_gradient_norms {contrasts[contrast_index]} for {subjects[subject_index]}, {hemi} hemi"
@@ -98,15 +103,19 @@ def get_contrast_gradient_norms(subject_index, contrast_index, hemi="left"):
     edges = triu(gradient).tocsr()
     edges.sort_indices()
 
-    return edges.data.tolist()
+    return jsonify(edges.data)
 
 
-@eel.expose
-def get_contrast_gradient_averaged(subject_index, contrast_index, hemi="left"):
+@app.route("/contrast_gradient_averaged", methods=["GET"])
+def get_contrast_gradient_averaged():
     """
     Returns an array of size (n_voxels, 3) which associates each fsaverage voxel i
     with a vector representing the mean of all gradient vectors along edges i -> j.
     """
+    subject_index = request.args.get("subject_index", type=int)
+    contrast_index = request.args.get("contrast_index", type=int)
+    hemi = request.args.get("hemi", default="left", type=str)
+
     if DEBUG:
         print(
             f"[{datetime.now()}] get_contrast_gradient_averaged {contrasts[contrast_index]} for {subjects[subject_index]}, {hemi} hemi"
@@ -114,4 +123,4 @@ def get_contrast_gradient_averaged(subject_index, contrast_index, hemi="left"):
 
     gradient = gradients_averaged_per_subject[subject_index][contrast_index]
 
-    return gradient.data.tolist()
+    return jsonify(gradient.data)

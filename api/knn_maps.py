@@ -1,9 +1,10 @@
+from api import app
 from api.surface_contrasts import n_voxels, subjects
 import custom_utils.setup as setup
 from datetime import datetime
 from distutils.util import strtobool
 import dotenv
-import eel
+from flask import jsonify, request
 import numpy as np
 import os
 import pandas as pd
@@ -54,37 +55,46 @@ if (
     distances = np.stack(distances_list, axis=0)
 
 
-@eel.expose
-def get_knn(subject, voxel_index):
+@app.route("/knn", methods=["GET"])
+def get_knn():
+    subject_index = request.args.get("subject_index", type=int)
+    voxel_index = request.args.get("voxel_index", type=int)
+
     if DEBUG:
         print(
-            f"[{datetime.now()}] get_knn for subject {subjects[subject]}, voxel {voxel_index}"
+            f"[{datetime.now()}] get_knn for subject {subjects[subject_index]}, voxel {voxel_index}"
         )
-    return (knn[subjects[subject]][voxel_index, :]).tolist()
+
+    return jsonify((knn[subjects[subject_index]][voxel_index, :]))
 
 
-@eel.expose
-def get_knn_all_subjects(voxel_index):
+@app.route("/knn_all_subjects", methods=["GET"])
+def get_knn_all_subjects():
+    voxel_index = request.args.get("voxel_index", type=int)
+
     if DEBUG:
         print(
             f"[{datetime.now()}] get_knn_all_subjects for voxel {voxel_index}"
         )
 
-    print([knn[subject][voxel_index, 0] for subject in subjects])
-    return [knn[subject][voxel_index, 0] for subject in subjects]
+    return jsonify([knn[subject][voxel_index, 0] for subject in subjects])
 
 
-@eel.expose
-def get_knn_distance(subject):
+@app.route("/knn_distance", methods=["GET"])
+def get_knn_distance():
+    subject_index = request.args.get("subject_index", type=int)
+
     if DEBUG:
         print(
-            f"[{datetime.now()}] get_knn_distance for subject {subjects[subject]}"
+            f"[{datetime.now()}] get_knn_distance for subject {subjects[subject_index]}"
         )
-    return (distances[subject, : n_voxels // 2, 0]).tolist()
+
+    return jsonify((distances[subject_index, : n_voxels // 2, 0]))
 
 
-@eel.expose
+@app.route("/knn_distance_mean", methods=["GET"])
 def get_knn_distance_mean():
     if DEBUG:
         print(f"[{datetime.now()}] get_knn_distance_mean")
-    return (np.mean(distances[:, : n_voxels // 2, 0], axis=0)).tolist()
+
+    return jsonify(np.mean(distances[:, : n_voxels // 2, 0], axis=0))
