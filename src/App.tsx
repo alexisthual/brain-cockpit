@@ -5,6 +5,7 @@ import {
   Position,
   Tooltip,
 } from "@blueprintjs/core";
+import axios from "axios";
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -21,11 +22,9 @@ import RegressionExplorer from "views/regression";
 import SurfaceExplorer from "views/surface";
 import "./App.scss";
 
-export const eel = window.eel;
-
-eel.set_host(
-  `${process.env.REACT_APP_API_WS_PROTOCOL}://${process.env.REACT_APP_API_URL}`
-);
+export const server = axios.create({
+  baseURL: `${process.env.REACT_APP_API_HTTP_PROTOCOL}://${process.env.REACT_APP_API_URL}`,
+});
 
 const App = () => {
   return (

@@ -1,4 +1,5 @@
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
+import { AxiosResponse } from "axios";
 import React, {
   useCallback,
   useEffect,
@@ -7,7 +8,7 @@ import React, {
   useState,
 } from "react";
 
-import { eel } from "App";
+import { server } from "App";
 import InfoPanel, { InputType } from "components/infoPanel";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
@@ -245,22 +246,27 @@ const ScenePane = ({
     if (contrast.index !== undefined) {
       setLoadingSurfaceMap(true);
       if (meanSurfaceMap) {
-        eel.get_contrast_mean(
-          contrast.index,
-          hemi
-        )((surfaceMap: number[]) => {
-          setSurfaceMap(surfaceMap);
-          setLoadingSurfaceMap(false);
-        });
+        server
+          .get("/contrast_mean", {
+            params: { contrast_index: contrast.index, hemi: hemi },
+          })
+          .then((response: AxiosResponse<number[]>) => {
+            setSurfaceMap(response.data);
+            setLoadingSurfaceMap(false);
+          });
       } else if (subject.index !== undefined) {
-        eel.get_contrast(
-          subject.index,
-          contrast.index,
-          hemi
-        )((surfaceMap: number[]) => {
-          setSurfaceMap(surfaceMap);
-          setLoadingSurfaceMap(false);
-        });
+        server
+          .get("/contrast", {
+            params: {
+              subject_index: subject.index,
+              contrast_index: contrast.index,
+              hemi: hemi,
+            },
+          })
+          .then((response: AxiosResponse<number[]>) => {
+            setSurfaceMap(response.data);
+            setLoadingSurfaceMap(false);
+          });
       } else {
         setLoadingSurfaceMap(false);
       }

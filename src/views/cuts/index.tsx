@@ -1,9 +1,10 @@
 import { Button, Colors, Slider } from "@blueprintjs/core";
 import { Select } from "@blueprintjs/select";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
+import { AxiosResponse } from "axios";
 import React, { useEffect, useState } from "react";
 
-import { eel } from "App";
+import { server } from "App";
 import CanvasSlice from "components/canvasSlice";
 import CanvasCrosshair from "components/canvasCrosshair";
 import Colorbar from "components/colorbar";
@@ -53,36 +54,38 @@ const CutsExplorer = () => {
   const [rotatedSagital] = useState(false);
 
   useEffect(() => {
-    eel.get_subject_list()((subjects: string[]) => {
-      setSubjects(subjects);
+    server.get("/subject_list").then((response: AxiosResponse<string[]>) => {
+      setSubjects(response.data);
     });
   }, []);
 
   useEffect(() => {
     if (subject !== undefined) {
       setImage(undefined);
-      eel.get_functional_image_names(subject)((names: string[]) => {
-        setImages(names);
-      });
+      server
+        .get("/functional_image_names", { params: { subject: subject } })
+        .then((response: AxiosResponse<string[]>) => {
+          setImages(response.data);
+        });
     }
   }, [subject]);
 
   useEffect(() => {
     if (subject !== undefined && image !== undefined) {
-      eel.get_functional_range(
-        subject,
-        image
-      )((range: number[]) => {
-        setContRange(range);
+      const range = server.get<number[]>("/functional_range", {
+        params: { subject: subject, image: image },
       });
-      eel.get_functional_shape(
-        subject,
-        image
-      )((shape: number[]) => {
-        setContSize(shape);
+      const functionalShape = server.get<number[]>("/functional_shape", {
+        params: { subject: subject, image: image },
       });
-      eel.get_anatomical_shape(subject)((shape: number[]) => {
-        setAnatSize(shape);
+      const anatomicalShape = server.get<number[]>("/anatomical_shape", {
+        params: { subject: subject },
+      });
+
+      Promise.all([range, functionalShape, anatomicalShape]).then((values) => {
+        setContRange(values[0].data);
+        setContSize(values[1].data);
+        setAnatSize(values[2].data);
       });
     }
   }, [subject, image]);
@@ -91,16 +94,20 @@ const CutsExplorer = () => {
   useEffect(() => {
     if (subject !== undefined && image !== undefined) {
       setLoadingTimeseries(true);
-      eel.get_voxel_timeseries(
-        subject,
-        image,
-        Math.floor(position.x * contSize[0]),
-        Math.floor(position.y * contSize[1]),
-        Math.floor(position.z * contSize[2])
-      )((timeseries: number[]) => {
-        setVoxelTimeseries(timeseries);
-        setLoadingTimeseries(false);
-      });
+      server
+        .get<number[]>("/voxel_timeseries", {
+          params: {
+            subject: subject,
+            image: image,
+            x: Math.floor(position.x * contSize[0]),
+            y: Math.floor(position.y * contSize[1]),
+            z: Math.floor(position.z * contSize[2]),
+          },
+        })
+        .then((response) => {
+          setVoxelTimeseries(response.data);
+          setLoadingTimeseries(false);
+        });
     }
   }, [subject, image, position.x, position.y, position.z, contSize]);
 
@@ -108,19 +115,24 @@ const CutsExplorer = () => {
   useEffect(() => {
     if (subject !== undefined && image !== undefined) {
       setLoadingSagital(true);
-      const anat = eel.get_anatomical_sagital(
-        subject,
-        Math.floor(position.x * anatSize[0])
-      )();
-      const contrast = eel.get_functional_sagital(
-        subject,
-        image,
-        Math.floor(position.x * contSize[0]),
-        t
-      )();
+      const anat = server.get<number[][]>("/anatomical_sagital", {
+        params: {
+          subject: subject,
+          x: Math.floor(position.x * anatSize[0]),
+        },
+      });
+      const contrast = server.get<number[][]>("/functional_sagital", {
+        params: {
+          subject: subject,
+          image: image,
+          x: Math.floor(position.x * anatSize[0]),
+          t: t,
+        },
+      });
+
       Promise.all([anat, contrast]).then((values) => {
-        setAnatSagitalSlice(values[0]);
-        setContSagitalSlice(values[1]);
+        setAnatSagitalSlice(values[0].data);
+        setContSagitalSlice(values[1].data);
         setLoadingSagital(false);
       });
     }
@@ -129,19 +141,23 @@ const CutsExplorer = () => {
   useEffect(() => {
     if (subject !== undefined && image !== undefined) {
       setLoadingCoronal(true);
-      const anat = eel.get_anatomical_coronal(
-        subject,
-        Math.floor(position.y * anatSize[1])
-      )();
-      const contrast = eel.get_functional_coronal(
-        subject,
-        image,
-        Math.floor(position.y * contSize[1]),
-        t
-      )();
+      const anat = server.get<number[][]>("/anatomical_coronal", {
+        params: {
+          subject: subject,
+          y: Math.floor(position.y * anatSize[1]),
+        },
+      });
+      const contrast = server.get<number[][]>("/functional_coronal", {
+        params: {
+          subject: subject,
+          image: image,
+          y: Math.floor(position.y * anatSize[1]),
+          t: t,
+        },
+      });
       Promise.all([anat, contrast]).then((values) => {
-        setAnatCoronalSlice(values[0]);
-        setContCoronalSlice(values[1]);
+        setAnatCoronalSlice(values[0].data);
+        setContCoronalSlice(values[1].data);
         setLoadingCoronal(false);
       });
     }
@@ -150,19 +166,23 @@ const CutsExplorer = () => {
   useEffect(() => {
     if (subject !== undefined && image !== undefined) {
       setLoadingHorizontal(true);
-      const anat = eel.get_anatomical_horizontal(
-        subject,
-        Math.floor(position.z * anatSize[2])
-      )();
-      const contrast = eel.get_functional_horizontal(
-        subject,
-        image,
-        Math.floor(position.z * contSize[2]),
-        t
-      )();
+      const anat = server.get<number[][]>("/anatomical_horizontal", {
+        params: {
+          subject: subject,
+          z: Math.floor(position.z * anatSize[2]),
+        },
+      });
+      const contrast = server.get<number[][]>("/functional_horizontal", {
+        params: {
+          subject: subject,
+          image: image,
+          z: Math.floor(position.z * anatSize[2]),
+          t: t,
+        },
+      });
       Promise.all([anat, contrast]).then((values) => {
-        setAnatHorizontalSlice(values[0]);
-        setContHorizontalSlice(values[1]);
+        setAnatHorizontalSlice(values[0].data);
+        setContHorizontalSlice(values[1].data);
         setLoadingHorizontal(false);
       });
     }

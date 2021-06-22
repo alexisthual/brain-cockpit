@@ -1,6 +1,8 @@
-import React, { useCallback, useEffect, useReducer, useState } from "react";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
+import { AxiosResponse } from "axios";
+import React, { useCallback, useEffect, useReducer, useState } from "react";
 
+import { server } from "App";
 import Colorbar from "components/colorbar";
 import ContrastFingerprint from "components/contrastFingerprint";
 import InfoPanel, { InputType } from "components/infoPanel";
@@ -14,7 +16,6 @@ import {
   Orientation,
   Subject,
 } from "constants/index";
-import { eel } from "App";
 
 const KnnExplorer = () => {
   const [subjectLabels, setSubjectLabels] = useState<string[]>([]);
@@ -58,13 +59,18 @@ const KnnExplorer = () => {
   useEffect(() => {
     const fetchAllData = async () => {
       // Load static data
-      const subjectLabels = eel.get_subjects()();
-      const contrastLabels = eel.get_contrast_labels()();
+      const subjectLabels = server.get<string[]>("subjects");
+      const contrastLabels = server.get<string[][]>("contrast_labels");
 
       // Wait for all data to be loaded before setting app state
       Promise.all([subjectLabels, contrastLabels]).then((values) => {
-        setSubjectLabels(values[0]);
-        setContrastLabels(values[1]);
+        setSubjectLabels(values[0].data);
+        setContrastLabels(
+          values[1].data.map((label: any) => ({
+            task: label[0],
+            contrast: label[1],
+          }))
+        );
       });
     };
 
@@ -116,15 +122,21 @@ const KnnExplorer = () => {
   useEffect(() => {
     setLoadingDistanceMap(true);
     if (meanAcrossSubjects) {
-      eel.get_knn_distance_mean()((distance: number[]) => {
-        setDistanceMap(distance);
-        setLoadingDistanceMap(false);
-      });
+      server
+        .get("/knn_distance_mean")
+        .then((response: AxiosResponse<number[]>) => {
+          setDistanceMap(response.data);
+          setLoadingDistanceMap(false);
+        });
     } else if (subject.index !== undefined) {
-      eel.get_knn_distance(subject.index)((distance: number[]) => {
-        setDistanceMap(distance);
-        setLoadingDistanceMap(false);
-      });
+      server
+        .get("/knn_distance", {
+          params: { subject_index: subject.index },
+        })
+        .then((response: AxiosResponse<number[]>) => {
+          setDistanceMap(response.data);
+          setLoadingDistanceMap(false);
+        });
     }
   }, [subject.index, meanAcrossSubjects]);
 
@@ -132,16 +144,21 @@ const KnnExplorer = () => {
   useEffect(() => {
     if (voxelIndex !== undefined) {
       if (meanAcrossSubjects) {
-        eel.get_knn_all_subjects(voxelIndex)((knn_indices: number[]) => {
-          setKnnIndices(knn_indices);
-        });
+        server
+          .get("/knn_all_subjects", {
+            params: { voxel_index: voxelIndex },
+          })
+          .then((response: AxiosResponse<number[]>) => {
+            setKnnIndices(response.data);
+          });
       } else if (subject.index !== undefined) {
-        eel.get_knn(
-          subject.index,
-          voxelIndex
-        )((knn_indices: number[]) => {
-          setKnnIndices(knn_indices);
-        });
+        server
+          .get("/knn", {
+            params: { subject_index: subject.index, voxel_index: voxelIndex },
+          })
+          .then((response: AxiosResponse<number[]>) => {
+            setKnnIndices(response.data);
+          });
       }
     }
   }, [voxelIndex, subject.index, meanAcrossSubjects]);
@@ -151,18 +168,23 @@ const KnnExplorer = () => {
     setLoadingFingerprint(true);
     if (voxelIndex !== undefined) {
       if (meanFingerprint) {
-        eel.get_voxel_fingerprint_mean(voxelIndex)((fingerprint: number[]) => {
-          setContrastFingerprint(fingerprint);
-          setLoadingFingerprint(false);
-        });
+        server
+          .get("/voxel_fingerprint_mean", {
+            params: { voxel_index: voxelIndex },
+          })
+          .then((response: AxiosResponse<number[]>) => {
+            setContrastFingerprint(response.data);
+            setLoadingFingerprint(false);
+          });
       } else if (subject.index !== undefined) {
-        eel.get_voxel_fingerprint(
-          subject.index,
-          voxelIndex
-        )((contrastFingerprint: number[]) => {
-          setContrastFingerprint(contrastFingerprint);
-          setLoadingFingerprint(false);
-        });
+        server
+          .get("/voxel_fingerprint", {
+            params: { subject_index: subject.index, voxel_index: voxelIndex },
+          })
+          .then((response: AxiosResponse<number[]>) => {
+            setContrastFingerprint(response.data);
+            setLoadingFingerprint(false);
+          });
       } else {
         setLoadingFingerprint(false);
       }

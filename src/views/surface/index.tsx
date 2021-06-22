@@ -1,8 +1,8 @@
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
+import { AxiosResponse } from "axios";
 import { nanoid } from "nanoid";
 import React, { useCallback, useEffect, useReducer, useState } from "react";
 
-import { eel } from "App";
 import Colorbar from "components/colorbar";
 import ContrastFingerprint from "components/contrastFingerprint";
 import InfoPanel, { InputType } from "components/infoPanel";
@@ -21,6 +21,7 @@ import {
   Orientation,
   Subject,
 } from "constants/index";
+import { server } from "App";
 
 const SurfaceExplorer = () => {
   const [subjectLabels, setSubjectLabels] = useState<string[]>([]);
@@ -127,22 +128,23 @@ const SurfaceExplorer = () => {
   useEffect(() => {
     const fetchAllData = async () => {
       // Load static data
-      const subjectLabels = eel.get_subjects()();
-      const contrastLabels = eel.get_contrast_labels()();
+      const subjectLabels = server.get<string[]>("subjects");
+      const contrastLabels = server.get<string[][]>("contrast_labels");
 
       // Wait for all data to be loaded before setting app state
       Promise.all([subjectLabels, contrastLabels]).then((values) => {
-        setSubjectLabels(values[0]);
+        setSubjectLabels(values[0].data);
+        if (values[0].data.length > 0) {
+          setSubject({ payload: 0 });
+        }
+
         setContrastLabels(
-          values[1].map((label: any) => ({
+          values[1].data.map((label: any) => ({
             task: label[0],
             contrast: label[1],
           }))
         );
-        if (values[0].length > 0) {
-          setSubject({ payload: 0 });
-        }
-        if (values[1].length > 0) {
+        if (values[1].data.length > 0) {
           setContrast({ payload: 0 });
         }
       });
@@ -297,22 +299,27 @@ const SurfaceExplorer = () => {
     if (contrast.index !== undefined) {
       setLoadingContrastMap(true);
       if (meanContrastMap) {
-        eel.get_contrast_mean(
-          contrast.index,
-          hemi
-        )((contrastMap: number[]) => {
-          setContrastMap(contrastMap);
-          setLoadingContrastMap(false);
-        });
+        server
+          .get("/contrast_mean", {
+            params: { contrast_index: contrast.index, hemi: hemi },
+          })
+          .then((response: AxiosResponse<number[]>) => {
+            setContrastMap(response.data);
+            setLoadingContrastMap(false);
+          });
       } else if (subject.index !== undefined) {
-        eel.get_contrast(
-          subject.index,
-          contrast.index,
-          hemi
-        )((contrastMap: number[]) => {
-          setContrastMap(contrastMap);
-          setLoadingContrastMap(false);
-        });
+        server
+          .get("/contrast", {
+            params: {
+              subject_index: subject.index,
+              contrast_index: contrast.index,
+              hemi: hemi,
+            },
+          })
+          .then((response: AxiosResponse<number[]>) => {
+            setContrastMap(response.data);
+            setLoadingContrastMap(false);
+          });
       } else {
         setLoadingContrastMap(false);
       }
@@ -321,31 +328,36 @@ const SurfaceExplorer = () => {
       switch (showGradient) {
         case 2:
           if (subject.index !== undefined) {
-            eel.get_contrast_gradient_norms(
-              subject.index,
-              contrast.index
-            )((gradientNorms: number[]) => {
-              console.log("got gradient norms");
-              console.log(gradientNorms);
-              setGradientNorms(gradientNorms);
-              setLoadingGradientMap(false);
-            });
+            server
+              .get("/contrast_gradient_norms", {
+                params: {
+                  subject_index: subject.index,
+                  contrast_index: contrast.index,
+                },
+              })
+              .then((response: AxiosResponse<number[]>) => {
+                setGradientNorms(response.data);
+                setLoadingGradientMap(false);
+              });
           }
           break;
         case 1:
           if (subject.index !== undefined) {
-            eel.get_contrast_gradient_averaged(
-              subject.index,
-              contrast.index
-            )((gradient: number[][]) => {
-              console.log("got gradient");
-              console.log(gradient);
-              setGradientAverageMap(gradient);
-              setLoadingGradientMap(false);
-            });
+            server
+              .get("/contrast_gradient_averaged", {
+                params: {
+                  subject_index: subject.index,
+                  contrast_index: contrast.index,
+                },
+              })
+              .then((response: AxiosResponse<number[][]>) => {
+                setGradientAverageMap(response.data);
+                setLoadingGradientMap(false);
+              });
           }
           break;
         default:
+          setLoadingGradientMap(false);
           break;
       }
     }
@@ -356,18 +368,28 @@ const SurfaceExplorer = () => {
     if (voxelIndex !== undefined) {
       setLoadingFingerprint(true);
       if (meanFingerprint) {
-        eel.get_voxel_fingerprint_mean(voxelIndex)((fingerprint: number[]) => {
-          setContrastFingerprint(fingerprint);
-          setLoadingFingerprint(false);
-        });
+        server
+          .get("/voxel_fingerprint_mean", {
+            params: {
+              voxel_index: voxelIndex,
+            },
+          })
+          .then((response: AxiosResponse<number[]>) => {
+            setContrastFingerprint(response.data);
+            setLoadingFingerprint(false);
+          });
       } else if (subject.index !== undefined) {
-        eel.get_voxel_fingerprint(
-          subject.index,
-          voxelIndex
-        )((contrastFingerprint: string) => {
-          setContrastFingerprint(JSON.parse(contrastFingerprint));
-          setLoadingFingerprint(false);
-        });
+        server
+          .get("/voxel_fingerprint", {
+            params: {
+              subject_index: subject.index,
+              voxel_index: voxelIndex,
+            },
+          })
+          .then((response: AxiosResponse<number[]>) => {
+            setContrastFingerprint(response.data);
+            setLoadingFingerprint(false);
+          });
       } else {
         setLoadingFingerprint(false);
       }

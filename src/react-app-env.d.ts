@@ -1,7 +1,5 @@
 /// <reference types="react-scripts" />
 
-interface Window {
-  eel: any;
-}
+interface Window {}
 
 declare var window: Window;

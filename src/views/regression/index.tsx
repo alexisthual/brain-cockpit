@@ -1,6 +1,8 @@
-import React, { useCallback, useEffect, useReducer, useState } from "react";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
+import { AxiosResponse } from "axios";
+import React, { useCallback, useEffect, useReducer, useState } from "react";
 
+import { server } from "App";
 import Colorbar from "components/colorbar";
 import ContrastFingerprint from "components/contrastFingerprint";
 import InfoPanel, { InputType } from "components/infoPanel";
@@ -14,7 +16,6 @@ import {
   Orientation,
   Subject,
 } from "constants/index";
-import { eel } from "App";
 
 const RegressionExplorer = () => {
   const [model, setModel] = useState<string>();
@@ -59,15 +60,20 @@ const RegressionExplorer = () => {
   useEffect(() => {
     const fetchAllData = async () => {
       // Load static data
-      const subjectLabels = eel.get_subjects()();
-      const contrastLabels = eel.get_contrast_labels()();
-      const models = eel.get_regression_models()();
+      const subjectLabels = server.get<string[]>("subjects");
+      const contrastLabels = server.get<string[][]>("contrast_labels");
+      const models = server.get<string[]>("regression_models");
 
       // Wait for all data to be loaded before setting app state
       Promise.all([subjectLabels, contrastLabels, models]).then((values) => {
-        setSubjectLabels(values[0]);
-        setContrastLabels(values[1]);
-        setModels(values[2]);
+        setSubjectLabels(values[0].data);
+        setContrastLabels(
+          values[1].data.map((label: any) => ({
+            task: label[0],
+            contrast: label[1],
+          }))
+        );
+        setModels(values[2].data);
       });
     };
 
@@ -119,13 +125,14 @@ const RegressionExplorer = () => {
   useEffect(() => {
     if (subject.label !== undefined && model !== undefined) {
       setLoadingErrorMap(true);
-      eel.get_regressed_coordinates_error(
-        model,
-        subject.label
-      )((error: number[]) => {
-        setErrorMap(error);
-        setLoadingErrorMap(false);
-      });
+      server
+        .get("/regressed_coordinates_error", {
+          params: { model: model, subject: subject.label },
+        })
+        .then((response: AxiosResponse<number[]>) => {
+          setErrorMap(response.data);
+          setLoadingErrorMap(false);
+        });
     }
   }, [subject.label, model]);
 
@@ -137,13 +144,17 @@ const RegressionExplorer = () => {
       model !== undefined &&
       subject.label !== undefined
     ) {
-      eel.get_regressed_coordinates(
-        model,
-        subject.label,
-        voxelIndex
-      )((coordinates: number[]) => {
-        setRegressedCoordinates(coordinates);
-      });
+      server
+        .get("/regressed_coordinates", {
+          params: {
+            model: model,
+            subject: subject.label,
+            voxel_index: voxelIndex,
+          },
+        })
+        .then((response: AxiosResponse<number[]>) => {
+          setRegressedCoordinates(response.data);
+        });
     }
   }, [voxelIndex, subject.label, model]);
 
@@ -152,18 +163,28 @@ const RegressionExplorer = () => {
     setLoadingFingerprint(true);
     if (voxelIndex !== undefined) {
       if (meanFingerprint) {
-        eel.get_voxel_fingerprint_mean(voxelIndex)((fingerprint: number[]) => {
-          setContrastFingerprint(fingerprint);
-          setLoadingFingerprint(false);
-        });
+        server
+          .get("/voxel_fingerprint_mean", {
+            params: {
+              voxel_index: voxelIndex,
+            },
+          })
+          .then((response: AxiosResponse<number[]>) => {
+            setContrastFingerprint(response.data);
+            setLoadingFingerprint(false);
+          });
       } else if (subject.index !== undefined) {
-        eel.get_voxel_fingerprint(
-          subject.index,
-          voxelIndex
-        )((contrastFingerprint: number[]) => {
-          setContrastFingerprint(contrastFingerprint);
-          setLoadingFingerprint(false);
-        });
+        server
+          .get("/voxel_fingerprint", {
+            params: {
+              subject_index: subject.index,
+              voxel_index: voxelIndex,
+            },
+          })
+          .then((response: AxiosResponse<number[]>) => {
+            setContrastFingerprint(response.data);
+            setLoadingFingerprint(false);
+          });
       } else {
         setLoadingFingerprint(false);
       }

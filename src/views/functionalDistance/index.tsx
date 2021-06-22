@@ -1,7 +1,9 @@
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
+import { AxiosResponse } from "axios";
 import { nanoid } from "nanoid";
 import React, { useEffect, useReducer, useState } from "react";
 
+import { server } from "App";
 import Colorbar from "components/colorbar";
 import ContrastFingerprint from "components/contrastFingerprint";
 import DistanceBars from "./distanceBars";
@@ -20,7 +22,6 @@ import {
   Subject,
   SurfaceMapType,
 } from "constants/index";
-import { eel } from "App";
 import "./style.scss";
 
 const FunctionalDistanceExplorer = () => {
@@ -97,14 +98,20 @@ const FunctionalDistanceExplorer = () => {
   useEffect(() => {
     const fetchAllData = async () => {
       // Load static data
-      const subjectLabels = eel.get_subjects()();
-      const contrastLabels = eel.get_contrast_labels()();
+      const subjectLabels = server.get<string[]>("subjects");
+      const contrastLabels = server.get<string[][]>("contrast_labels");
 
       // Wait for all data to be loaded before setting app state
       Promise.all([subjectLabels, contrastLabels]).then((values) => {
-        setSubjectLabels(values[0]);
-        setContrastLabels(values[1]);
-        if (values[0].length > 0) {
+        setSubjectLabels(values[0].data);
+
+        setContrastLabels(
+          values[1].data.map((label: any) => ({
+            task: label[0],
+            contrast: label[1],
+          }))
+        );
+        if (values[0].data.length > 0) {
           setSubject({ payload: 0 });
         }
       });
@@ -181,36 +188,47 @@ const FunctionalDistanceExplorer = () => {
       switch (surfaceMapType) {
         case SurfaceMapType.SEED_BASED:
           if (meanSurfaceMap) {
-            eel.get_mean_distance_map(voxelIndex)((surfaceMap: number[]) => {
-              setSurfaceMap(surfaceMap);
-              setLoadingSurfaceMap(false);
-            });
+            server
+              .get("/mean_distance_map", {
+                params: { voxel_index: voxelIndex },
+              })
+              .then((response: AxiosResponse<number[]>) => {
+                setSurfaceMap(response.data);
+                setLoadingSurfaceMap(false);
+              });
           } else {
-            eel.get_distance_map(
-              subject.index,
-              voxelIndex
-            )((surfaceMap: number[]) => {
-              setSurfaceMap(surfaceMap);
-              setLoadingSurfaceMap(false);
-            });
+            server
+              .get("/distance_map", {
+                params: {
+                  subject_index: subject.index,
+                  voxel_index: voxelIndex,
+                },
+              })
+              .then((response: AxiosResponse<number[]>) => {
+                setSurfaceMap(response.data);
+                setLoadingSurfaceMap(false);
+              });
           }
           break;
         case SurfaceMapType.M_DISTANCE:
           if (meanSurfaceMap) {
-            eel.get_mean_topographic_distance_to_m_functional_distance(m)(
-              (surfaceMap: number[]) => {
-                setSurfaceMap(surfaceMap);
+            server
+              .get("/mean_topographic_distance_to_m_functional_distance", {
+                params: { m: m },
+              })
+              .then((response: AxiosResponse<number[]>) => {
+                setSurfaceMap(response.data);
                 setLoadingSurfaceMap(false);
-              }
-            );
+              });
           } else {
-            eel.get_topographic_distance_to_m_functional_distance(
-              subject.index,
-              m
-            )((surfaceMap: number[]) => {
-              setSurfaceMap(surfaceMap);
-              setLoadingSurfaceMap(false);
-            });
+            server
+              .get("/topographic_distance_to_m_functional_distance", {
+                params: { subject_index: subject.index, m: m },
+              })
+              .then((response: AxiosResponse<number[]>) => {
+                setSurfaceMap(response.data);
+                setLoadingSurfaceMap(false);
+              });
           }
           break;
         default:
@@ -226,18 +244,23 @@ const FunctionalDistanceExplorer = () => {
     if (voxelIndex !== undefined) {
       setLoadingFingerprint(true);
       if (meanFingerprint) {
-        eel.get_voxel_fingerprint_mean(voxelIndex)((fingerprint: number[]) => {
-          setContrastFingerprint(fingerprint);
-          setLoadingFingerprint(false);
-        });
+        server
+          .get("/voxel_fingerprint_mean", {
+            params: { voxel_index: voxelIndex },
+          })
+          .then((response: AxiosResponse<number[]>) => {
+            setContrastFingerprint(response.data);
+            setLoadingFingerprint(false);
+          });
       } else if (subject.index !== undefined) {
-        eel.get_voxel_fingerprint(
-          subject.index,
-          voxelIndex
-        )((contrastFingerprint: number[]) => {
-          setContrastFingerprint(contrastFingerprint);
-          setLoadingFingerprint(false);
-        });
+        server
+          .get("/voxel_fingerprint", {
+            params: { subject_index: subject.index, voxel_index: voxelIndex },
+          })
+          .then((response: AxiosResponse<number[]>) => {
+            setContrastFingerprint(response.data);
+            setLoadingFingerprint(false);
+          });
       } else {
         setLoadingFingerprint(false);
       }
@@ -249,20 +272,23 @@ const FunctionalDistanceExplorer = () => {
     if (voxelIndex !== undefined) {
       setLoadingFunctionalDistances(true);
       if (meanFunctionalDistance) {
-        eel.get_mean_across_subjects_mean_functional_distance(voxelIndex)(
-          (distances: number[]) => {
-            setFunctionalDistances(distances);
+        server
+          .get("/mean_across_subjects_mean_functional_distance", {
+            params: { voxel_index: voxelIndex },
+          })
+          .then((response: AxiosResponse<number[]>) => {
+            setFunctionalDistances(response.data);
             setLoadingFunctionalDistances(false);
-          }
-        );
+          });
       } else if (subject.index !== undefined) {
-        eel.get_mean_functional_distance(
-          subject.index,
-          voxelIndex
-        )((distances: number[]) => {
-          setFunctionalDistances(distances);
-          setLoadingFunctionalDistances(false);
-        });
+        server
+          .get("/mean_functional_distance", {
+            params: { subject_index: subject.index, voxel_index: voxelIndex },
+          })
+          .then((response: AxiosResponse<number[]>) => {
+            setFunctionalDistances(response.data);
+            setLoadingFunctionalDistances(false);
+          });
       } else {
         setLoadingFunctionalDistances(false);
       }
