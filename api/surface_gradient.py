@@ -29,8 +29,9 @@ GRADIENTS_DATA_PATH = os.getenv("GRADIENTS_DATA_PATH")
 
 ## Util functions
 def load_gradients(df, subjects):
-    gradient_norms_per_subject = list()
+    gradients_per_subject = list()
     gradients_averaged_per_subject = list()
+    gradients_norm_per_subject = list()
 
     for subject in subjects:
         gradient = np.load(
@@ -41,9 +42,9 @@ def load_gradients(df, subjects):
             ),
             allow_pickle=True,
         )
-        gradient_norms_per_subject.append(gradient)
+        gradients_per_subject.append(gradient)
 
-        gradient_averaged = np.load(
+        gradients_averaged = np.load(
             os.path.join(
                 EXPERIMENT_DATA_PATH,
                 GRADIENTS_DATA_PATH,
@@ -51,9 +52,23 @@ def load_gradients(df, subjects):
             ),
             allow_pickle=True,
         )
-        gradients_averaged_per_subject.append(gradient_averaged)
+        gradients_averaged_per_subject.append(gradients_averaged)
 
-    return gradient_norms_per_subject, gradients_averaged_per_subject
+        gradients_norm = np.load(
+            os.path.join(
+                EXPERIMENT_DATA_PATH,
+                GRADIENTS_DATA_PATH,
+                f"gradient_averaged_norm_left_{subject}.npy",
+            ),
+            allow_pickle=True,
+        )
+        gradients_norm_per_subject.append(gradients_norm)
+
+    return (
+        gradients_per_subject,
+        gradients_averaged_per_subject,
+        gradients_norm_per_subject,
+    )
 
 
 # Load gradients
@@ -73,8 +88,9 @@ if REACT_APP_CONDITIONS_VIEW and os.path.exists(AVAILABLE_GIFTI_FILES_DB):
     ## Load functional data for all subjects
     print(f"Loading {n_contrasts} contrast gradients...", end=" ")
     (
-        gradient_norms_per_subject,
+        gradients_per_subject,
         gradients_averaged_per_subject,
+        gradients_norm_per_subject,
     ) = load_gradients(
         df,
         # Load gradients for all subjects only in production
@@ -96,10 +112,10 @@ def get_contrast_gradient():
 
     if DEBUG:
         print(
-            f"[{datetime.now()}] get_contrast_gradient_norms {contrasts[contrast_index]} for {subjects[subject_index]}, {hemi} hemi"
+            f"[{datetime.now()}] get_contrast_gradient {contrasts[contrast_index]} for {subjects[subject_index]}, {hemi} hemi"
         )
 
-    gradient = gradient_norms_per_subject[subject_index][contrast_index]
+    gradient = gradients_per_subject[subject_index][contrast_index]
     edges = triu(gradient).tocsr()
     edges.sort_indices()
 
@@ -123,4 +139,24 @@ def get_contrast_gradient_averaged():
 
     gradient = gradients_averaged_per_subject[subject_index][contrast_index]
 
-    return jsonify(gradient.data)
+    return jsonify(gradient)
+
+
+@app.route("/contrast_gradient_norm", methods=["GET"])
+def get_contrast_gradient_norm():
+    """
+    Returns an array of size (n_voxels) which associates each fsaverage voxel i
+    with the norm of the mean of all gradient vectors along edges i -> j.
+    """
+    subject_index = request.args.get("subject_index", type=int)
+    contrast_index = request.args.get("contrast_index", type=int)
+    hemi = request.args.get("hemi", default="left", type=str)
+
+    if DEBUG:
+        print(
+            f"[{datetime.now()}] get_contrast_gradient_norm {contrasts[contrast_index]} for {subjects[subject_index]}, {hemi} hemi"
+        )
+
+    gradient = gradients_norm_per_subject[subject_index][contrast_index]
+
+    return jsonify(gradient)
