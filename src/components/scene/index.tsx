@@ -93,7 +93,7 @@ class Scene extends Component<IProps, IState> {
     });
   }
 
-  static loadMesh(
+  static async loadMesh(
     meshType: MeshType = MeshType.PIAL,
     hemisphereSide: HemisphereSide = HemisphereSide.LEFT
   ) {
@@ -133,7 +133,7 @@ class Scene extends Component<IProps, IState> {
     }
   }
 
-  static loadGradientMesh(
+  static async loadGradientMesh(
     meshType: MeshType = MeshType.PIAL,
     hemisphereSide: HemisphereSide = HemisphereSide.LEFT
   ) {
