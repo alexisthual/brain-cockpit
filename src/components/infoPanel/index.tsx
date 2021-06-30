@@ -36,14 +36,14 @@ interface IProps {
   rows: InfoPanelRow[];
 }
 
-const contrastLabelToSpan = (label: ContrastLabel) => {
-  return (
+const contrastLabelToSpan = (label?: ContrastLabel) => {
+  return label !== undefined ? (
     <span>
       <span className={"menu-item-category"}>{label.task}</span>
       <Icon icon="chevron-right" color={Colors.GRAY5} />
       <span>{label.contrast}</span>
     </span>
-  );
+  ) : null;
 };
 
 const contrastLabelRenderer = (
@@ -137,14 +137,15 @@ const InfoPanel = ({ rows }: IProps) => {
                           }
                         }}
                         onQueryChange={(query: string) => {
-                          console.log(query);
                           setContrastQuery(query);
                         }}
                         query={contrastQuery}
                       >
                         <Button
                           rightIcon="double-caret-vertical"
-                          text={input.value}
+                          text={contrastLabelToSpan(
+                            input.value as ContrastLabel
+                          )}
                         />
                       </Select>
                     );
