@@ -142,3 +142,7 @@ export type ActionPane = {
   type?: "add" | "remove";
   payload?: string;
 };
+
+export const modulo = (a: number, n: number) => {
+  return ((a % n) + n) % n;
+};

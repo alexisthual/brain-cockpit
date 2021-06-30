@@ -20,6 +20,7 @@ import {
   MeshType,
   Orientation,
   Subject,
+  modulo,
 } from "constants/index";
 import { server } from "App";
 
@@ -64,13 +65,13 @@ const SurfaceExplorer = () => {
     let n = subjectLabels.length;
     switch (action.type) {
       case "increment":
-        newIndex = ((((state.index ?? 0) + 1) % n) + n) % n;
+        newIndex = modulo((state.index ?? 0) + 1, n);
         break;
       case "decrement":
-        newIndex = ((((state.index ?? 0) - 1) % n) + n) % n;
+        newIndex = modulo((state.index ?? 0) - 1, n);
         break;
       default:
-        newIndex = ((action.payload ?? 0 % n) + n) % n;
+        newIndex = modulo(action.payload ?? 0, n);
         break;
     }
     return {
@@ -85,13 +86,13 @@ const SurfaceExplorer = () => {
     let n = contrastLabels.length;
     switch (action.type) {
       case "increment":
-        newIndex = ((((state.index ?? 0) + 1) % n) + n) % n;
+        newIndex = modulo((state.index ?? 0) + 1, n);
         break;
       case "decrement":
-        newIndex = ((((state.index ?? 0) - 1) % n) + n) % n;
+        newIndex = modulo((state.index ?? 0) - 1, n);
         break;
       default:
-        newIndex = ((action.payload ?? 0 % n) + n) % n;
+        newIndex = modulo(action.payload ?? 0, n);
         break;
     }
     return {
