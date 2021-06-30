@@ -82,7 +82,6 @@ const SurfaceExplorer = () => {
   );
   const [meshGradient, setMeshGradient] = useState<number[] | undefined>();
   const [loadingGradientMap, setLoadingGradientMap] = useState(false);
-  const [meanGradientMap, setMeanGradientMap] = useState(false);
   const [gradientAverageMap, setGradientAverageMap] = useState<
     number[][] | undefined
   >();
@@ -343,9 +342,14 @@ const SurfaceExplorer = () => {
       setLoadingSurfaceMap(true);
       if (meanSurfaceMap) {
         server
-          .get("/contrast_mean", {
-            params: { contrast_index: contrast.index, hemi: hemi },
-          })
+          .get(
+            surfaceMode === SurfaceMode.CONTRAST
+              ? "/contrast_mean"
+              : "/contrast_gradient_norm_mean",
+            {
+              params: { contrast_index: contrast.index, hemi: hemi },
+            }
+          )
           .then((response: AxiosResponse<number[]>) => {
             setSurfaceMap(response.data);
             setLoadingSurfaceMap(false);
@@ -410,15 +414,7 @@ const SurfaceExplorer = () => {
           break;
       }
     }
-  }, [
-    subject,
-    contrast,
-    meanSurfaceMap,
-    meanGradientMap,
-    hemi,
-    gradientMode,
-    surfaceMode,
-  ]);
+  }, [subject, contrast, meanSurfaceMap, hemi, gradientMode, surfaceMode]);
 
   // Update fingerprint when voxelIndex or subjectIndex change
   useEffect(() => {
