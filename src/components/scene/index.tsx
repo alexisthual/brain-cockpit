@@ -9,13 +9,13 @@ import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtil
 
 import { colormaps, HemisphereSide, MeshType, View } from "constants/index";
 import { Hotspots, IHotspot } from "./hotspots";
-import { GradientNorms, Gradient } from "./gradient";
+import { MeshGradient, CustomGradient } from "./gradient";
 import "./style.scss";
 
 interface IProps {
   clickedVoxelCallback?: any;
   surfaceMap?: number[];
-  gradientNorms?: number[];
+  meshGradient?: number[];
   gradient?: number[][];
   width: number;
   height: number;
@@ -511,16 +511,15 @@ class Scene extends Component<IProps, IState> {
       this.props.gradient !== undefined &&
       this.props.gradient !== prevProps.gradient
     ) {
-      console.log("should update gradient");
       if (this.gradient === undefined) {
-        const gradient = new Gradient(this.object, this.props.gradient);
+        const gradient = new CustomGradient(this.object, this.props.gradient);
         this.scene.add(gradient);
         this.gradient = gradient;
       } else {
         if (this.props.gradient.length !== this.gradient.nVertices) {
-          // Either there was previously a GradientNorms being displayed...
+          // Either there was previously a MeshGradient being displayed...
           this.scene.remove(this.gradient);
-          const gradient = new Gradient(this.object, this.props.gradient);
+          const gradient = new CustomGradient(this.object, this.props.gradient);
           this.scene.add(gradient);
           this.gradient = gradient;
         } else {
@@ -529,10 +528,9 @@ class Scene extends Component<IProps, IState> {
         }
       }
     } else if (
-      this.props.gradientNorms !== undefined &&
-      this.props.gradientNorms !== prevProps.gradientNorms
+      this.props.meshGradient !== undefined &&
+      this.props.meshGradient !== prevProps.meshGradient
     ) {
-      console.log("shoud update gradient norms");
       // Load edges mesh if need be
       if (this.edgesMesh === undefined) {
         this.edgesMesh = await Scene.loadGradientMesh(
@@ -542,28 +540,25 @@ class Scene extends Component<IProps, IState> {
       }
 
       if (this.gradient === undefined) {
-        console.log("this.gradient is undefined");
-        const gradient = new GradientNorms(
+        const gradient = new MeshGradient(
           this.edgesMesh,
-          this.props.gradientNorms
+          this.props.meshGradient
         );
         this.scene.add(gradient);
         this.gradient = gradient;
       } else {
-        if (this.props.gradientNorms.length !== this.gradient.nVertices) {
-          console.log("previous was Gradient");
+        if (this.props.meshGradient.length !== this.gradient.nVertices) {
           // Either there was previously a Gradient being displayed...
           this.scene.remove(this.gradient);
-          const gradient = new GradientNorms(
+          const gradient = new MeshGradient(
             this.edgesMesh,
-            this.props.gradientNorms
+            this.props.meshGradient
           );
           this.scene.add(gradient);
           this.gradient = gradient;
         } else {
-          console.log("previous was GradientNorms");
-          // ...Or there was a GradientNorms
-          this.gradient.update(this.props.gradientNorms);
+          // ...Or there was a MeshGradient
+          this.gradient.update(this.props.meshGradient);
         }
       }
     }
@@ -601,18 +596,18 @@ class Scene extends Component<IProps, IState> {
     scene.add(object);
 
     if (this.props.gradient !== undefined) {
-      const gradient = new Gradient(this.object, this.props.gradient);
+      const gradient = new CustomGradient(this.object, this.props.gradient);
       scene.add(gradient);
       this.gradient = gradient;
-    } else if (this.props.gradientNorms !== undefined) {
+    } else if (this.props.meshGradient !== undefined) {
       this.edgesMesh = await Scene.loadGradientMesh(
         this.props.meshType,
         this.props.hemi
       );
 
-      const gradient = new GradientNorms(
+      const gradient = new MeshGradient(
         this.edgesMesh,
-        this.props.gradientNorms
+        this.props.meshGradient
       );
       scene.add(gradient);
       this.gradient = gradient;

@@ -44,19 +44,18 @@ const material = new THREE.ShaderMaterial({
   lights: true,
 });
 
-// Class for displaying gradient flow
-// on the fsaverage surface.
-// All vectors of the gradient flow are therefore
+// Class for displaying gradient computed on a given surface.
+// All vectors of the gradient are therefore
 // along edges of the fsaverage mesh.
-export class GradientNorms extends THREE.Mesh {
+export class MeshGradient extends THREE.Mesh {
   originalMesh: any;
   nVertices: number;
 
-  // Initiate Gradient object with mesh and gradientNorms
+  // Initiate MeshGradient object with mesh and gradient
   // Here, mesh is expected to have 2 attributes:
   // - position, which yields 3d vectors giving coordinates of our gradient vectors
   // - tangent, which yiels normalized 3d vectors giving the orientation of our gradient vectors
-  constructor(mesh: any, gradientNorms?: number[]) {
+  constructor(mesh: any, gradientNorm?: number[]) {
     // Use InstancedBufferGeometry which allows for better
     // performances when drawing the same geometry several times
     // (draws all instances in one single call).
@@ -125,16 +124,16 @@ export class GradientNorms extends THREE.Mesh {
     this.castShadow = true;
     this.originalMesh = mesh;
 
-    // Set vectors properties according to gradientNorms
-    if (gradientNorms !== undefined) {
-      this.update(gradientNorms);
+    // Set vectors properties according to gradientNorm
+    if (gradientNorm !== undefined) {
+      this.update(gradientNorm);
     }
   }
 
-  update(gradientNorms: number[]) {
-    if (gradientNorms.length !== this.nVertices) {
+  update(gradientNorm: number[]) {
+    if (gradientNorm.length !== this.nVertices) {
       console.warn(
-        `gradientNorms length and number of edges don't match: ${gradientNorms.length} !== ${this.nVertices}`
+        `gradientNorm length and number of edges don't match: ${gradientNorm.length} !== ${this.nVertices}`
       );
     }
 
@@ -148,7 +147,7 @@ export class GradientNorms extends THREE.Mesh {
     const orientations = (this
       .geometry as THREE.ConeBufferGeometry).getAttribute("orientation");
 
-    gradientNorms.forEach((edge: number, index: number) => {
+    gradientNorm.forEach((edge: number, index: number) => {
       const vertex = new THREE.Vector3();
       vertex.fromBufferAttribute(
         this.originalMesh.geometry.getAttribute("tangent"),
@@ -173,7 +172,8 @@ export class GradientNorms extends THREE.Mesh {
         quaternion.w
       );
 
-      // Scale proportionally to gradient norm
+      // Scale proportionally to gradientNorm norm
+      // scales.setX(index, 30 * Math.abs(edge));
       scales.setX(index, Math.abs(edge));
     });
 
@@ -186,11 +186,15 @@ export class GradientNorms extends THREE.Mesh {
   }
 }
 
-export class Gradient extends THREE.Mesh {
+// Class for displaying a field of vectors.
+// The center of each vector is given by a mesh.
+// Ex: compute average vector from gradient computed on a mesh
+// and display these vectors centered at the mesh vertices
+export class CustomGradient extends THREE.Mesh {
   originalMesh: any;
   nVertices: number;
 
-  constructor(mesh: any, gradient?: number[][]) {
+  constructor(mesh: any, vectors?: number[][]) {
     // Use InstancedBufferGeometry which allows for better
     // performances when drawing the same geometry several times
     // (draws all instances in one single call).
@@ -244,15 +248,15 @@ export class Gradient extends THREE.Mesh {
     this.originalMesh = mesh;
 
     // Set vectors properties according to gradient
-    if (gradient !== undefined) {
-      this.update(gradient);
+    if (vectors !== undefined) {
+      this.update(vectors);
     }
   }
 
-  update(gradient: number[][]) {
-    if (gradient.length !== this.nVertices) {
+  update(vectors: number[][]) {
+    if (vectors.length !== this.nVertices) {
       console.warn(
-        `gradient length and number of vertices don't match: ${gradient.length} !== ${this.nVertices}`
+        `vectors length and number of vertices don't match: ${vectors.length} !== ${this.nVertices}`
       );
     }
 
@@ -263,7 +267,7 @@ export class Gradient extends THREE.Mesh {
     const orientations = (this
       .geometry as THREE.ConeBufferGeometry).getAttribute("orientation");
 
-    gradient.forEach((vector: number[], index: number) => {
+    vectors.forEach((vector: number[], index: number) => {
       const v = new THREE.Vector3();
 
       // Store vector norm before normalizing
