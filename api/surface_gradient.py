@@ -160,3 +160,26 @@ def get_contrast_gradient_norm():
     gradient = gradients_norm_per_subject[subject_index][contrast_index]
 
     return jsonify(gradient)
+
+
+@app.route("/contrast_gradient_norm_mean", methods=["GET"])
+def get_contrast_gradient_norm_mean():
+    contrast_index = request.args.get("contrast_index", type=int)
+    hemi = request.args.get("hemi", default="left", type=str)
+
+    if DEBUG:
+        print(
+            f"[{datetime.now()}] get_contrast_gradient_norm_mean {contrasts[contrast_index]}, {hemi} hemi"
+        )
+
+    gradient = np.nanmean(
+        np.vstack(
+            [
+                gradients_norm_per_subject[subject_index][contrast_index]
+                for subject_index in range(n_subjects)
+            ]
+        ),
+        axis=0,
+    )
+
+    return jsonify(gradient)
