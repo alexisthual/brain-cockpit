@@ -38,4 +38,4 @@ def load_env(verbose=False):
                 dotenv_path=".env.development.local", override=True
             )
 
-    return args
+    return args.env

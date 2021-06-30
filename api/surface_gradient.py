@@ -14,7 +14,7 @@ import custom_utils.setup as setup
 from api.surface_contrasts import parse_conditions_db
 
 # Load environment variables
-args = setup.load_env()
+env = setup.load_env()
 
 DEBUG = os.getenv("DEBUG")
 
@@ -94,7 +94,7 @@ if REACT_APP_CONDITIONS_VIEW and os.path.exists(AVAILABLE_GIFTI_FILES_DB):
     ) = load_gradients(
         df,
         # Load gradients for all subjects only in production
-        subjects if args.env == "production" else ["sub-01"],
+        subjects if env == "production" else ["sub-01"],
     )
     print("OK")
 
