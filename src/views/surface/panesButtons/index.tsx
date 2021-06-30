@@ -1,6 +1,7 @@
 import { Button } from "@blueprintjs/core";
 import React from "react";
 
+import { GradientMode, SurfaceMode } from "constants/index";
 import "./style.scss";
 
 interface Props {
@@ -9,10 +10,12 @@ interface Props {
   filterSurfaceCallback: () => void;
   sharedState: boolean;
   sharedStateCallback: () => void;
-  showGradient?: number;
+  gradientMode?: GradientMode;
   showGradientCallback?: () => void;
   showGridHelper?: boolean;
   showGridHelperCallback?: () => void;
+  surfaceMode?: SurfaceMode;
+  showSurfaceCallback?: () => void;
 }
 
 const PanesButtons = ({
@@ -21,11 +24,39 @@ const PanesButtons = ({
   filterSurfaceCallback = () => {},
   sharedState,
   sharedStateCallback = () => {},
-  showGradient,
+  gradientMode,
   showGradientCallback = () => {},
   showGridHelper,
   showGridHelperCallback = () => {},
+  surfaceMode,
+  showSurfaceCallback = () => {},
 }: Props) => {
+  let gradientButtonText;
+  switch (gradientMode) {
+    case GradientMode.EDGES:
+      gradientButtonText = "Gradient";
+      break;
+    case GradientMode.AVERAGE:
+      gradientButtonText = "Gradient average";
+      break;
+    default:
+      gradientButtonText = "None";
+      break;
+  }
+
+  let surfaceButtonText;
+  switch (surfaceMode) {
+    case SurfaceMode.CONTRAST:
+      surfaceButtonText = "Contrast";
+      break;
+    case SurfaceMode.GRADIENT:
+      surfaceButtonText = "Gradient";
+      break;
+    default:
+      surfaceButtonText = "Contrast";
+      break;
+  }
+
   return (
     <div className="panes-buttons">
       <Button
@@ -34,14 +65,18 @@ const PanesButtons = ({
         onClick={showGridHelperCallback}
         outlined
       />
-      {showGradient !== undefined ? (
-        <Button
-          active={showGradient > 0}
-          icon={showGradient === 2 ? "flow-review-branch" : "arrow-top-right"}
-          onClick={showGradientCallback}
-          outlined
-        />
-      ) : null}
+      <Button
+        icon={"function"}
+        onClick={showSurfaceCallback}
+        text={surfaceButtonText}
+        outlined
+      />
+      <Button
+        icon={"flows"}
+        onClick={showGradientCallback}
+        text={gradientButtonText}
+        outlined
+      />
       <Button
         active={filterSurface}
         icon={"filter"}

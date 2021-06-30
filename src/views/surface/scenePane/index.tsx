@@ -17,10 +17,12 @@ import {
   colormaps,
   Contrast,
   ContrastLabel,
+  GradientMode,
   HemisphereSide,
   MeshType,
   modulo,
   Subject,
+  SurfaceMode,
 } from "constants/index";
 import PaneButtons from "./buttons";
 
@@ -34,7 +36,7 @@ interface Props {
   sharedContrast?: Contrast;
   sharedSurfaceMap?: number[];
   sharedMeanSurfaceMap: boolean;
-  sharedGradientNorms?: number[];
+  sharedMeshGradient?: number[];
   sharedGradient?: number[][];
   sharedVoxelIndex?: number;
   setSharedVoxelIndex?: (voxelIndex: number) => void;
@@ -46,6 +48,8 @@ interface Props {
   highThresholdMin?: number;
   highThresholdMax?: number;
   showGridHelper?: boolean;
+  gradientMode?: GradientMode;
+  surfaceMode?: SurfaceMode;
 }
 
 const ScenePane = ({
@@ -58,7 +62,7 @@ const ScenePane = ({
   sharedContrast,
   sharedSurfaceMap,
   sharedMeanSurfaceMap = false,
-  sharedGradientNorms,
+  sharedMeshGradient,
   sharedGradient,
   sharedVoxelIndex,
   setSharedVoxelIndex = () => {},
@@ -70,13 +74,17 @@ const ScenePane = ({
   highThresholdMin,
   highThresholdMax,
   showGridHelper,
+  gradientMode,
+  surfaceMode,
 }: Props) => {
   const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
   const [surfaceMap, setSurfaceMap] = useState<number[] | undefined>();
   const [loadingSurfaceMap, setLoadingSurfaceMap] = useState(false);
   const [meanSurfaceMap, setMeanSurfaceMap] = useState(false);
-  const [gradientNorms, setGradientMap] = useState<number[] | undefined>();
-  const [gradient, setGradient] = useState<number[][] | undefined>();
+  const [meshGradient, setMeshGradient] = useState<number[] | undefined>();
+  const [gradientAverageMap, setGradientAverageMap] = useState<
+    number[][] | undefined
+  >();
   const [loadingGradientMap, setLoadingGradientMap] = useState(false);
   const [meanGradientMap, setMeanGradientMap] = useState(false);
   const [wireframe] = useState(false);
@@ -257,13 +265,18 @@ const ScenePane = ({
           });
       } else if (subject.index !== undefined) {
         server
-          .get("/contrast", {
-            params: {
-              subject_index: subject.index,
-              contrast_index: contrast.index,
-              hemi: hemi,
-            },
-          })
+          .get(
+            surfaceMode === SurfaceMode.GRADIENT
+              ? "/contrast_gradient_norm"
+              : "/contrast",
+            {
+              params: {
+                subject_index: subject.index,
+                contrast_index: contrast.index,
+                hemi: hemi,
+              },
+            }
+          )
           .then((response: AxiosResponse<number[]>) => {
             setSurfaceMap(response.data);
             setLoadingSurfaceMap(false);
@@ -272,21 +285,53 @@ const ScenePane = ({
         setLoadingSurfaceMap(false);
       }
 
-      // setLoadingGradientMap(true);
-      // if (meanGradientMap) {
-      // } else if (subject.index !== undefined) {
-      //   eel.get_contrast_gradient_norms(
-      //     subject.index,
-      //     contrast.index
-      //   )((gradientNorms: number[]) => {
-      //     setGradientMap(gradientNorms);
-      //     setLoadingGradientMap(false);
-      //   });
-      // } else {
-      //   setLoadingGradientMap(false);
-      // }
+      // Load surfacemap gradient
+      setLoadingGradientMap(true);
+      switch (gradientMode) {
+        case GradientMode.EDGES:
+          if (subject.index !== undefined) {
+            server
+              .get("/contrast_gradient", {
+                params: {
+                  subject_index: subject.index,
+                  contrast_index: contrast.index,
+                },
+              })
+              .then((response: AxiosResponse<number[]>) => {
+                setMeshGradient(response.data);
+                setLoadingGradientMap(false);
+              });
+          }
+          break;
+        case GradientMode.AVERAGE:
+          if (subject.index !== undefined) {
+            server
+              .get("/contrast_gradient_averaged", {
+                params: {
+                  subject_index: subject.index,
+                  contrast_index: contrast.index,
+                },
+              })
+              .then((response: AxiosResponse<number[][]>) => {
+                setGradientAverageMap(response.data);
+                setLoadingGradientMap(false);
+              });
+          }
+          break;
+        default:
+          setLoadingGradientMap(false);
+          break;
+      }
     }
-  }, [subject, contrast, meanSurfaceMap, meanGradientMap, hemi]);
+  }, [
+    subject,
+    contrast,
+    meanSurfaceMap,
+    meanGradientMap,
+    hemi,
+    gradientMode,
+    surfaceMode,
+  ]);
 
   return (
     <div className="scene" ref={panelEl}>
@@ -344,19 +389,12 @@ const ScenePane = ({
               label: "Contrast",
               inputs: [
                 {
-                  inputType: InputType.SELECT_STRING,
-                  value:
-                    contrast.label !== undefined
-                      ? contrast.label.contrast
-                      : undefined,
-                  values: contrastLabels.map(
-                    (label: ContrastLabel) => label.contrast
-                  ),
-                  onChangeCallback: (newValue: string) =>
+                  inputType: InputType.SELECT_CONTRAST,
+                  value: contrast.label,
+                  values: contrastLabels,
+                  onChangeCallback: (newValue: ContrastLabel) =>
                     setContrast({
-                      payload: contrastLabels
-                        .map((label: ContrastLabel) => label.contrast)
-                        .indexOf(newValue),
+                      payload: contrastLabels.indexOf(newValue),
                     }),
                 },
               ],
@@ -376,6 +414,9 @@ const ScenePane = ({
       {loadingSurfaceMap ? (
         <TextualLoader text="Loading surface map..." />
       ) : null}
+      {loadingGradientMap ? (
+        <TextualLoader text="Loading gradient map..." />
+      ) : null}
       <ParentSize className="scene-container" debounceTime={10}>
         {({ width: sceneWidth, height: sceneHeight }) => (
           <Scene
@@ -389,8 +430,8 @@ const ScenePane = ({
             colormap={colormaps[colormapName]}
             voxelIndex={sharedState ? sharedVoxelIndex : voxelIndex}
             surfaceMap={sharedState ? sharedSurfaceMap : surfaceMap}
-            gradientNorms={sharedState ? sharedGradientNorms : gradientNorms}
-            gradient={sharedState ? sharedGradient : gradient}
+            meshGradient={sharedState ? sharedMeshGradient : meshGradient}
+            gradient={sharedState ? sharedGradient : gradientAverageMap}
             meshType={sharedState ? sharedMeshType : meshType}
             hemi={sharedState ? sharedHemi : hemi}
             wireframe={sharedState ? sharedWireframe : wireframe}

@@ -16,10 +16,12 @@ import {
   colormaps,
   Contrast,
   ContrastLabel,
+  GradientMode,
   HemisphereSide,
   MeshType,
   Orientation,
   Subject,
+  SurfaceMode,
   modulo,
 } from "constants/index";
 import { server } from "App";
@@ -31,15 +33,54 @@ const SurfaceExplorer = () => {
   const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
   const [loadingFingerprint, setLoadingFingerprint] = useState(false);
   const [meanFingerprint, setMeanFingerprint] = useState(false);
-  const [contrastMap, setContrastMap] = useState<number[] | undefined>();
-  const [loadingContrastMap, setLoadingContrastMap] = useState(false);
-  const [meanContrastMap, setMeanContrastMap] = useState(false);
-  // Variable to show gradients.
-  // 0 = don't show
-  // 1 = show on mesh
-  // 2 = show averaged
-  const [showGradient, setShowGradient] = useState(0);
-  const [gradientNorms, setGradientNorms] = useState<number[] | undefined>();
+  const [surfaceMap, setSurfaceMap] = useState<number[] | undefined>();
+  const [loadingContrastMap, setLoadingSurfaceMap] = useState(false);
+  const [meanSurfaceMap, setMeanContrastMap] = useState(false);
+  const gradientModeReducer = (
+    gradientMode: GradientMode,
+    action: ActionLabel
+  ): GradientMode => {
+    let newIndex = Object.keys(GradientMode).indexOf(gradientMode);
+    const n = Object.values(GradientMode).length;
+    switch (action.type) {
+      case "increment":
+        newIndex = modulo(newIndex + 1, n);
+        break;
+      case "decrement":
+        newIndex = modulo(newIndex - 1, n);
+        break;
+      default:
+        break;
+    }
+    return Object.values(GradientMode)[newIndex];
+  };
+  const [gradientMode, setGradientMode] = useReducer(
+    gradientModeReducer,
+    GradientMode.NONE
+  );
+  const surfaceModeReducer = (
+    surfaceMode: SurfaceMode,
+    action: ActionLabel
+  ): SurfaceMode => {
+    let newIndex = Object.keys(SurfaceMode).indexOf(surfaceMode);
+    const n = Object.values(SurfaceMode).length;
+    switch (action.type) {
+      case "increment":
+        newIndex = modulo(newIndex + 1, n);
+        break;
+      case "decrement":
+        newIndex = modulo(newIndex - 1, n);
+        break;
+      default:
+        break;
+    }
+    return Object.values(SurfaceMode)[newIndex];
+  };
+  const [surfaceMode, setSurfaceMode] = useReducer(
+    surfaceModeReducer,
+    SurfaceMode.CONTRAST
+  );
+  const [meshGradient, setMeshGradient] = useState<number[] | undefined>();
   const [loadingGradientMap, setLoadingGradientMap] = useState(false);
   const [meanGradientMap, setMeanGradientMap] = useState(false);
   const [gradientAverageMap, setGradientAverageMap] = useState<
@@ -53,8 +94,8 @@ const SurfaceExplorer = () => {
   const [hemi, setHemi] = useState(HemisphereSide.LEFT);
   const [sharedState, setSharedState] = useState(true);
   const [lowThresholdMin, setLowThresholdMin] = useState(-10);
-  const [lowThresholdMax, setLowThresholdMax] = useState(-3);
-  const [highThresholdMin, setHighThresholdMin] = useState(3);
+  const [lowThresholdMax, setLowThresholdMax] = useState(0);
+  const [highThresholdMin, setHighThresholdMin] = useState(0);
   const [highThresholdMax, setHighThresholdMax] = useState(10);
   const [filterSurface, setFilterSurface] = useState(false);
 
@@ -198,12 +239,12 @@ const SurfaceExplorer = () => {
       if (event.target.matches("input")) return;
 
       if (event.isComposing || event.keyCode === 73) {
-        if (sharedState && !meanContrastMap) {
+        if (sharedState && !meanSurfaceMap) {
           setSubject({ type: "increment" });
         }
       }
     },
-    [sharedState, meanContrastMap]
+    [sharedState, meanSurfaceMap]
   );
   useEffect(() => {
     window.addEventListener("keydown", incrementSubject);
@@ -216,12 +257,12 @@ const SurfaceExplorer = () => {
       if (event.target.matches("input")) return;
 
       if (event.isComposing || event.keyCode === 75) {
-        if (sharedState && !meanContrastMap) {
+        if (sharedState && !meanSurfaceMap) {
           setSubject({ type: "decrement" });
         }
       }
     },
-    [sharedState, meanContrastMap]
+    [sharedState, meanSurfaceMap]
   );
   useEffect(() => {
     window.addEventListener("keydown", decrementSubject);
@@ -298,51 +339,58 @@ const SurfaceExplorer = () => {
   // Update contrast map when subject or contrast change
   useEffect(() => {
     if (contrast.index !== undefined) {
-      setLoadingContrastMap(true);
-      if (meanContrastMap) {
+      // Load surfacemap
+      setLoadingSurfaceMap(true);
+      if (meanSurfaceMap) {
         server
           .get("/contrast_mean", {
             params: { contrast_index: contrast.index, hemi: hemi },
           })
           .then((response: AxiosResponse<number[]>) => {
-            setContrastMap(response.data);
-            setLoadingContrastMap(false);
+            setSurfaceMap(response.data);
+            setLoadingSurfaceMap(false);
           });
       } else if (subject.index !== undefined) {
         server
-          .get("/contrast", {
-            params: {
-              subject_index: subject.index,
-              contrast_index: contrast.index,
-              hemi: hemi,
-            },
-          })
+          .get(
+            surfaceMode === SurfaceMode.CONTRAST
+              ? "/contrast"
+              : "/contrast_gradient_norm",
+            {
+              params: {
+                subject_index: subject.index,
+                contrast_index: contrast.index,
+                hemi: hemi,
+              },
+            }
+          )
           .then((response: AxiosResponse<number[]>) => {
-            setContrastMap(response.data);
-            setLoadingContrastMap(false);
+            setSurfaceMap(response.data);
+            setLoadingSurfaceMap(false);
           });
       } else {
-        setLoadingContrastMap(false);
+        setLoadingSurfaceMap(false);
       }
 
+      // Load surfacemap gradient
       setLoadingGradientMap(true);
-      switch (showGradient) {
-        case 2:
+      switch (gradientMode) {
+        case GradientMode.EDGES:
           if (subject.index !== undefined) {
             server
-              .get("/contrast_gradient_norms", {
+              .get("/contrast_gradient", {
                 params: {
                   subject_index: subject.index,
                   contrast_index: contrast.index,
                 },
               })
               .then((response: AxiosResponse<number[]>) => {
-                setGradientNorms(response.data);
+                setMeshGradient(response.data);
                 setLoadingGradientMap(false);
               });
           }
           break;
-        case 1:
+        case GradientMode.AVERAGE:
           if (subject.index !== undefined) {
             server
               .get("/contrast_gradient_averaged", {
@@ -362,7 +410,15 @@ const SurfaceExplorer = () => {
           break;
       }
     }
-  }, [subject, contrast, meanContrastMap, meanGradientMap, hemi, showGradient]);
+  }, [
+    subject,
+    contrast,
+    meanSurfaceMap,
+    meanGradientMap,
+    hemi,
+    gradientMode,
+    surfaceMode,
+  ]);
 
   // Update fingerprint when voxelIndex or subjectIndex change
   useEffect(() => {
@@ -407,10 +463,25 @@ const SurfaceExplorer = () => {
         {sharedState && loadingContrastMap ? (
           <TextualLoader text="Loading surface map..." />
         ) : null}
+        {sharedState && loadingGradientMap ? (
+          <TextualLoader text="Loading gradient map..." />
+        ) : null}
         <Colorbar
-          colormap={colormaps[colormapName]}
-          vmin={-10}
-          vmax={10}
+          colormap={
+            surfaceMode === SurfaceMode.GRADIENT
+              ? colormaps["single_diverging_heat"]
+              : colormaps[colormapName]
+          }
+          vmin={
+            surfaceMode === SurfaceMode.GRADIENT && surfaceMap !== undefined
+              ? Math.min(...surfaceMap)
+              : -10
+          }
+          vmax={
+            surfaceMode === SurfaceMode.GRADIENT && surfaceMap !== undefined
+              ? Math.max(...surfaceMap)
+              : 10
+          }
           unit="Z-Score"
         />
         <PanesButtons
@@ -421,10 +492,12 @@ const SurfaceExplorer = () => {
           filterSurfaceCallback={() => setFilterSurface(!filterSurface)}
           sharedState={sharedState}
           sharedStateCallback={() => setSharedState(!sharedState)}
-          showGradient={showGradient}
-          showGradientCallback={() => setShowGradient((showGradient + 1) % 3)}
+          gradientMode={gradientMode}
+          showGradientCallback={() => setGradientMode({ type: "increment" })}
           showGridHelper={showGridHelper}
           showGridHelperCallback={() => setShowGridHelper(!showGridHelper)}
+          surfaceMode={surfaceMode}
+          showSurfaceCallback={() => setSurfaceMode({ type: "increment" })}
         />
         {sharedState ? (
           <InfoPanel
@@ -467,9 +540,8 @@ const SurfaceExplorer = () => {
                   },
                   {
                     inputType: InputType.BUTTON,
-                    value: meanContrastMap,
-                    onChangeCallback: () =>
-                      setMeanContrastMap(!meanContrastMap),
+                    value: meanSurfaceMap,
+                    onChangeCallback: () => setMeanContrastMap(!meanSurfaceMap),
                     iconActive: "group-objects",
                     iconInactive: "ungroup-objects",
                     title: "Mean across subjects",
@@ -481,10 +553,7 @@ const SurfaceExplorer = () => {
                 inputs: [
                   {
                     inputType: InputType.SELECT_CONTRAST,
-                    value:
-                      contrast.label !== undefined
-                        ? contrast.label.contrast
-                        : undefined,
+                    value: contrast.label,
                     values: contrastLabels,
                     onChangeCallback: (newValue: ContrastLabel) =>
                       setContrast({
@@ -513,19 +582,25 @@ const SurfaceExplorer = () => {
                 closeCallback={() => {
                   setPanes({ type: "remove", payload: paneId });
                 }}
-                colormapName={colormapName}
+                colormapName={
+                  surfaceMode === SurfaceMode.GRADIENT
+                    ? "single_diverging_heat"
+                    : colormapName
+                }
                 subjectLabels={subjectLabels}
                 contrastLabels={contrastLabels}
                 sharedState={sharedState}
                 sharedSubject={subject}
                 sharedContrast={contrast}
-                sharedSurfaceMap={contrastMap}
-                sharedMeanSurfaceMap={meanContrastMap}
-                sharedGradientNorms={
-                  showGradient === 2 ? gradientNorms : undefined
+                sharedSurfaceMap={surfaceMap}
+                sharedMeanSurfaceMap={meanSurfaceMap}
+                sharedMeshGradient={
+                  gradientMode === GradientMode.EDGES ? meshGradient : undefined
                 }
                 sharedGradient={
-                  showGradient === 1 ? gradientAverageMap : undefined
+                  gradientMode === GradientMode.AVERAGE
+                    ? gradientAverageMap
+                    : undefined
                 }
                 sharedVoxelIndex={voxelIndex}
                 setSharedVoxelIndex={(newVoxelIndex: number) => {
@@ -534,11 +609,13 @@ const SurfaceExplorer = () => {
                 sharedWireframe={wireframe}
                 sharedMeshType={meshType}
                 sharedHemi={hemi}
-                lowThresholdMin={lowThresholdMin}
+                lowThresholdMin={filterSurface ? lowThresholdMin : undefined}
                 lowThresholdMax={filterSurface ? lowThresholdMax : undefined}
                 highThresholdMin={filterSurface ? highThresholdMin : undefined}
-                highThresholdMax={highThresholdMax}
+                highThresholdMax={filterSurface ? highThresholdMax : undefined}
                 showGridHelper={showGridHelper}
+                gradientMode={gradientMode}
+                surfaceMode={surfaceMode}
               />
             );
           })}

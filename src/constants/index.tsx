@@ -146,3 +146,14 @@ export type ActionPane = {
 export const modulo = (a: number, n: number) => {
   return ((a % n) + n) % n;
 };
+
+export enum GradientMode {
+  NONE = "NONE",
+  EDGES = "EDGES",
+  AVERAGE = "AVERAGE",
+}
+
+export enum SurfaceMode {
+  CONTRAST = "CONTRAST",
+  GRADIENT = "GRADIENT",
+}
