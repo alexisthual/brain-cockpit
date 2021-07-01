@@ -89,7 +89,12 @@ class Scene extends Component<IProps, IState> {
     const loader = new GLTFLoader();
 
     return new Promise((resolve, reject) => {
-      loader.load(url, (data) => resolve(data), undefined, reject);
+      loader.load(
+        `${process.env.REACT_APP_API_HTTP_PROTOCOL}://${process.env.REACT_APP_API_URL}/${url}`,
+        (data) => resolve(data),
+        undefined,
+        reject
+      );
     });
   }
 
@@ -99,23 +104,21 @@ class Scene extends Component<IProps, IState> {
   ) {
     switch (hemisphereSide) {
       case HemisphereSide.LEFT:
-        return Scene.load(`/assets/fsaverage_${meshType}_left.gltf`).then(
+        return Scene.load(`mesh/fsaverage5_${meshType}_left.gltf`).then(
           (gltf: any) => {
             return gltf.scene.children[0] as any;
           }
         );
       case HemisphereSide.RIGHT:
-        return Scene.load(`/assets/fsaverage_${meshType}_right.gltf`).then(
+        return Scene.load(`mesh/fsaverage5_${meshType}_right.gltf`).then(
           (gltf: any) => {
             return gltf.scene.children[0] as any;
           }
         );
       case HemisphereSide.BOTH:
         // Load both meshes
-        const loadLeft = Scene.load(`/assets/fsaverage_${meshType}_left.gltf`);
-        const loadRight = Scene.load(
-          `/assets/fsaverage_${meshType}_right.gltf`
-        );
+        const loadLeft = Scene.load(`mesh/fsaverage5_${meshType}_left.gltf`);
+        const loadRight = Scene.load(`mesh/fsaverage5_${meshType}_right.gltf`);
 
         // Merge them in a common Mesh
         return Promise.all([loadLeft, loadRight]).then((values: any) => {
@@ -139,24 +142,24 @@ class Scene extends Component<IProps, IState> {
   ) {
     switch (hemisphereSide) {
       case HemisphereSide.LEFT:
-        return Scene.load(`/assets/edges_fsaverage_${meshType}_left.gltf`).then(
+        return Scene.load(`mesh/edges_fsaverage5_${meshType}_left.gltf`).then(
           (gltf: any) => {
             return gltf.scene.children[0] as any;
           }
         );
       case HemisphereSide.RIGHT:
-        return Scene.load(
-          `/assets/edges_fsaverage_${meshType}_right.gltf`
-        ).then((gltf: any) => {
-          return gltf.scene.children[0] as any;
-        });
+        return Scene.load(`mesh/edges_fsaverage5_${meshType}_right.gltf`).then(
+          (gltf: any) => {
+            return gltf.scene.children[0] as any;
+          }
+        );
       case HemisphereSide.BOTH:
         // Load both meshes
         const loadLeft = Scene.load(
-          `/assets/edges_fsaverage_${meshType}_left.gltf`
+          `mesh/edges_fsaverage5_${meshType}_left.gltf`
         );
         const loadRight = Scene.load(
-          `/assets/edges_fsaverage_${meshType}_right.gltf`
+          `mesh/edges_fsaverage5_${meshType}_right.gltf`
         );
 
         // Merge them in a common Mesh

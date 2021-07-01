@@ -2,7 +2,7 @@ from api import app
 from datetime import datetime
 from distutils.util import strtobool
 import dotenv
-from flask import jsonify, request
+from flask import jsonify, request, send_from_directory
 import nibabel as nib
 import numpy as np
 import os
@@ -20,6 +20,7 @@ REACT_APP_CONDITIONS_VIEW = bool(
     strtobool(os.getenv("REACT_APP_CONDITIONS_VIEW"))
 )
 AVAILABLE_GIFTI_FILES_DB = os.getenv("AVAILABLE_GIFTI_FILES_DB")
+MESH_PATH = os.getenv("MESH_PATH")
 
 n_voxels_hemi = 10242
 
@@ -213,6 +214,14 @@ def get_contrast_labels():
         print(f"[{datetime.now()}] get_contrast_labels")
 
     return jsonify(contrasts)
+
+
+@app.route("/mesh/<path:path>", methods=["GET"])
+def get_mesh(path):
+    if DEBUG:
+        print(f"[{datetime.now()}] get_mesh {path}")
+
+    return send_from_directory(MESH_PATH, path)
 
 
 @app.route("/voxel_fingerprint", methods=["GET"])
