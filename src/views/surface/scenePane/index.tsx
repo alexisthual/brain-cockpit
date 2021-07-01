@@ -9,6 +9,7 @@ import React, {
 } from "react";
 
 import { server } from "App";
+import Colorbar from "components/colorbar";
 import InfoPanel, { InputType } from "components/infoPanel";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
@@ -86,7 +87,6 @@ const ScenePane = ({
     number[][] | undefined
   >();
   const [loadingGradientMap, setLoadingGradientMap] = useState(false);
-  const [meanGradientMap, setMeanGradientMap] = useState(false);
   const [wireframe] = useState(false);
   const [meshType, setMeshType] = useState(MeshType.PIAL);
   const [hemi, setHemi] = useState(HemisphereSide.LEFT);
@@ -256,9 +256,14 @@ const ScenePane = ({
       setLoadingSurfaceMap(true);
       if (meanSurfaceMap) {
         server
-          .get("/contrast_mean", {
-            params: { contrast_index: contrast.index, hemi: hemi },
-          })
+          .get(
+            surfaceMode === SurfaceMode.GRADIENT
+              ? "/contrast_gradient_norm_mean"
+              : "/contrast_mean",
+            {
+              params: { contrast_index: contrast.index, hemi: hemi },
+            }
+          )
           .then((response: AxiosResponse<number[]>) => {
             setSurfaceMap(response.data);
             setLoadingSurfaceMap(false);
@@ -323,15 +328,7 @@ const ScenePane = ({
           break;
       }
     }
-  }, [
-    subject,
-    contrast,
-    meanSurfaceMap,
-    meanGradientMap,
-    hemi,
-    gradientMode,
-    surfaceMode,
-  ]);
+  }, [subject, contrast, meanSurfaceMap, hemi, gradientMode, surfaceMode]);
 
   return (
     <div className="scene" ref={panelEl}>
@@ -417,6 +414,26 @@ const ScenePane = ({
       {loadingGradientMap ? (
         <TextualLoader text="Loading gradient map..." />
       ) : null}
+      <Colorbar
+        colormap={
+          surfaceMode === SurfaceMode.GRADIENT
+            ? colormaps["single_diverging_heat"]
+            : colormaps[colormapName]
+        }
+        vmin={
+          surfaceMode === SurfaceMode.GRADIENT && surfaceMap !== undefined
+            ? Math.min(...surfaceMap)
+            : -10
+        }
+        vmax={
+          surfaceMode === SurfaceMode.GRADIENT && surfaceMap !== undefined
+            ? Math.max(...surfaceMap)
+            : 10
+        }
+        unit={
+          surfaceMode === SurfaceMode.CONTRAST ? "Z-Score" : "Z-Score\n/ mm"
+        }
+      />
       <ParentSize className="scene-container" debounceTime={10}>
         {({ width: sceneWidth, height: sceneHeight }) => (
           <Scene

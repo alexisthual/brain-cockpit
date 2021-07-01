@@ -462,24 +462,28 @@ const SurfaceExplorer = () => {
         {sharedState && loadingGradientMap ? (
           <TextualLoader text="Loading gradient map..." />
         ) : null}
-        <Colorbar
-          colormap={
-            surfaceMode === SurfaceMode.GRADIENT
-              ? colormaps["single_diverging_heat"]
-              : colormaps[colormapName]
-          }
-          vmin={
-            surfaceMode === SurfaceMode.GRADIENT && surfaceMap !== undefined
-              ? Math.min(...surfaceMap)
-              : -10
-          }
-          vmax={
-            surfaceMode === SurfaceMode.GRADIENT && surfaceMap !== undefined
-              ? Math.max(...surfaceMap)
-              : 10
-          }
-          unit="Z-Score"
-        />
+        {sharedState ? (
+          <Colorbar
+            colormap={
+              surfaceMode === SurfaceMode.GRADIENT
+                ? colormaps["single_diverging_heat"]
+                : colormaps[colormapName]
+            }
+            vmin={
+              surfaceMode === SurfaceMode.GRADIENT && surfaceMap !== undefined
+                ? Math.min(...surfaceMap)
+                : -10
+            }
+            vmax={
+              surfaceMode === SurfaceMode.GRADIENT && surfaceMap !== undefined
+                ? Math.max(...surfaceMap)
+                : 10
+            }
+            unit={
+              surfaceMode === SurfaceMode.CONTRAST ? "Z-Score" : "Z-Score / mm"
+            }
+          />
+        ) : null}
         <PanesButtons
           addPaneCallback={() => {
             setPanes({ type: "add" });
