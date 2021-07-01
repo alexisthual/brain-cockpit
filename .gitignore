@@ -2,6 +2,7 @@ node_modules
 .eslintcache
 yarn-error.log
 public/assets/*
+public/meshes/*
 .env.local
 .env.development
 .env.development.local
