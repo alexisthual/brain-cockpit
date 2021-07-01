@@ -98,6 +98,11 @@ def compute_gltf_from_gifti(mesh_path, original_mesh_name, mesh_type, side):
     - mesh_type: string, among ["pial", "white", etc]
     - side: string, ["left", "right"]
     """
+    # Create output folder for mesh
+    mesh_output_path = os.path.join(OUTPUT_PATH, original_mesh_name)
+    if not os.path.exists(mesh_output_path):
+        os.mkdir(mesh_output_path)
+
     vertices, triangles = read_gii(mesh_path)
     vertices = vertices.tolist()
     triangles = triangles.tolist()
@@ -135,11 +140,11 @@ def compute_gltf_from_gifti(mesh_path, original_mesh_name, mesh_type, side):
         buffers=[
             Buffer(
                 byteLength=len(vertex_bytearray),
-                uri=f"vertices_{original_mesh_name}_{mesh_type}_{side}.bin",
+                uri=f"vertices_{mesh_type}_{side}.bin",
             ),
             Buffer(
                 byteLength=len(triangles_bytearray),
-                uri=f"triangles_{original_mesh_name}_{mesh_type}_{side}.bin",
+                uri=f"triangles_{mesh_type}_{side}.bin",
             ),
         ],
         bufferViews=[
@@ -177,19 +182,13 @@ def compute_gltf_from_gifti(mesh_path, original_mesh_name, mesh_type, side):
     )
 
     vertices_resource = FileResource(
-        f"vertices_{original_mesh_name}_{mesh_type}_{side}.bin",
-        data=vertex_bytearray,
+        f"vertices_{mesh_type}_{side}.bin", data=vertex_bytearray
     )
     triangles_resource = FileResource(
-        f"triangles_{original_mesh_name}_{mesh_type}_{side}.bin",
-        data=triangles_bytearray,
+        f"triangles_{mesh_type}_{side}.bin", data=triangles_bytearray
     )
     gltf = GLTF(model=model, resources=[vertices_resource, triangles_resource])
-    gltf.export(
-        os.path.join(
-            OUTPUT_PATH, f"{original_mesh_name}_{mesh_type}_{side}.gltf"
-        )
-    )
+    gltf.export(os.path.join(mesh_output_path, f"{mesh_type}_{side}.gltf"))
 
     # Compute edges related information
     # dataset = "pial_left"
@@ -238,11 +237,11 @@ def compute_gltf_from_gifti(mesh_path, original_mesh_name, mesh_type, side):
         buffers=[
             Buffer(
                 byteLength=len(edges_center_bytearray),
-                uri=f"edges_center_{original_mesh_name}_{mesh_type}_{side}.bin",
+                uri=f"edges_center_{mesh_type}_{side}.bin",
             ),
             Buffer(
                 byteLength=len(edges_orientation_bytearray),
-                uri=f"edges_orientation_{original_mesh_name}_{mesh_type}_{side}.bin",
+                uri=f"edges_orientation_{mesh_type}_{side}.bin",
             ),
         ],
         bufferViews=[
@@ -280,11 +279,10 @@ def compute_gltf_from_gifti(mesh_path, original_mesh_name, mesh_type, side):
     )
 
     edges_center_resource = FileResource(
-        f"edges_center_{original_mesh_name}_{mesh_type}_{side}.bin",
-        data=edges_center_bytearray,
+        f"edges_center_{mesh_type}_{side}.bin", data=edges_center_bytearray
     )
     edges_orientation_resource = FileResource(
-        f"edges_orientation_{original_mesh_name}_{mesh_type}_{side}.bin",
+        f"edges_orientation_{mesh_type}_{side}.bin",
         data=edges_orientation_bytearray,
     )
 
@@ -293,9 +291,7 @@ def compute_gltf_from_gifti(mesh_path, original_mesh_name, mesh_type, side):
         resources=[edges_center_resource, edges_orientation_resource],
     )
     edges_gltf.export(
-        os.path.join(
-            OUTPUT_PATH, f"edges_{original_mesh_name}_{mesh_type}_{side}.gltf"
-        )
+        os.path.join(mesh_output_path, f"edges_{mesh_type}_{side}.gltf")
     )
 
 
