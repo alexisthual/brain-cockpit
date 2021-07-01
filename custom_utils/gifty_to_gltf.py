@@ -2,6 +2,7 @@ import gzip
 import nibabel as nib
 import numpy as np
 import operator
+import os
 import struct
 
 from gltflib import (
@@ -28,11 +29,14 @@ from nilearn import surface
 from scipy.linalg import norm
 from scipy.sparse import coo_matrix, csr_matrix, triu
 from sklearn.preprocessing import normalize
+from tqdm import tqdm
+
+OUTPUT_PATH = "/home/alexis/singbrain/repo/brain-cockpit/public/meshes"
 
 
 # %%
 def read_gii(gii_file):
-    """ Read Gifti File"""
+    """Read Gifti File"""
 
     with gzip.open(gii_file) as f:
         file_as_bytes = f.read()
@@ -82,16 +86,19 @@ def mesh_to_graph(mesh):
 
 
 # %%
-fsaverage = datasets.fetch_surf_fsaverage()
-for dataset in [
-    "infl_left",
-    "infl_right",
-    "pial_left",
-    "pial_right",
-    "white_left",
-    "white_right",
-]:
-    vertices, triangles = read_gii(fsaverage[dataset])
+def compute_gltf_from_gifti(mesh_path, original_mesh_name, mesh_type, side):
+    """
+    Build GLTF files optimized for webGL from a given gifti file:
+    - one GLTF file representing the given mesh itself (same vertices and triangles)
+    - one GLTF file containing 2 buffers representing the edges centers and orientations
+
+    Inputs:
+    - mesh_path: string, path to input gifti file
+    - original_mesh_name: string
+    - mesh_type: string, among ["pial", "white", etc]
+    - side: string, ["left", "right"]
+    """
+    vertices, triangles = read_gii(mesh_path)
     vertices = vertices.tolist()
     triangles = triangles.tolist()
 
@@ -112,7 +119,7 @@ for dataset in [
     triangles_bytearray = bytearray()
     for triangle in triangles:
         for vertex_index in triangle:
-            triangles_bytearray.extend(struct.pack("H", vertex_index))
+            triangles_bytearray.extend(struct.pack("I", vertex_index))
 
     model = GLTFModel(
         asset=Asset(version="2.0"),
@@ -127,11 +134,12 @@ for dataset in [
         ],
         buffers=[
             Buffer(
-                byteLength=len(vertex_bytearray), uri=f"vertices_{dataset}.bin"
+                byteLength=len(vertex_bytearray),
+                uri=f"vertices_{original_mesh_name}_{mesh_type}_{side}.bin",
             ),
             Buffer(
                 byteLength=len(triangles_bytearray),
-                uri=f"triangles_{dataset}.bin",
+                uri=f"triangles_{original_mesh_name}_{mesh_type}_{side}.bin",
             ),
         ],
         bufferViews=[
@@ -161,7 +169,7 @@ for dataset in [
             Accessor(
                 bufferView=1,
                 byteOffset=0,
-                componentType=ComponentType.UNSIGNED_SHORT.value,
+                componentType=ComponentType.UNSIGNED_INT.value,
                 count=3 * len(triangles),
                 type=AccessorType.SCALAR.value,
             ),
@@ -169,18 +177,24 @@ for dataset in [
     )
 
     vertices_resource = FileResource(
-        f"vertices_{dataset}.bin", data=vertex_bytearray
+        f"vertices_{original_mesh_name}_{mesh_type}_{side}.bin",
+        data=vertex_bytearray,
     )
     triangles_resource = FileResource(
-        f"triangles_{dataset}.bin", data=triangles_bytearray
+        f"triangles_{original_mesh_name}_{mesh_type}_{side}.bin",
+        data=triangles_bytearray,
     )
     gltf = GLTF(model=model, resources=[vertices_resource, triangles_resource])
-    gltf.export(f"public/assets/fsaverage_{dataset}.gltf")
+    gltf.export(
+        os.path.join(
+            OUTPUT_PATH, f"{original_mesh_name}_{mesh_type}_{side}.gltf"
+        )
+    )
 
     # Compute edges related information
-    dataset = "pial_left"
-    coordinates, _ = mesh_to_coordinates(fsaverage[dataset])
-    connectivity = mesh_to_graph(fsaverage[dataset])
+    # dataset = "pial_left"
+    coordinates, _ = mesh_to_coordinates(mesh_path)
+    connectivity = mesh_to_graph(mesh_path)
     # Keep only upper triangular portion of connectivity matrix
     # to deduplicate edges
     col_indices = triu(connectivity).tocoo().col
@@ -224,11 +238,11 @@ for dataset in [
         buffers=[
             Buffer(
                 byteLength=len(edges_center_bytearray),
-                uri=f"edges_center_{dataset}.bin",
+                uri=f"edges_center_{original_mesh_name}_{mesh_type}_{side}.bin",
             ),
             Buffer(
                 byteLength=len(edges_orientation_bytearray),
-                uri=f"edges_orientation_{dataset}.bin",
+                uri=f"edges_orientation_{original_mesh_name}_{mesh_type}_{side}.bin",
             ),
         ],
         bufferViews=[
@@ -266,14 +280,30 @@ for dataset in [
     )
 
     edges_center_resource = FileResource(
-        f"edges_center_{dataset}.bin", data=edges_center_bytearray
+        f"edges_center_{original_mesh_name}_{mesh_type}_{side}.bin",
+        data=edges_center_bytearray,
     )
     edges_orientation_resource = FileResource(
-        f"edges_orientation_{dataset}.bin", data=edges_orientation_bytearray
+        f"edges_orientation_{original_mesh_name}_{mesh_type}_{side}.bin",
+        data=edges_orientation_bytearray,
     )
 
     edges_gltf = GLTF(
         model=edges_model,
         resources=[edges_center_resource, edges_orientation_resource],
     )
-    edges_gltf.export(f"public/assets/edges_fsaverage_{dataset}.gltf")
+    edges_gltf.export(
+        os.path.join(
+            OUTPUT_PATH, f"edges_{original_mesh_name}_{mesh_type}_{side}.gltf"
+        )
+    )
+
+
+# %%
+for mesh in tqdm(["fsaverage5", "fsaverage6", "fsaverage7"]):
+    for mesh_type in ["infl", "pial", "white"]:
+        for side in ["left", "right"]:
+            fsaverage = datasets.fetch_surf_fsaverage(mesh=mesh)
+            compute_gltf_from_gifti(
+                fsaverage[f"{mesh_type}_{side}"], mesh, mesh_type, side
+            )
