@@ -22,328 +22,237 @@ REACT_APP_CONDITIONS_VIEW = bool(
 AVAILABLE_GIFTI_FILES_DB = os.getenv("AVAILABLE_GIFTI_FILES_DB")
 MESH_PATH = os.getenv("MESH_PATH")
 
-n_voxels_hemi = 10242
-
-# IBC contrasts exploration
+gifti_files = "/home/alexis/singbrain/data/mathlang_rsvp_fs5_fs7_individual_db"
+shapes = {"fsaverage5": 10242, "fsaverage7": 163_842}
 
 
 ## Util functions
+def parse_hemi(hemi):
+    if hemi == "left":
+        return "lh"
+    elif hemi == "right":
+        return "rh"
+    return "lh"
 
 
-def parse_conditions_db(df):
-    """
-    Given a DataFrame containing all available gifti files,
-    preselects subjects with enough contrasts,
-    contrasts which exists for all these subjects,
-    and tasks from which these contrasts are taken.
+def multiindex_to_nested_dict(df):
+    if isinstance(df.index, pd.core.indexes.multi.MultiIndex):
+        return dict(
+            (k, multiindex_to_nested_dict(df.loc[k]))
+            for k in df.index.remove_unused_levels().levels[0]
+        )
+    else:
+        d = dict()
+        for idx in df.index:
+            d[idx] = df.loc[idx, "path"]
+        return d
 
-    Inputs
-    ------
-    df: DataFrame
-        each row points to an available gifti file
-        and specifies the subject, contrast, resolution, etc
 
-    Outputs
-    -------
-    subjects: list of strings
-    contrasts: list of (task, contrast) tuples
-    """
-    # Select subjects
-    selected_subjects = np.array(
-        [
-            "sub-01",
-            "sub-04",
-            "sub-05",
-            "sub-06",
-            "sub-07",
-            "sub-09",
-            "sub-11",
-            "sub-12",
-            "sub-13",
-            "sub-14",
-            "sub-15",
-        ]
-    )
-
-    # Select contrasts which are available for any of the selected subjects
-    selected_contrasts = (
-        df[df["subject"].isin(selected_subjects)]
-        .groupby(["task", "contrast"])["subject"]
-        .nunique()
+def load_data(df):
+    meshes = df["mesh"].unique().tolist()
+    subjects = df["subject"].unique().tolist()
+    tasks_contrasts = (
+        df.groupby(["task", "contrast"])
+        .count()
         .reset_index()
         .sort_values(["task", "contrast"])[["task", "contrast"]]
-    ).values
-
-    return (selected_subjects, selected_contrasts)
-
-
-# Load FMRI data
-def load_subject_fmri(df, subject, unique_contrasts):
-    """
-    Read functional data corresponding to contrast list and provided subject
-
-    Inputs:
-    df: Pandas DataFrame,
-        Database descriptor
-    subject: string,
-             subject identifier
-    unique_contrasts: list of (task, contrast) tuples,
-                      Contrasts wanted
-
-    Outputs:
-    Xl: array of shape (n_vertices, n_contrasts),
-        functional data read from left-hemisphere textures
-    Xr: array of shape (n_vertices, n_contrasts),
-        functional data read from right-hemisphere textures
-    """
-
-    paths_lh = []
-    paths_rh = []
-
-    # Iterate through every selected contrast
-    for task, contrast in unique_contrasts:
-        # Select db rows with matching subject and contrast
-        mask = (
-            (df.subject == subject).values
-            * (df.contrast == contrast).values
-            * (df.task == task).values
-        )
-
-        # It can be that there is no matching row
-        # because this contrast was not acquired for this subject
-        if len(df.loc[mask]) == 0:
-            paths_lh.append(None)
-            paths_rh.append(None)
-        # but otherwise, one adds the path to the matching contrast
-        # to our path lists
-        else:
-            # Among selected rows, add "path" of last row to path lists.
-            # Indeed, it might be that a given tuple
-            # (subject, task, contrast) corresponds to several rows
-            # because the same contrast might have been acquired
-            # multiple times.
-            # We deal with this by sorting selected rows by "session"
-            # and choosing the last row is equivalent to choosing
-            # the latest acquired contrast.
-            paths_lh.append(
-                df.loc[mask]
-                .loc[df.side == "lh"]
-                .sort_values(by=["session"])
-                .path.values[-1]
-            )
-            paths_rh.append(
-                df.loc[mask]
-                .loc[df.side == "rh"]
-                .sort_values(by=["session"])
-                .path.values[-1]
-            )
-
-    # Load all images available;
-    # for values of path that are None, simply return
-    # a numpy array of the size of the mesh filled with NaNs
-    Xl = np.array(
-        [
-            nib.load(path_lh).darrays[0].data
-            if path_lh is not None
-            else np.full(n_voxels_hemi, np.nan)
-            for path_lh in list(paths_lh)
-        ]
+        .values.tolist()
     )
-    Xr = np.array(
-        [
-            nib.load(path_rh).darrays[0].data
-            if path_rh is not None
-            else np.full(n_voxels_hemi, np.nan)
-            for path_rh in list(paths_rh)
-        ]
-    )
+    sides = df["side"].unique().tolist()
 
-    return Xl, Xr
+    # Group rows before turning the dataframe into a python dict d
+    # such that d[mesh][subject][task][contrast][side]
+    # is the path to a gifti file describing this data
+    df_grouped = df.groupby(["mesh", "subject", "task", "contrast", "side"])[
+        "path"
+    ].first()
+    paths = multiindex_to_nested_dict(df_grouped.to_frame())
 
-
-def load_fmri(df, subjects, unique_contrasts):
-    """
-    Load data for a given list of subjects and contrasts.
-
-    Outputs
-    -------
-    X: array of size (2*n_voxels_hemi * n_subjects, n_contrasts)
-    """
-
-    X = np.empty((0, len(unique_contrasts)))
-
-    for subject in subjects:
-        X_left, X_right = load_subject_fmri(df, subject, unique_contrasts)
-        X = np.append(X, np.concatenate([X_left.T, X_right.T]), axis=0)
-
-    return X
-
-
-## Init variables and load data if possible
-df = pd.DataFrame()
-subjects, contrasts = [], []
-n_subjects, n_contrasts = 0, 0
-X = np.empty((0, 0))
-n_voxels = 0
-
-if REACT_APP_CONDITIONS_VIEW and os.path.exists(AVAILABLE_GIFTI_FILES_DB):
-    ## Load selected subjects and contrasts
-    df = pd.read_csv(AVAILABLE_GIFTI_FILES_DB)
-
-    subjects, contrasts = parse_conditions_db(df)
-    n_subjects, n_contrasts = len(subjects), len(contrasts)
-
-    ## Load functional data for all subjects
-    print(f"Loading {n_contrasts} contrasts...", end=" ")
-    X = load_fmri(df, subjects, contrasts)
-    n_voxels = X.shape[0] // n_subjects
+    # Load gifti files
+    # and populate missing (mesh, subject, task, contrast, side) tuples
+    # with None
+    print(f"Loading {len(tasks_contrasts)} contrasts...", end=" ")
+    data = dict()
+    for mesh in tqdm(meshes):
+        dsu = dict()
+        for subject in tqdm(subjects):
+            dtc = dict()
+            for task, contrast in tasks_contrasts:
+                dsi = dict()
+                for side in ["lh", "rh"]:
+                    hemi = "left" if side == "lh" else "right"
+                    try:
+                        dsi[hemi] = (
+                            nib.load(
+                                os.path.join(
+                                    gifti_files,
+                                    paths[mesh][subject][task][contrast][side],
+                                )
+                            )
+                            .darrays[0]
+                            .data
+                        )
+                    except KeyError:
+                        dsi[hemi] = None
+                if task not in dtc:
+                    dtc[task] = dict()
+                dtc[task][contrast] = dsi
+            dsu[subject] = dtc
+        data[mesh] = dsu
     print(f"OK")
 
-# Expose functions for exploring contrasts
-@app.route("/subjects", methods=["GET"])
-def get_subjects():
-    if DEBUG:
-        print(f"[{datetime.now()}] get_subjects")
-
-    return jsonify(subjects)
+    return meshes, subjects, tasks_contrasts, sides, data
 
 
-@app.route("/contrast_labels", methods=["GET"])
-def get_contrast_labels():
-    if DEBUG:
-        print(f"[{datetime.now()}] get_contrast_labels")
+def load_contrasts():
+    df = pd.DataFrame()
+    meshes, subjects, tasks_contrasts, sides = [], [], [], []
 
-    return jsonify(contrasts)
+    if REACT_APP_CONDITIONS_VIEW and os.path.exists(AVAILABLE_GIFTI_FILES_DB):
+        ## Load selected subjects and contrasts
+        df = pd.read_csv(AVAILABLE_GIFTI_FILES_DB)
+        meshes, subjects, tasks_contrasts, sides, data = load_data(df)
 
+    # ROUTES
+    # Define a series of enpoints to expose contrasts, meshes, etc
+    @app.route("/subjects", methods=["GET"])
+    def get_subjects():
+        return jsonify(subjects)
 
-@app.route("/mesh/<path:path>", methods=["GET"])
-def get_mesh(path):
-    if DEBUG:
-        print(f"[{datetime.now()}] get_mesh {path}")
+    @app.route("/contrast_labels", methods=["GET"])
+    def get_contrast_labels():
+        return jsonify(tasks_contrasts)
 
-    return send_from_directory(MESH_PATH, path)
+    @app.route("/mesh/<path:path>", methods=["GET"])
+    def get_mesh(path):
+        return send_from_directory(MESH_PATH, path)
 
+    @app.route("/voxel_fingerprint", methods=["GET"])
+    def get_voxel_fingerprint():
+        mesh = request.args.get("mesh", type=str, default="fsaverage5")
+        subject_index = request.args.get("subject_index", type=int)
+        voxel_index = request.args.get("voxel_index", type=int)
 
-@app.route("/voxel_fingerprint", methods=["GET"])
-def get_voxel_fingerprint():
-    subject_index = request.args.get("subject_index", type=int)
-    voxel_index = request.args.get("voxel_index", type=int)
+        subject = subjects[subject_index]
+        # Deduce hemi from voxel index
+        n_voxels_left_hemi = shapes[mesh]
+        hemi = "left"
+        ## If voxel_index is in the right hemisphere,
+        ## update values of hemi and voxel_index
+        if voxel_index >= n_voxels_left_hemi:
+            voxel_index -= n_voxels_left_hemi
+            hemi = "right"
 
-    if DEBUG:
-        print(
-            f"[{datetime.now()}] get_voxel_fingerprint {voxel_index} for {subjects[subject_index]} ({subject_index})"
-        )
+        fingerprint = [
+            data[mesh][subject][task][contrast][hemi][voxel_index]
+            if data[mesh][subject][task][contrast][hemi] is not None
+            else None
+            for task, contrast in tasks_contrasts
+        ]
 
-    return jsonify(X[n_voxels * subject_index + voxel_index, :])
+        return jsonify(fingerprint)
 
+    @app.route("/voxel_fingerprint_mean", methods=["GET"])
+    def get_voxel_fingerprint_mean():
+        mesh = request.args.get("mesh", type=str, default="fsaverage5")
+        voxel_index = request.args.get("voxel_index", type=int)
 
-@app.route("/voxel_fingerprint_mean", methods=["GET"])
-def get_voxel_fingerprint_mean():
-    voxel_index = request.args.get("voxel_index", type=int)
+        # Deduce hemi from voxel index
+        n_voxels_left_hemi = shapes[mesh]
+        hemi = "left"
+        ## If voxel_index is in the right hemisphere,
+        ## update values of hemi and voxel_index
+        if voxel_index >= n_voxels_left_hemi:
+            voxel_index -= n_voxels_left_hemi
+            hemi = "right"
 
-    if DEBUG:
-        print(f"[{datetime.now()}] get_voxel_mean_fingerprint {voxel_index}")
-    mean = np.nanmean(
-        X[
-            [
-                n_voxels * subject_index + voxel_index
-                for subject_index in range(n_subjects)
-            ],
-            :,
-        ],
-        axis=0,
-    )
-
-    return jsonify(mean)
-
-
-@app.route("/contrast", methods=["GET"])
-def get_contrast():
-    subject_index = request.args.get("subject_index", type=int)
-    contrast_index = request.args.get("contrast_index", type=int)
-    hemi = request.args.get("hemi", default="left", type=str)
-
-    if DEBUG:
-        print(
-            f"[{datetime.now()}] get_contrast {contrasts[contrast_index]} for {subjects[subject_index]}, {hemi} hemi"
-        )
-
-    start_index = n_voxels * subject_index
-
-    if hemi == "left":
-        return jsonify(
-            X[start_index : start_index + n_voxels // 2, contrast_index]
-        )
-    elif hemi == "right":
-        return jsonify(
-            X[
-                start_index + n_voxels // 2 : start_index + n_voxels,
-                contrast_index,
-            ]
-        )
-    elif hemi == "both":
-        return jsonify(X[start_index : start_index + n_voxels, contrast_index])
-    else:
-        print(f"Unknown value for hemi: {hemi}")
-        return jsonify([])
-
-
-@app.route("/contrast_mean", methods=["GET"])
-def get_contrast_mean():
-    contrast_index = request.args.get("contrast_index", type=int)
-    hemi = request.args.get("hemi", default="left", type=str)
-
-    if DEBUG:
-        print(
-            f"[{datetime.now()}] get_contrast_mean {contrasts[contrast_index]} ({contrast_index}), hemi {hemi}"
-        )
-
-    mean = []
-
-    if hemi == "left":
         mean = np.nanmean(
-            np.vstack(
+            np.concatenate(
                 [
-                    X[
-                        n_voxels * subject_index : n_voxels * subject_index
-                        + n_voxels // 2,
-                        contrast_index,
-                    ]
-                    for subject_index in range(n_subjects)
+                    np.array(
+                        [
+                            data[mesh][subject][task][contrast][hemi][
+                                voxel_index
+                            ]
+                            if data[mesh][subject][task][contrast][hemi]
+                            is not None
+                            else None
+                            for task, contrast in tasks_contrasts
+                        ]
+                    )
+                    for subject in subjects
                 ]
             ),
             axis=0,
         )
-    elif hemi == "right":
-        mean = np.nanmean(
-            np.vstack(
-                [
-                    X[
-                        n_voxels * subject_index
-                        + n_voxels // 2 : n_voxels * subject_index
-                        + n_voxels,
-                        contrast_index,
-                    ]
-                    for subject_index in range(n_subjects)
-                ]
-            ),
-            axis=0,
-        )
-    elif hemi == "both":
-        mean = np.nanmean(
-            np.vstack(
-                [
-                    X[
-                        n_voxels * subject_index : n_voxels * subject_index
-                        + n_voxels,
-                        contrast_index,
-                    ]
-                    for subject_index in range(n_subjects)
-                ]
-            ),
-            axis=0,
-        )
-    else:
-        print(f"Unknown value for hemi: {hemi}")
 
-    return jsonify(mean)
+        return jsonify(mean)
+
+    @app.route("/contrast", methods=["GET"])
+    def get_contrast():
+        mesh = request.args.get("mesh", default="fsaverage5", type=str)
+        subject_index = request.args.get("subject_index", type=int)
+        contrast_index = request.args.get("contrast_index", type=int)
+        hemi = request.args.get("hemi", default="left", type=str)
+
+        subject = subjects[subject_index]
+        task, contrast = tasks_contrasts[contrast_index]
+
+        if hemi == "left" or hemi == "right":
+            return jsonify(data[mesh][subject][task][contrast][hemi])
+        elif hemi == "both":
+            return jsonify(
+                np.concatenate(
+                    [
+                        data[mesh][subject][task][contrast]["left"],
+                        data[mesh][subject][task][contrast]["right"],
+                    ]
+                )
+            )
+        else:
+            print(f"Unknown value for hemi: {hemi}")
+            return jsonify([])
+
+    @app.route("/contrast_mean", methods=["GET"])
+    def get_contrast_mean():
+        mesh = request.args.get("mesh", default="fsaverage5", type=str)
+        contrast_index = request.args.get("contrast_index", type=int)
+        hemi = request.args.get("hemi", default="left", type=str)
+
+        task, contrast = tasks_contrasts[contrast_index]
+        if hemi == "left" or hemi == "right":
+            return jsonify(
+                np.nanmean(
+                    np.vstack(
+                        [
+                            data[mesh][subject][task][contrast][hemi]
+                            for subject in subjects
+                        ]
+                    ),
+                    axis=0,
+                )
+            )
+        elif hemi == "both":
+            return jsonify(
+                np.nanmean(
+                    np.vstack(
+                        [
+                            np.concatenate(
+                                [
+                                    data[mesh][subject][task][contrast][
+                                        "left"
+                                    ],
+                                    data[mesh][subject][task][contrast][
+                                        "right"
+                                    ],
+                                ]
+                            )
+                            for subject in subjects
+                        ]
+                    ),
+                    axis=0,
+                )
+            )
+        else:
+            print(f"Unknown value for hemi: {hemi}")
+            return jsonify([])
