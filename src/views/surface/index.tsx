@@ -16,6 +16,8 @@ import {
   colormaps,
   Contrast,
   ContrastLabel,
+  getMax,
+  getMin,
   GradientMode,
   HemisphereSide,
   MeshType,
@@ -471,12 +473,12 @@ const SurfaceExplorer = () => {
             }
             vmin={
               surfaceMode === SurfaceMode.GRADIENT && surfaceMap !== undefined
-                ? Math.min(...surfaceMap)
+                ? getMin(surfaceMap)
                 : -10
             }
             vmax={
               surfaceMode === SurfaceMode.GRADIENT && surfaceMap !== undefined
-                ? Math.max(...surfaceMap)
+                ? getMax(surfaceMap)
                 : 10
             }
             unit={

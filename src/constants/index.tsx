@@ -157,3 +157,34 @@ export enum SurfaceMode {
   CONTRAST = "CONTRAST",
   GRADIENT = "GRADIENT",
 }
+
+// FUNCTIONS
+export const getMax = (arr: any[] | undefined | null) => {
+  let max = undefined;
+
+  if (arr !== undefined && arr !== null) {
+    let len = arr.length;
+    max = -Infinity;
+
+    while (len--) {
+      max = arr[len] > max ? arr[len] : max;
+    }
+  }
+
+  return max;
+};
+
+export const getMin = (arr: any[]) => {
+  let min = undefined;
+
+  if (arr !== undefined && arr !== null) {
+    let len = arr.length;
+    min = Infinity;
+
+    while (len--) {
+      min = arr[len] < min ? arr[len] : min;
+    }
+  }
+
+  return min;
+};

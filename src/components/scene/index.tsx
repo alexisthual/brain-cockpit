@@ -7,7 +7,14 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
-import { colormaps, HemisphereSide, MeshType, View } from "constants/index";
+import {
+  colormaps,
+  getMax,
+  getMin,
+  HemisphereSide,
+  MeshType,
+  View,
+} from "constants/index";
 import { Hotspots, IHotspot } from "./hotspots";
 import { MeshGradient, CustomGradient } from "./gradient";
 import "./style.scss";
@@ -260,8 +267,8 @@ class Scene extends Component<IProps, IState> {
     const color = new THREE.Color();
     const count = object.geometry.attributes.position.count;
     const colors = object.geometry.attributes.color;
-    const min = Math.min(...surfaceMap);
-    const max = Math.max(...surfaceMap);
+    const min = getMin(surfaceMap);
+    const max = getMax(surfaceMap);
 
     for (let i = 0; i < count; i++) {
       // Get and scale voxelIntensity
