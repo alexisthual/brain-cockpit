@@ -35,6 +35,13 @@ OUTPUT_PATH = "/home/alexis/singbrain/repo/brain-cockpit/public/meshes"
 
 
 # %%
+def read_freesurfer(freesurfer_file):
+    """Read freesurfer file"""
+    vertices, triangles = nib.freesurfer.read_geometry(freesurfer_file)
+
+    return vertices, triangles
+
+
 def read_gii(gii_file):
     """Read Gifti File"""
 
@@ -86,7 +93,9 @@ def mesh_to_graph(mesh):
 
 
 # %%
-def compute_gltf_from_gifti(mesh_path, original_mesh_name, mesh_type, side):
+def compute_gltf_from_gifti(
+    mesh_path, original_mesh_name, mesh_type, side, individual=False
+):
     """
     Build GLTF files optimized for webGL from a given gifti file:
     - one GLTF file representing the given mesh itself (same vertices and triangles)
@@ -100,10 +109,19 @@ def compute_gltf_from_gifti(mesh_path, original_mesh_name, mesh_type, side):
     """
     # Create output folder for mesh
     mesh_output_path = os.path.join(OUTPUT_PATH, original_mesh_name)
+    if individual:
+        mesh_output_path = os.path.join(
+            OUTPUT_PATH, "individual", original_mesh_name
+        )
     if not os.path.exists(mesh_output_path):
         os.mkdir(mesh_output_path)
 
-    vertices, triangles = read_gii(mesh_path)
+    vertices, triangles = [], []
+    if mesh_path[-3:] == "gii":
+        vertices, triangles = read_gii(mesh_path)
+    else:
+        vertices, triangles = read_freesurfer(mesh_path)
+
     vertices = vertices.tolist()
     triangles = triangles.tolist()
 
@@ -295,11 +313,45 @@ def compute_gltf_from_gifti(mesh_path, original_mesh_name, mesh_type, side):
     )
 
 
-# %%
+# %% Export all fsaverage resolutions
 for mesh in tqdm(["fsaverage5", "fsaverage6", "fsaverage7"]):
+    fsaverage = datasets.fetch_surf_fsaverage(mesh=mesh)
     for mesh_type in ["infl", "pial", "white"]:
         for side in ["left", "right"]:
-            fsaverage = datasets.fetch_surf_fsaverage(mesh=mesh)
             compute_gltf_from_gifti(
                 fsaverage[f"{mesh_type}_{side}"], mesh, mesh_type, side
+            )
+
+# %% Export all individual meshes from IBC
+# Originally in the freesurfer format
+subjects = [
+    "sub-01",
+    "sub-02",
+    "sub-04",
+    "sub-05",
+    "sub-06",
+    "sub-07",
+    "sub-08",
+    "sub-09",
+    "sub-11",
+    "sub-12",
+    "sub-13",
+    "sub-14",
+    "sub-15",
+]
+
+for subject in tqdm(subjects):
+    for mesh_type in ["inflated", "pial", "white"]:
+        for side in ["lh", "rh"]:
+            mesh_path = f"/home/alexis/singbrain/data/ibc_meshes/{subject}/{side}.{mesh_type}"
+            side_corrected = "left" if side == "lh" else "right"
+            mesh_type_corrected = (
+                "infl" if mesh_type == "inflated" else mesh_type
+            )
+            compute_gltf_from_gifti(
+                mesh_path,
+                subject,
+                mesh_type_corrected,
+                side_corrected,
+                individual=True,
             )
