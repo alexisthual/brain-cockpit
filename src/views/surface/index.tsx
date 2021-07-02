@@ -20,6 +20,7 @@ import {
   getMin,
   GradientMode,
   HemisphereSide,
+  MeshSupport,
   MeshType,
   Orientation,
   Subject,
@@ -92,6 +93,7 @@ const SurfaceExplorer = () => {
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [wireframe, setWireframe] = useState(false);
   const [meshType, setMeshType] = useState(MeshType.PIAL);
+  const [meshSupport, setMeshSupport] = useState(MeshSupport.FSAVERAGE5);
   const [hemi, setHemi] = useState(HemisphereSide.LEFT);
   const [sharedState, setSharedState] = useState(true);
   const [lowThresholdMin, setLowThresholdMin] = useState(-10);
@@ -349,7 +351,11 @@ const SurfaceExplorer = () => {
               ? "/contrast_mean"
               : "/contrast_gradient_norm_mean",
             {
-              params: { contrast_index: contrast.index, hemi: hemi },
+              params: {
+                contrast_index: contrast.index,
+                mesh: meshSupport,
+                hemi: hemi,
+              },
             }
           )
           .then((response: AxiosResponse<number[]>) => {
@@ -366,12 +372,13 @@ const SurfaceExplorer = () => {
               params: {
                 subject_index: subject.index,
                 contrast_index: contrast.index,
+                mesh: meshSupport,
                 hemi: hemi,
               },
             }
           )
-          .then((response: AxiosResponse<number[]>) => {
-            setSurfaceMap(response.data);
+          .then((response: AxiosResponse<number[] | undefined>) => {
+            setSurfaceMap(response.data ?? []);
             setLoadingSurfaceMap(false);
           });
       } else {
@@ -388,6 +395,7 @@ const SurfaceExplorer = () => {
                 params: {
                   subject_index: subject.index,
                   contrast_index: contrast.index,
+                  mesh: meshSupport,
                 },
               })
               .then((response: AxiosResponse<number[]>) => {
@@ -403,6 +411,7 @@ const SurfaceExplorer = () => {
                 params: {
                   subject_index: subject.index,
                   contrast_index: contrast.index,
+                  mesh: meshSupport,
                 },
               })
               .then((response: AxiosResponse<number[][]>) => {
@@ -416,7 +425,15 @@ const SurfaceExplorer = () => {
           break;
       }
     }
-  }, [subject, contrast, meanSurfaceMap, hemi, gradientMode, surfaceMode]);
+  }, [
+    subject,
+    contrast,
+    meanSurfaceMap,
+    hemi,
+    gradientMode,
+    surfaceMode,
+    meshSupport,
+  ]);
 
   // Update fingerprint when voxelIndex or subjectIndex change
   useEffect(() => {
@@ -427,6 +444,7 @@ const SurfaceExplorer = () => {
           .get("/voxel_fingerprint_mean", {
             params: {
               voxel_index: voxelIndex,
+              mesh: meshSupport,
             },
           })
           .then((response: AxiosResponse<number[]>) => {
@@ -439,6 +457,7 @@ const SurfaceExplorer = () => {
             params: {
               subject_index: subject.index,
               voxel_index: voxelIndex,
+              mesh: meshSupport,
             },
           })
           .then((response: AxiosResponse<number[]>) => {
@@ -504,6 +523,20 @@ const SurfaceExplorer = () => {
         {sharedState ? (
           <InfoPanel
             rows={[
+              {
+                label: "Mesh Support",
+                inputs: [
+                  {
+                    inputType: InputType.SELECT_STRING,
+                    value: meshSupport,
+                    values: Object.keys(MeshSupport),
+                    onChangeCallback: (newValue: string) =>
+                      setMeshSupport(
+                        MeshSupport[newValue as keyof typeof MeshSupport]
+                      ),
+                  },
+                ],
+              },
               {
                 label: "Mesh Type",
                 inputs: [
@@ -610,6 +643,7 @@ const SurfaceExplorer = () => {
                 }}
                 sharedWireframe={wireframe}
                 sharedMeshType={meshType}
+                sharedMeshSupport={meshSupport}
                 sharedHemi={hemi}
                 lowThresholdMin={filterSurface ? lowThresholdMin : undefined}
                 lowThresholdMax={filterSurface ? lowThresholdMax : undefined}

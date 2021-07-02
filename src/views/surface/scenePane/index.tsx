@@ -22,6 +22,7 @@ import {
   getMin,
   GradientMode,
   HemisphereSide,
+  MeshSupport,
   MeshType,
   modulo,
   Subject,
@@ -45,6 +46,7 @@ interface Props {
   setSharedVoxelIndex?: (voxelIndex: number) => void;
   sharedWireframe: boolean;
   sharedMeshType: MeshType;
+  sharedMeshSupport: MeshSupport;
   sharedHemi: HemisphereSide;
   lowThresholdMin?: number;
   lowThresholdMax?: number;
@@ -71,6 +73,7 @@ const ScenePane = ({
   setSharedVoxelIndex = () => {},
   sharedWireframe = false,
   sharedMeshType = MeshType.PIAL,
+  sharedMeshSupport = MeshSupport.FSAVERAGE5,
   sharedHemi = HemisphereSide.LEFT,
   lowThresholdMin,
   lowThresholdMax,
@@ -91,6 +94,7 @@ const ScenePane = ({
   const [loadingGradientMap, setLoadingGradientMap] = useState(false);
   const [wireframe] = useState(false);
   const [meshType, setMeshType] = useState(MeshType.PIAL);
+  const [meshSupport, setMeshSupport] = useState(MeshSupport.FSAVERAGE5);
   const [hemi, setHemi] = useState(HemisphereSide.LEFT);
   const panelEl = useRef<HTMLDivElement>(null);
 
@@ -263,7 +267,11 @@ const ScenePane = ({
               ? "/contrast_gradient_norm_mean"
               : "/contrast_mean",
             {
-              params: { contrast_index: contrast.index, hemi: hemi },
+              params: {
+                contrast_index: contrast.index,
+                hemi: hemi,
+                mesh: meshSupport,
+              },
             }
           )
           .then((response: AxiosResponse<number[]>) => {
@@ -281,6 +289,7 @@ const ScenePane = ({
                 subject_index: subject.index,
                 contrast_index: contrast.index,
                 hemi: hemi,
+                mesh: meshSupport,
               },
             }
           )
@@ -302,6 +311,7 @@ const ScenePane = ({
                 params: {
                   subject_index: subject.index,
                   contrast_index: contrast.index,
+                  mesh: meshSupport,
                 },
               })
               .then((response: AxiosResponse<number[]>) => {
@@ -317,6 +327,7 @@ const ScenePane = ({
                 params: {
                   subject_index: subject.index,
                   contrast_index: contrast.index,
+                  mesh: meshSupport,
                 },
               })
               .then((response: AxiosResponse<number[][]>) => {
@@ -330,7 +341,15 @@ const ScenePane = ({
           break;
       }
     }
-  }, [subject, contrast, meanSurfaceMap, hemi, gradientMode, surfaceMode]);
+  }, [
+    subject,
+    contrast,
+    meanSurfaceMap,
+    hemi,
+    gradientMode,
+    surfaceMode,
+    meshSupport,
+  ]);
 
   return (
     <div className="scene" ref={panelEl}>
@@ -338,6 +357,20 @@ const ScenePane = ({
       {!sharedState ? (
         <InfoPanel
           rows={[
+            {
+              label: "Mesh Support",
+              inputs: [
+                {
+                  inputType: InputType.SELECT_STRING,
+                  value: meshSupport,
+                  values: Object.keys(MeshSupport),
+                  onChangeCallback: (newValue: string) =>
+                    setMeshSupport(
+                      MeshSupport[newValue as keyof typeof MeshSupport]
+                    ),
+                },
+              ],
+            },
             {
               label: "Mesh Type",
               inputs: [
@@ -452,6 +485,12 @@ const ScenePane = ({
             meshGradient={sharedState ? sharedMeshGradient : meshGradient}
             gradient={sharedState ? sharedGradient : gradientAverageMap}
             meshType={sharedState ? sharedMeshType : meshType}
+            meshSupport={sharedState ? sharedMeshSupport : meshSupport}
+            subjectLabel={
+              sharedState && sharedSubject !== undefined
+                ? sharedSubject.label
+                : subject.label
+            }
             hemi={sharedState ? sharedHemi : hemi}
             wireframe={sharedState ? sharedWireframe : wireframe}
             width={sceneWidth}

@@ -100,6 +100,13 @@ export enum HemisphereSide {
 
 export type HemisphereSideString = keyof typeof HemisphereSide;
 
+export enum MeshSupport {
+  FSAVERAGE5 = "fsaverage5",
+  // FSAVERAGE6 = "fsaverage6",
+  FSAVERAGE7 = "fsaverage7",
+  INDIVIDUAL = "individual",
+}
+
 export enum MeshType {
   PIAL = "pial",
   WHITE = "white",

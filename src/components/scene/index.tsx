@@ -12,6 +12,7 @@ import {
   getMax,
   getMin,
   HemisphereSide,
+  MeshSupport,
   MeshType,
   View,
 } from "constants/index";
@@ -31,6 +32,8 @@ interface IProps {
   markerCoordinates?: number[][];
   markerIndices?: number[];
   meshType: MeshType;
+  meshSupport: MeshSupport;
+  subjectLabel?: string;
   hemi: HemisphereSide;
   uniqueKey?: string;
   lowThresholdMin?: number;
@@ -67,6 +70,7 @@ class Scene extends Component<IProps, IState> {
 
   static defaultProps = {
     meshType: MeshType.PIAL,
+    meshSupport: MeshSupport.FSAVERAGE5,
     hemi: HemisphereSide.LEFT,
     colormap: colormaps["sequential"],
   };
@@ -106,26 +110,33 @@ class Scene extends Component<IProps, IState> {
   }
 
   static async loadMesh(
+    meshSupport: MeshSupport = MeshSupport.FSAVERAGE5,
     meshType: MeshType = MeshType.PIAL,
-    hemisphereSide: HemisphereSide = HemisphereSide.LEFT
+    hemisphereSide: HemisphereSide = HemisphereSide.LEFT,
+    subjectLabel: string | undefined = undefined
   ) {
+    let url: string;
+    switch (meshSupport) {
+      case MeshSupport.INDIVIDUAL:
+        url = `mesh/${meshSupport}/${subjectLabel}`;
+        break;
+      default:
+        url = `mesh/${meshSupport}`;
+        break;
+    }
     switch (hemisphereSide) {
       case HemisphereSide.LEFT:
-        return Scene.load(`mesh/fsaverage5/${meshType}_left.gltf`).then(
-          (gltf: any) => {
-            return gltf.scene.children[0] as any;
-          }
-        );
+        return Scene.load(`${url}/${meshType}_left.gltf`).then((gltf: any) => {
+          return gltf.scene.children[0] as any;
+        });
       case HemisphereSide.RIGHT:
-        return Scene.load(`mesh/fsaverage5/${meshType}_right.gltf`).then(
-          (gltf: any) => {
-            return gltf.scene.children[0] as any;
-          }
-        );
+        return Scene.load(`${url}/${meshType}_right.gltf`).then((gltf: any) => {
+          return gltf.scene.children[0] as any;
+        });
       case HemisphereSide.BOTH:
         // Load both meshes
-        const loadLeft = Scene.load(`mesh/fsaverage5/${meshType}_left.gltf`);
-        const loadRight = Scene.load(`mesh/fsaverage5/${meshType}_right.gltf`);
+        const loadLeft = Scene.load(`${url}/${meshType}_left.gltf`);
+        const loadRight = Scene.load(`${url}/${meshType}_right.gltf`);
 
         // Merge them in a common Mesh
         return Promise.all([loadLeft, loadRight]).then((values: any) => {
@@ -144,29 +155,30 @@ class Scene extends Component<IProps, IState> {
   }
 
   static async loadGradientMesh(
+    meshSupport: MeshSupport = MeshSupport.FSAVERAGE5,
     meshType: MeshType = MeshType.PIAL,
     hemisphereSide: HemisphereSide = HemisphereSide.LEFT
   ) {
     switch (hemisphereSide) {
       case HemisphereSide.LEFT:
-        return Scene.load(`mesh/fsaverage5/edges_${meshType}_left.gltf`).then(
-          (gltf: any) => {
-            return gltf.scene.children[0] as any;
-          }
-        );
+        return Scene.load(
+          `mesh/${meshSupport}/edges_${meshType}_left.gltf`
+        ).then((gltf: any) => {
+          return gltf.scene.children[0] as any;
+        });
       case HemisphereSide.RIGHT:
-        return Scene.load(`mesh/fsaverage5/edges_${meshType}_right.gltf`).then(
-          (gltf: any) => {
-            return gltf.scene.children[0] as any;
-          }
-        );
+        return Scene.load(
+          `mesh/${meshSupport}/edges_${meshType}_right.gltf`
+        ).then((gltf: any) => {
+          return gltf.scene.children[0] as any;
+        });
       case HemisphereSide.BOTH:
         // Load both meshes
         const loadLeft = Scene.load(
-          `mesh/fsaverage5/edges_${meshType}_left.gltf`
+          `mesh/${meshSupport}/edges_${meshType}_left.gltf`
         );
         const loadRight = Scene.load(
-          `mesh/fsaverage5/edges_${meshType}_right.gltf`
+          `mesh/${meshSupport}/edges_${meshType}_right.gltf`
         );
 
         // Merge them in a common Mesh
@@ -349,7 +361,12 @@ class Scene extends Component<IProps, IState> {
     window.addEventListener("resize", this.handleWindowResize);
 
     // Load exteral meshes
-    let object = await Scene.loadMesh(this.props.meshType, this.props.hemi);
+    let object = await Scene.loadMesh(
+      this.props.meshSupport,
+      this.props.meshType,
+      this.props.hemi,
+      this.props.subjectLabel
+    );
     object = Scene.initialiseMesh(
       object,
       this.props.wireframe,
@@ -375,28 +392,22 @@ class Scene extends Component<IProps, IState> {
 
     // Update displayed mesh when meshType or hemi change
     if (
+      prevProps.meshSupport !== this.props.meshSupport ||
       prevProps.meshType !== this.props.meshType ||
+      prevProps.subjectLabel !== this.props.subjectLabel ||
       prevProps.hemi !== this.props.hemi
     ) {
       let newObject = (await Scene.loadMesh(
+        this.props.meshSupport,
         this.props.meshType,
-        this.props.hemi
+        this.props.hemi,
+        this.props.subjectLabel
       )) as any;
 
-      // In case hemi changes, we remove the old object
-      // and add a fresh one.
-      // Otherwise (when only meshType changed), we simply
-      // update the current object's geometry.
-      if (prevProps.hemi !== this.props.hemi) {
-        this.scene.remove(this.object);
-        this.object = Scene.initialiseMesh(newObject, this.props.wireframe);
-        this.scene.add(this.object);
-      } else {
-        this.object.geometry.setAttribute(
-          "position",
-          newObject.geometry.attributes.position
-        );
-      }
+      // Remove the old mesh (this.object) and add a fresh one.
+      this.scene.remove(this.object);
+      this.object = Scene.initialiseMesh(newObject, this.props.wireframe);
+      this.scene.add(this.object);
 
       // Update camera and controls focus
       this.focusOnMainObject();
@@ -410,6 +421,7 @@ class Scene extends Component<IProps, IState> {
     // Update object color to display surface map
     if (
       this.props.surfaceMap !== undefined &&
+      this.props.surfaceMap !== null &&
       (this.props.surfaceMap !== prevProps.surfaceMap ||
         prevProps.hemi !== this.props.hemi ||
         this.props.lowThresholdMin !== prevProps.lowThresholdMin ||
@@ -544,6 +556,7 @@ class Scene extends Component<IProps, IState> {
       // Load edges mesh if need be
       if (this.edgesMesh === undefined) {
         this.edgesMesh = await Scene.loadGradientMesh(
+          this.props.meshSupport,
           this.props.meshType,
           this.props.hemi
         );
@@ -611,6 +624,7 @@ class Scene extends Component<IProps, IState> {
       this.gradient = gradient;
     } else if (this.props.meshGradient !== undefined) {
       this.edgesMesh = await Scene.loadGradientMesh(
+        this.props.meshSupport,
         this.props.meshType,
         this.props.hemi
       );
