@@ -1,5 +1,3 @@
-from api import app
-from datetime import datetime
 from distutils.util import strtobool
 import dotenv
 from flask import jsonify, request, send_from_directory
@@ -7,9 +5,10 @@ import nibabel as nib
 import numpy as np
 import os
 import pandas as pd
-import simplejson
+import sys
 from tqdm import tqdm
 
+from api import app
 import custom_utils.setup as setup
 
 # Load environment variables
@@ -26,7 +25,10 @@ gifti_files = "/home/alexis/singbrain/data/mathlang_rsvp_fs5_fs7_individual_db"
 shapes = {"fsaverage5": 10242, "fsaverage7": 163_842}
 
 
-## Util functions
+# UTIL FUNCTIONS
+# These functions are useful for loading data
+
+
 def parse_hemi(hemi):
     if hemi == "left":
         return "lh"
@@ -48,7 +50,22 @@ def multiindex_to_nested_dict(df):
         return d
 
 
-def load_data(df):
+def parse_metadata(df):
+    """
+    Inputs:
+    - df: DataFrame,
+          each row contains information about an available gifti image one will load here
+
+    Outputs:
+    - meshes: list of strings,
+              list of all unique meshes encountered during loading
+    - subjects: list of strings
+                list of all unique subjects encountered during loading
+    - tasks_contrasts: list of (task, contrast)
+                       list of all unique tuples (task, contrast) encountered during loading
+    - sides: list of strings,
+             list of all unique sides encountered during loading
+    """
     meshes = df["mesh"].unique().tolist()
     subjects = df["subject"].unique().tolist()
     tasks_contrasts = (
@@ -59,6 +76,21 @@ def load_data(df):
         .values.tolist()
     )
     sides = df["side"].unique().tolist()
+
+    return meshes, subjects, tasks_contrasts, sides
+
+
+def load_data(df):
+    """
+    Inputs:
+    - df: DataFrame,
+          each row contains information about an available gifti image one will load here
+
+    Outputs:
+    - data: dictionary d such that d[mesh][subject][task][contrast][side] is
+            either a numpy array or None
+    """
+    meshes, subjects, tasks_contrasts, sides = parse_metadata(df)
 
     # Group rows before turning the dataframe into a python dict d
     # such that d[mesh][subject][task][contrast][side]
@@ -71,11 +103,11 @@ def load_data(df):
     # Load gifti files
     # and populate missing (mesh, subject, task, contrast, side) tuples
     # with None
-    print(f"Loading {len(tasks_contrasts)} contrasts...", end=" ")
+    print(f"Loading {len(tasks_contrasts)} contrasts...")
     data = dict()
-    for mesh in tqdm(meshes):
+    for mesh in tqdm(meshes, file=sys.stdout, position=0):
         dsu = dict()
-        for subject in tqdm(subjects):
+        for subject in tqdm(subjects, file=sys.stdout, position=1):
             dtc = dict()
             for task, contrast in tasks_contrasts:
                 dsi = dict()
@@ -101,7 +133,12 @@ def load_data(df):
         data[mesh] = dsu
     print(f"OK")
 
-    return meshes, subjects, tasks_contrasts, sides, data
+    return data
+
+
+# MAIN FUNCTION
+# This function is meant to be called from other files.
+# It loads fmri contrasts and exposes flask endpoints.
 
 
 def load_contrasts():
@@ -109,12 +146,14 @@ def load_contrasts():
     meshes, subjects, tasks_contrasts, sides = [], [], [], []
 
     if REACT_APP_CONDITIONS_VIEW and os.path.exists(AVAILABLE_GIFTI_FILES_DB):
-        ## Load selected subjects and contrasts
+        ## Load all available contrasts
         df = pd.read_csv(AVAILABLE_GIFTI_FILES_DB)
-        meshes, subjects, tasks_contrasts, sides, data = load_data(df)
+        meshes, subjects, tasks_contrasts, sides = parse_metadata(df)
+        data = load_data(df)
 
     # ROUTES
     # Define a series of enpoints to expose contrasts, meshes, etc
+
     @app.route("/subjects", methods=["GET"])
     def get_subjects():
         return jsonify(subjects)
