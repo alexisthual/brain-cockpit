@@ -1,6 +1,7 @@
 from distutils.util import strtobool
 import dotenv
 from flask import jsonify, request, send_from_directory
+import json
 import nibabel as nib
 import numpy as np
 import os
@@ -22,7 +23,11 @@ AVAILABLE_GIFTI_FILES_DB = os.getenv("AVAILABLE_GIFTI_FILES_DB")
 MESH_PATH = os.getenv("MESH_PATH")
 
 gifti_files = "/home/alexis/singbrain/data/mathlang_rsvp_fs5_fs7_individual_db"
-shapes = {"fsaverage5": 10242, "fsaverage7": 163_842}
+mesh_shape = {
+    "fsaverage5": {"left": 10242, "right": 10242},
+    "fsaverage7": {"left": 163_842, "right": 163_842},
+    "individual": {},
+}
 
 
 # UTIL FUNCTIONS
@@ -100,6 +105,18 @@ def load_data(df):
     ].first()
     paths = multiindex_to_nested_dict(df_grouped.to_frame())
 
+    # Load available meshes and store shapes
+    for subject in subjects:
+        mesh_shape["individual"][subject] = {}
+        for hemi in ["left", "right"]:
+            with open(
+                f"./public/meshes/individual/{subject}/pial_{hemi}.gltf", "r"
+            ) as f:
+                individual_mesh_meta = json.load(f)
+            mesh_shape["individual"][subject][hemi] = individual_mesh_meta[
+                "accessors"
+            ][0]["count"]
+
     # Load gifti files
     # and populate missing (mesh, subject, task, contrast, side) tuples
     # with None
@@ -174,7 +191,11 @@ def load_contrasts():
 
         subject = subjects[subject_index]
         # Deduce hemi from voxel index
-        n_voxels_left_hemi = shapes[mesh]
+        n_voxels_left_hemi = (
+            mesh_shape[mesh][subject]["left"]
+            if mesh == "individual"
+            else mesh_shape[mesh]["left"]
+        )
         hemi = "left"
         ## If voxel_index is in the right hemisphere,
         ## update values of hemi and voxel_index
@@ -196,36 +217,40 @@ def load_contrasts():
         mesh = request.args.get("mesh", type=str, default="fsaverage5")
         voxel_index = request.args.get("voxel_index", type=int)
 
-        # Deduce hemi from voxel index
-        n_voxels_left_hemi = shapes[mesh]
-        hemi = "left"
-        ## If voxel_index is in the right hemisphere,
-        ## update values of hemi and voxel_index
-        if voxel_index >= n_voxels_left_hemi:
-            voxel_index -= n_voxels_left_hemi
-            hemi = "right"
+        # Can't return mean of meshes which are not comparable
+        if mesh == "individual":
+            return []
+        else:
+            # Deduce hemi from voxel index
+            n_voxels_left_hemi = mesh_shape[mesh]["left"]
+            hemi = "left"
+            ## If voxel_index is in the right hemisphere,
+            ## update values of hemi and voxel_index
+            if voxel_index >= n_voxels_left_hemi:
+                voxel_index -= n_voxels_left_hemi
+                hemi = "right"
 
-        mean = np.nanmean(
-            np.concatenate(
-                [
-                    np.array(
-                        [
-                            data[mesh][subject][task][contrast][hemi][
-                                voxel_index
+            mean = np.nanmean(
+                np.concatenate(
+                    [
+                        np.array(
+                            [
+                                data[mesh][subject][task][contrast][hemi][
+                                    voxel_index
+                                ]
+                                if data[mesh][subject][task][contrast][hemi]
+                                is not None
+                                else None
+                                for task, contrast in tasks_contrasts
                             ]
-                            if data[mesh][subject][task][contrast][hemi]
-                            is not None
-                            else None
-                            for task, contrast in tasks_contrasts
-                        ]
-                    )
-                    for subject in subjects
-                ]
-            ),
-            axis=0,
-        )
+                        )
+                        for subject in subjects
+                    ]
+                ),
+                axis=0,
+            )
 
-        return jsonify(mean)
+            return jsonify(mean)
 
     @app.route("/contrast", methods=["GET"])
     def get_contrast():
