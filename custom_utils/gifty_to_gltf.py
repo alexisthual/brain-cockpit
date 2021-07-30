@@ -45,15 +45,22 @@ def read_freesurfer(freesurfer_file):
 def read_gii(gii_file):
     """Read Gifti File"""
 
-    with gzip.open(gii_file) as f:
-        file_as_bytes = f.read()
-        parser = nib.gifti.GiftiImage.parser()
-        parser.parse(file_as_bytes)
-        gifti_img = parser.img
-        arrays = np.asarray(
-            [arr.data for arr in gifti_img.darrays], dtype=object
-        ).T.squeeze()
-        f.close()
+    if gii_file[-6:] == "gii.gz":
+        with gzip.open(gii_file) as f:
+            file_as_bytes = f.read()
+            parser = nib.gifti.GiftiImage.parser()
+            parser.parse(file_as_bytes)
+            gifti_img = parser.img
+            arrays = np.asarray(
+                [arr.data for arr in gifti_img.darrays], dtype=object
+            ).T.squeeze()
+            f.close()
+    elif gii_file[-3:] == "gii":
+        img = nib.load(gii_file)
+        arrays = [
+            img.get_arrays_from_intent("NIFTI_INTENT_POINTSET")[0].data,
+            img.get_arrays_from_intent("NIFTI_INTENT_TRIANGLE")[0].data,
+        ]
 
     return list(arrays)
 
@@ -117,7 +124,7 @@ def compute_gltf_from_gifti(
         os.mkdir(mesh_output_path)
 
     vertices, triangles = [], []
-    if mesh_path[-3:] == "gii":
+    if mesh_path[-3:] == "gii" or mesh_path[-6:] == "gii.gz":
         vertices, triangles = read_gii(mesh_path)
     else:
         vertices, triangles = read_freesurfer(mesh_path)
@@ -340,14 +347,25 @@ subjects = [
     "sub-15",
 ]
 
+mesh_folder = "/home/alexis/singbrain/data/ibc_meshes"
+
 for subject in tqdm(subjects):
     for mesh_type in ["inflated", "pial", "white"]:
         for side in ["lh", "rh"]:
-            mesh_path = f"/home/alexis/singbrain/data/ibc_meshes/{subject}/{side}.{mesh_type}"
             side_corrected = "left" if side == "lh" else "right"
             mesh_type_corrected = (
                 "infl" if mesh_type == "inflated" else mesh_type
             )
+
+            # Load gifti file if available, else load freesurfer file.
+            # This is useful since pial surfaces have been modified
+            # (new pial surfaces are average between freesurfer's pial and white)
+            fs_path = os.path.join(mesh_folder, subject, f"{side}.{mesh_type}")
+            gii_path = os.path.join(
+                mesh_folder, subject, f"{mesh_type}_{side_corrected}.gii"
+            )
+            mesh_path = gii_path if os.path.exists(gii_path) else fs_path
+
             compute_gltf_from_gifti(
                 mesh_path,
                 subject,
@@ -355,3 +373,15 @@ for subject in tqdm(subjects):
                 side_corrected,
                 individual=True,
             )
+
+# %%
+p = "/home/alexis/singbrain/data/ibc_meshes/sub-01/pial_left.gii"
+img = nib.load(p)
+img.meta
+img.get_arrays_from_intent("NIFTI_INTENT_POINTSET")[0].print_summary()
+img.get_arrays_from_intent("NIFTI_INTENT_POINTSET")[0].data
+
+fs5 = datasets.fetch_surf_fsaverage(mesh="fsaverage5")
+img_fs5 = nib.load(fs5.pial_left)
+img_fs5.meta
+img_fs5.get_arrays_from_intent("NIFTI_INTENT_POINTSET")[0].print_summary()
