@@ -48,6 +48,7 @@ interface Props {
   sharedMeshType: MeshType;
   sharedMeshSupport: MeshSupport;
   sharedHemi: HemisphereSide;
+  filterSurface?: boolean;
   lowThresholdMin?: number;
   lowThresholdMax?: number;
   highThresholdMin?: number;
@@ -75,6 +76,7 @@ const ScenePane = ({
   sharedMeshType = MeshType.PIAL,
   sharedMeshSupport = MeshSupport.FSAVERAGE5,
   sharedHemi = HemisphereSide.LEFT,
+  filterSurface,
   lowThresholdMin,
   lowThresholdMax,
   highThresholdMin,
@@ -455,19 +457,9 @@ const ScenePane = ({
             ? colormaps["single_diverging_heat"]
             : colormaps[colormapName]
         }
-        vmin={
-          surfaceMode === SurfaceMode.GRADIENT && surfaceMap !== undefined
-            ? getMin(surfaceMap)
-            : -10
-        }
-        vmax={
-          surfaceMode === SurfaceMode.GRADIENT && surfaceMap !== undefined
-            ? getMax(surfaceMap)
-            : 10
-        }
-        unit={
-          surfaceMode === SurfaceMode.CONTRAST ? "Z-Score" : "Z-Score\n/ mm"
-        }
+        vmin={filterSurface ? lowThresholdMin : getMin(surfaceMap)}
+        vmax={filterSurface ? highThresholdMax : getMax(surfaceMap)}
+        unit={surfaceMode === SurfaceMode.CONTRAST ? "Z-Score" : "Z-Score / mm"}
       />
       <ParentSize className="scene-container" debounceTime={10}>
         {({ width: sceneWidth, height: sceneHeight }) => (

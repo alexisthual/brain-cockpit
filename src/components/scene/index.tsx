@@ -295,47 +295,20 @@ class Scene extends Component<IProps, IState> {
       }
 
       if (
+        (lowThresholdMin !== undefined && surfaceMap[i] <= lowThresholdMin) ||
         (lowThresholdMin !== undefined &&
-          lowThresholdMin <= surfaceMap[i] &&
           lowThresholdMax !== undefined &&
-          lowThresholdMax >= surfaceMap[i]) ||
+          lowThresholdMin <= surfaceMap[i] &&
+          surfaceMap[i] <= lowThresholdMax) ||
         (highThresholdMin !== undefined &&
-          highThresholdMin <= surfaceMap[i] &&
           highThresholdMax !== undefined &&
-          highThresholdMax >= surfaceMap[i]) ||
+          highThresholdMin <= surfaceMap[i] &&
+          surfaceMap[i] <= highThresholdMax) ||
+        (highThresholdMax !== undefined && highThresholdMax <= surfaceMap[i]) ||
         (lowThresholdMin === undefined &&
           lowThresholdMax === undefined &&
           highThresholdMin === undefined &&
           highThresholdMax === undefined)
-      ) {
-        color.setRGB(
-          colormap(voxelIntensity).get("rgb.r") / 255,
-          colormap(voxelIntensity).get("rgb.g") / 255,
-          colormap(voxelIntensity).get("rgb.b") / 255
-        );
-      } else if (
-        // Threshold colormap with max value
-        highThresholdMax !== undefined &&
-        surfaceMap[i] >= highThresholdMax
-      ) {
-        color.setRGB(
-          colormap(highThresholdMax).get("rgb.r") / 255,
-          colormap(highThresholdMax).get("rgb.g") / 255,
-          colormap(highThresholdMax).get("rgb.b") / 255
-        );
-      } else if (
-        // Threshold colormap with min value
-        lowThresholdMin !== undefined &&
-        surfaceMap[i] <= lowThresholdMin
-      ) {
-        color.setRGB(
-          colormap(lowThresholdMin).get("rgb.r") / 255,
-          colormap(lowThresholdMin).get("rgb.g") / 255,
-          colormap(lowThresholdMin).get("rgb.b") / 255
-        );
-      } else if (
-        lowThresholdMax === undefined &&
-        highThresholdMin === undefined
       ) {
         color.setRGB(
           colormap(voxelIntensity).get("rgb.r") / 255,

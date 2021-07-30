@@ -24,6 +24,10 @@ interface Props {
   clickedLabelCallback?: (labelIndex: number) => void;
   orientation: Orientation;
   selectedContrast?: Contrast;
+  lowThresholdMin?: number;
+  lowThresholdMax?: number;
+  highThresholdMin?: number;
+  highThresholdMax?: number;
   lowHandleMinRelease?: (newValue: number) => void;
   lowHandleMaxRelease?: (newValue: number) => void;
   highHandleMinRelease?: (newValue: number) => void;
@@ -39,6 +43,10 @@ const ContrastFingerprint = ({
   clickedLabelCallback,
   orientation = Orientation.VERTICAL,
   selectedContrast,
+  lowThresholdMin = -10,
+  lowThresholdMax = 0,
+  highThresholdMin = 0,
+  highThresholdMax = 10,
   lowHandleMinRelease,
   lowHandleMaxRelease,
   highHandleMinRelease,
@@ -95,10 +103,10 @@ const ContrastFingerprint = ({
     return acc + count;
   }, 0);
 
-  const [lowHandleMin, setLowHandleMin] = useState(-10);
-  const [lowHandleMax, setLowHandleMax] = useState(-3);
-  const [highHandleMin, setHighHandleMin] = useState(3);
-  const [highHandleMax, setHighHandleMax] = useState(10);
+  const [lowHandleMin, setLowHandleMin] = useState(lowThresholdMin);
+  const [lowHandleMax, setLowHandleMax] = useState(lowThresholdMax);
+  const [highHandleMin, setHighHandleMin] = useState(highThresholdMin);
+  const [highHandleMax, setHighHandleMax] = useState(highThresholdMax);
 
   return (
     <div className={`contrast-fingerprint ${orientation}-orientation`}>

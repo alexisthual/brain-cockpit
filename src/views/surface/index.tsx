@@ -100,7 +100,7 @@ const SurfaceExplorer = () => {
   const [lowThresholdMax, setLowThresholdMax] = useState(0);
   const [highThresholdMin, setHighThresholdMin] = useState(0);
   const [highThresholdMax, setHighThresholdMax] = useState(10);
-  const [filterSurface, setFilterSurface] = useState(false);
+  const [filterSurface, setFilterSurface] = useState(true);
 
   const colormapName = "diverging_temperature";
 
@@ -468,7 +468,7 @@ const SurfaceExplorer = () => {
         setLoadingFingerprint(false);
       }
     }
-  }, [voxelIndex, subject, meanFingerprint]);
+  }, [voxelIndex, subject, meanFingerprint, meshSupport]);
 
   return (
     <div
@@ -490,16 +490,8 @@ const SurfaceExplorer = () => {
                 ? colormaps["single_diverging_heat"]
                 : colormaps[colormapName]
             }
-            vmin={
-              surfaceMode === SurfaceMode.GRADIENT && surfaceMap !== undefined
-                ? getMin(surfaceMap)
-                : -10
-            }
-            vmax={
-              surfaceMode === SurfaceMode.GRADIENT && surfaceMap !== undefined
-                ? getMax(surfaceMap)
-                : 10
-            }
+            vmin={filterSurface ? lowThresholdMin : getMin(surfaceMap)}
+            vmax={filterSurface ? highThresholdMax : getMax(surfaceMap)}
             unit={
               surfaceMode === SurfaceMode.CONTRAST ? "Z-Score" : "Z-Score / mm"
             }
@@ -645,6 +637,7 @@ const SurfaceExplorer = () => {
                 sharedMeshType={meshType}
                 sharedMeshSupport={meshSupport}
                 sharedHemi={hemi}
+                filterSurface={filterSurface}
                 lowThresholdMin={filterSurface ? lowThresholdMin : undefined}
                 lowThresholdMax={filterSurface ? lowThresholdMax : undefined}
                 highThresholdMin={filterSurface ? highThresholdMin : undefined}
@@ -702,6 +695,10 @@ const SurfaceExplorer = () => {
                 fingerprint={contrastFingerprint}
                 width={fingerprintWidth}
                 height={fingerprintHeight}
+                lowThresholdMin={filterSurface ? lowThresholdMin : undefined}
+                lowThresholdMax={filterSurface ? lowThresholdMax : undefined}
+                highThresholdMin={filterSurface ? highThresholdMin : undefined}
+                highThresholdMax={filterSurface ? highThresholdMax : undefined}
                 lowHandleMinRelease={(newValue: number) =>
                   setLowThresholdMin(newValue)
                 }
