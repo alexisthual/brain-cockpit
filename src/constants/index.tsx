@@ -181,7 +181,7 @@ export const getMax = (arr: any[] | undefined | null) => {
   return max;
 };
 
-export const getMin = (arr: any[]) => {
+export const getMin = (arr: any[] | undefined | null) => {
   let min = undefined;
 
   if (arr !== undefined && arr !== null) {
