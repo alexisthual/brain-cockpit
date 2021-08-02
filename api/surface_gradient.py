@@ -1,5 +1,3 @@
-from api import app
-from datetime import datetime
 from distutils.util import strtobool
 import dotenv
 from flask import jsonify, request
@@ -8,10 +6,12 @@ import numpy as np
 import os
 import pandas as pd
 from scipy.sparse import coo_matrix, triu
+import sys
 from tqdm import tqdm
 
+from api import app
+from api.surface_contrasts import parse_metadata
 import custom_utils.setup as setup
-from api.surface_contrasts import parse_conditions_db
 
 # Load environment variables
 env = setup.load_env()
@@ -27,159 +27,146 @@ EXPERIMENT_DATA_PATH = os.getenv("EXPERIMENT_DATA_PATH")
 GRADIENTS_DATA_PATH = os.getenv("GRADIENTS_DATA_PATH")
 
 
-## Util functions
-def load_gradients(df, subjects):
-    gradients_per_subject = list()
-    gradients_averaged_per_subject = list()
-    gradients_norm_per_subject = list()
-
-    for subject in subjects:
-        gradient = np.load(
-            os.path.join(
-                EXPERIMENT_DATA_PATH,
-                GRADIENTS_DATA_PATH,
-                f"gradient_left_{subject}.npy",
-            ),
-            allow_pickle=True,
-        )
-        gradients_per_subject.append(gradient)
-
-        gradients_averaged = np.load(
-            os.path.join(
-                EXPERIMENT_DATA_PATH,
-                GRADIENTS_DATA_PATH,
-                f"gradient_averaged_left_{subject}.npy",
-            ),
-            allow_pickle=True,
-        )
-        gradients_averaged_per_subject.append(gradients_averaged)
-
-        gradients_norm = np.load(
-            os.path.join(
-                EXPERIMENT_DATA_PATH,
-                GRADIENTS_DATA_PATH,
-                f"gradient_averaged_norm_left_{subject}.npy",
-            ),
-            allow_pickle=True,
-        )
-        gradients_norm_per_subject.append(gradients_norm)
-
-    return (
-        gradients_per_subject,
-        gradients_averaged_per_subject,
-        gradients_norm_per_subject,
-    )
+# UTIL FUNCTIONS
 
 
-# Load gradients
-## Init variables and load data if possible
-df = pd.DataFrame()
-subjects, contrasts = [], []
-n_subjects, n_contrasts = 0, 0
-n_voxels = 0
+def load_data(meshes, subjects, tasks_contrasts, sides):
+    print(f"Loading {len(tasks_contrasts)} gradients...")
+    data = dict()
+    for mesh in tqdm(meshes, file=sys.stdout, position=1):
+        gsu = dict()  # gradients per subject
+        for subject in tqdm(subjects, file=sys.stdout, position=0):
+            gtc = dict()  # gradients per task, contrast
+            for task, contrast in tasks_contrasts:
+                gsi = dict()  # gradients per side
+                for side in sides:
+                    hemi = "left" if side == "lh" else "right"
+                    gradient_path = os.path.join(
+                        EXPERIMENT_DATA_PATH,
+                        GRADIENTS_DATA_PATH,
+                        f"{mesh}_{subject}_{task}_{contrast}_{hemi}.npy",
+                    )
+                    if os.path.exists(gradient_path):
+                        gsi[hemi] = np.load(gradient_path)
+                    else:
+                        gsi[hemi] = None
+                if task not in gtc:
+                    gtc[task] = dict()
+                gtc[task][contrast] = gsi
+            gsu[subject] = gtc
+        data[mesh] = gsu
+    print(f"OK")
 
-if REACT_APP_CONDITIONS_VIEW and os.path.exists(AVAILABLE_GIFTI_FILES_DB):
-    ## Load selected subjects and contrasts
-    df = pd.read_csv(AVAILABLE_GIFTI_FILES_DB)
-
-    subjects, contrasts = parse_conditions_db(df)
-    n_subjects, n_contrasts = len(subjects), len(contrasts)
-
-    ## Load functional data for all subjects
-    print(f"Loading {n_contrasts} contrast gradients...", end=" ")
-    (
-        gradients_per_subject,
-        gradients_averaged_per_subject,
-        gradients_norm_per_subject,
-    ) = load_gradients(
-        df,
-        # Load gradients for all subjects only in production
-        subjects if env == "production" else ["sub-01"],
-    )
-    print("OK")
-
-
-@app.route("/contrast_gradient", methods=["GET"])
-def get_contrast_gradient():
-    """
-    Return gradient intensity along edges of the fsaverage mesh.
-    Edges are deduplicated. Order of appearence is determined by
-    the upper triangular portion of the connectivity matrix.
-    """
-    subject_index = request.args.get("subject_index", type=int)
-    contrast_index = request.args.get("contrast_index", type=int)
-    hemi = request.args.get("hemi", default="left", type=str)
-
-    if DEBUG:
-        print(
-            f"[{datetime.now()}] get_contrast_gradient {contrasts[contrast_index]} for {subjects[subject_index]}, {hemi} hemi"
-        )
-
-    gradient = gradients_per_subject[subject_index][contrast_index]
-    edges = triu(gradient).tocsr()
-    edges.sort_indices()
-
-    return jsonify(edges.data)
+    return data
 
 
-@app.route("/contrast_gradient_averaged", methods=["GET"])
-def get_contrast_gradient_averaged():
-    """
-    Returns an array of size (n_voxels, 3) which associates each fsaverage voxel i
-    with a vector representing the mean of all gradient vectors along edges i -> j.
-    """
-    subject_index = request.args.get("subject_index", type=int)
-    contrast_index = request.args.get("contrast_index", type=int)
-    hemi = request.args.get("hemi", default="left", type=str)
-
-    if DEBUG:
-        print(
-            f"[{datetime.now()}] get_contrast_gradient_averaged {contrasts[contrast_index]} for {subjects[subject_index]}, {hemi} hemi"
-        )
-
-    gradient = gradients_averaged_per_subject[subject_index][contrast_index]
-
-    return jsonify(gradient)
+# MAIN FUNCTION
+# This function is meant to be called from other files.
+# It loads fmri previously computed contrasts'gradients
+# and exposes flask endpoints.
 
 
-@app.route("/contrast_gradient_norm", methods=["GET"])
-def get_contrast_gradient_norm():
-    """
-    Returns an array of size (n_voxels) which associates each fsaverage voxel i
-    with the norm of the mean of all gradient vectors along edges i -> j.
-    """
-    subject_index = request.args.get("subject_index", type=int)
-    contrast_index = request.args.get("contrast_index", type=int)
-    hemi = request.args.get("hemi", default="left", type=str)
+def load_gradients():
+    df = pd.DataFrame()
+    meshes, subjects, tasks_contrasts, sides = [], [], [], []
 
-    if DEBUG:
-        print(
-            f"[{datetime.now()}] get_contrast_gradient_norm {contrasts[contrast_index]} for {subjects[subject_index]}, {hemi} hemi"
-        )
+    if REACT_APP_CONDITIONS_VIEW and os.path.exists(AVAILABLE_GIFTI_FILES_DB):
+        # Load all available contrasts
+        df = pd.read_csv(AVAILABLE_GIFTI_FILES_DB)
+        meshes, subjects, tasks_contrasts, sides = parse_metadata(df)
+        data = load_data(meshes, subjects, tasks_contrasts, sides)
+        print(GRADIENTS_DATA_PATH)
 
-    gradient = gradients_norm_per_subject[subject_index][contrast_index]
+    # ROUTES
+    # Define a series of enpoints to expose contrasts, meshes, etc
 
-    return jsonify(gradient)
+    @app.route("/contrast_gradient", methods=["GET"])
+    def get_contrast_gradient():
+        """
+        Return (n, 3) gradient map computed in each vertex of a given mesh.
+        """
+        mesh = request.args.get("mesh", default="fsaverage5", type=str)
+        subject_index = request.args.get("subject_index", type=int)
+        contrast_index = request.args.get("contrast_index", type=int)
+        hemi = request.args.get("hemi", default="left", type=str)
 
+        subject = subjects[subject_index]
+        task, contrast = tasks_contrasts[contrast_index]
 
-@app.route("/contrast_gradient_norm_mean", methods=["GET"])
-def get_contrast_gradient_norm_mean():
-    contrast_index = request.args.get("contrast_index", type=int)
-    hemi = request.args.get("hemi", default="left", type=str)
+        if hemi == "left" or hemi == "right":
+            return jsonify(data[mesh][subject][task][contrast][hemi])
+        elif hemi == "both":
+            return jsonify(
+                np.concatenate(
+                    [
+                        data[mesh][subject][task][contrast]["left"],
+                        data[mesh][subject][task][contrast]["right"],
+                    ]
+                )
+            )
+        else:
+            print(f"Unknown value for hemi: {hemi}")
+            return jsonify([])
 
-    if DEBUG:
-        print(
-            f"[{datetime.now()}] get_contrast_gradient_norm_mean {contrasts[contrast_index]}, {hemi} hemi"
-        )
+    @app.route("/contrast_gradient_norm", methods=["GET"])
+    def get_contrast_gradient_norm():
+        """
+        Returns norm of gradient.
+        Returns an array of size (n_voxels) which associates each fsaverage voxel i
+        with the norm of the mean of all gradient vectors along edges i -> j.
+        """
+        mesh = request.args.get("mesh", default="fsaverage5", type=str)
+        subject_index = request.args.get("subject_index", type=int)
+        contrast_index = request.args.get("contrast_index", type=int)
+        hemi = request.args.get("hemi", default="left", type=str)
 
-    gradient = np.nanmean(
-        np.vstack(
-            [
-                gradients_norm_per_subject[subject_index][contrast_index]
-                for subject_index in range(n_subjects)
-            ]
-        ),
-        axis=0,
-    )
+        subject = subjects[subject_index]
+        task, contrast = tasks_contrasts[contrast_index]
 
-    return jsonify(gradient)
+        if hemi == "left" or hemi == "right":
+            print("here")
+            print(mesh, subject, task, contrast, hemi)
+            print(data[mesh][subject][task][contrast][hemi] is None)
+            gradient = data[mesh][subject][task][contrast][hemi]
+            if gradient is not None:
+                print(np.linalg.norm(gradient, axis=1).shape)
+                return jsonify(np.linalg.norm(gradient, axis=1))
+            else:
+                return jsonify([])
+        elif hemi == "both":
+            return jsonify(
+                np.linalg.norm(
+                    np.concatenate(
+                        [
+                            data[mesh][subject][task][contrast]["left"],
+                            data[mesh][subject][task][contrast]["right"],
+                        ]
+                    ),
+                    axis=1,
+                )
+            )
+        else:
+            print(f"Unknown value for hemi: {hemi}")
+            return jsonify([])
+
+    # @app.route("/contrast_gradient_norm_mean", methods=["GET"])
+    # def get_contrast_gradient_norm_mean():
+    #     contrast_index = request.args.get("contrast_index", type=int)
+    #     hemi = request.args.get("hemi", default="left", type=str)
+    #
+    #     if DEBUG:
+    #         print(
+    #             f"[{datetime.now()}] get_contrast_gradient_norm_mean {contrasts[contrast_index]}, {hemi} hemi"
+    #         )
+    #
+    #     gradient = np.nanmean(
+    #         np.vstack(
+    #             [
+    #                 gradients_norm_per_subject[subject_index][contrast_index]
+    #                 for subject_index in range(n_subjects)
+    #             ]
+    #         ),
+    #         axis=0,
+    #     )
+    #
+    #     return jsonify(gradient)
