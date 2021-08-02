@@ -22,7 +22,6 @@ REACT_APP_CONDITIONS_VIEW = bool(
 AVAILABLE_GIFTI_FILES_DB = os.getenv("AVAILABLE_GIFTI_FILES_DB")
 MESH_PATH = os.getenv("MESH_PATH")
 
-gifti_files = "/home/alexis/singbrain/data/mathlang_rsvp_fs5_fs7_individual_db"
 mesh_shape = {
     "fsaverage5": {"left": 10242, "right": 10242},
     "fsaverage7": {"left": 163_842, "right": 163_842},
@@ -131,16 +130,40 @@ def load_data(df):
                 for side in ["lh", "rh"]:
                     hemi = "left" if side == "lh" else "right"
                     try:
-                        dsi[hemi] = (
-                            nib.load(
-                                os.path.join(
-                                    gifti_files,
-                                    paths[mesh][subject][task][contrast][side],
+                        # Try following absolute path read from db...
+                        if os.path.exists(
+                            paths[mesh][subject][task][contrast][side]
+                        ):
+                            dsi[hemi] = (
+                                nib.load(
+                                    paths[mesh][subject][task][contrast][side]
                                 )
+                                .darrays[0]
+                                .data
                             )
-                            .darrays[0]
-                            .data
-                        )
+                        # or try relative path from where the db is located
+                        elif os.path.exists(
+                            os.path.join(
+                                os.path.split(AVAILABLE_GIFTI_FILES_DB)[0],
+                                paths[mesh][subject][task][contrast][side],
+                            )
+                        ):
+                            dsi[hemi] = (
+                                nib.load(
+                                    os.path.join(
+                                        os.path.split(
+                                            AVAILABLE_GIFTI_FILES_DB
+                                        )[0],
+                                        paths[mesh][subject][task][contrast][
+                                            side
+                                        ],
+                                    )
+                                )
+                                .darrays[0]
+                                .data
+                            )
+                        else:
+                            dsi[hemi] = None
                     except KeyError:
                         dsi[hemi] = None
                 if task not in dtc:
