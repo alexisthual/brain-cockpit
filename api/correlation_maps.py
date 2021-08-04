@@ -8,7 +8,6 @@ import os
 import pandas as pd
 from tqdm import tqdm
 
-from api.surface_contrasts import subjects
 import custom_utils.setup as setup
 
 # Load environment variables
@@ -24,6 +23,20 @@ REACT_APP_EXPERIMENT_CORRELATION_VIEW = bool(
 # Functional distance vs topographical distance experiment
 metric = "cosine"
 d_max = 40
+
+subjects = [
+    "sub-01",
+    "sub-04",
+    "sub-05",
+    "sub-06",
+    "sub-07",
+    "sub-09",
+    "sub-11",
+    "sub-12",
+    "sub-13",
+    "sub-14",
+    "sub-15",
+]
 
 
 def load_correlations():

@@ -1,5 +1,4 @@
 from api import app
-from api.surface_contrasts import n_voxels, subjects
 import custom_utils.setup as setup
 from datetime import datetime
 from distutils.util import strtobool
@@ -19,6 +18,23 @@ REACT_APP_EXPERIMENT_KNN_VIEW = bool(
     strtobool(os.getenv("REACT_APP_EXPERIMENT_KNN_VIEW"))
 )
 EXPERIMENT_KNN_FOLDER = os.getenv("EXPERIMENT_KNN_FOLDER")
+
+subjects = [
+    "sub-01",
+    "sub-04",
+    "sub-05",
+    "sub-06",
+    "sub-07",
+    "sub-09",
+    "sub-11",
+    "sub-12",
+    "sub-13",
+    "sub-14",
+    "sub-15",
+]
+
+# fsaverage5 number of voxels (counting both hemispheres)
+n_voxels = 20484
 
 
 def load_knn():

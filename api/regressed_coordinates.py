@@ -8,7 +8,6 @@ import os
 import pandas as pd
 from tqdm import tqdm
 
-from api.surface_contrasts import subjects
 import custom_utils.setup as setup
 
 # Load environment variables
@@ -25,6 +24,20 @@ MODELS = [
     "linear_svr",
     "nystroem_n_components_500",
     "nystroem_n_components_5000",
+]
+
+subjects = [
+    "sub-01",
+    "sub-04",
+    "sub-05",
+    "sub-06",
+    "sub-07",
+    "sub-09",
+    "sub-11",
+    "sub-12",
+    "sub-13",
+    "sub-14",
+    "sub-15",
 ]
 
 
