@@ -19,6 +19,7 @@ import api.fmri_image
 import custom_utils.setup as setup
 
 env = setup.load_env(verbose=True)
+N_JOBS = os.getenv("N_JOBS")
 REACT_APP_API_PORT = os.getenv("REACT_APP_API_PORT")
 
 
@@ -39,7 +40,9 @@ if __name__ == "__main__":
 
     if env == "production":
         # In production, serve flask app through waitress
-        serve(flask_app, host="0.0.0.0", port=REACT_APP_API_PORT)
+        serve(
+            flask_app, host="0.0.0.0", port=REACT_APP_API_PORT, threads=N_JOBS
+        )
     else:
         # Otherwise, serve app with hot reloader
         flask_app.run(debug=True, port=REACT_APP_API_PORT, use_reloader=True)
