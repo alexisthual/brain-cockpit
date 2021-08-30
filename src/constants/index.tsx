@@ -156,8 +156,7 @@ export const modulo = (a: number, n: number) => {
 
 export enum GradientMode {
   NONE = "NONE",
-  EDGES = "EDGES",
-  AVERAGE = "AVERAGE",
+  LOCAL = "LOCAL",
 }
 
 export enum SurfaceMode {

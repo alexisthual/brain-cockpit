@@ -248,7 +248,7 @@ export class CustomGradient extends THREE.Mesh {
     this.originalMesh = mesh;
 
     // Set vectors properties according to gradient
-    if (vectors !== undefined) {
+    if (vectors !== undefined && vectors !== null) {
       this.update(vectors);
     }
   }
@@ -289,7 +289,7 @@ export class CustomGradient extends THREE.Mesh {
       // Scale proportionally to gradient norm
       // scales.setX(index, Math.abs(norm));
       // scales.setX(index, Math.abs(0.7));
-      scales.setX(index, 1000 * norm);
+      scales.setX(index, norm);
     });
 
     ((this.geometry as THREE.InstancedBufferGeometry).attributes

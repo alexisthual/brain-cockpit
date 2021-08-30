@@ -33,11 +33,8 @@ const PanesButtons = ({
 }: Props) => {
   let gradientButtonText;
   switch (gradientMode) {
-    case GradientMode.EDGES:
-      gradientButtonText = "Gradient";
-      break;
-    case GradientMode.AVERAGE:
-      gradientButtonText = "Gradient average";
+    case GradientMode.LOCAL:
+      gradientButtonText = "Local Gradient";
       break;
     default:
       gradientButtonText = "None";

@@ -83,11 +83,8 @@ const SurfaceExplorer = () => {
     surfaceModeReducer,
     SurfaceMode.CONTRAST
   );
-  const [meshGradient, setMeshGradient] = useState<number[] | undefined>();
   const [loadingGradientMap, setLoadingGradientMap] = useState(false);
-  const [gradientAverageMap, setGradientAverageMap] = useState<
-    number[][] | undefined
-  >();
+  const [gradient, setGradient] = useState<number[][] | undefined>();
   const [showGridHelper, setShowGridHelper] = useState(true);
 
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
@@ -388,7 +385,7 @@ const SurfaceExplorer = () => {
       // Load surfacemap gradient
       setLoadingGradientMap(true);
       switch (gradientMode) {
-        case GradientMode.EDGES:
+        case GradientMode.LOCAL:
           if (subject.index !== undefined) {
             server
               .get("/contrast_gradient", {
@@ -398,24 +395,8 @@ const SurfaceExplorer = () => {
                   mesh: meshSupport,
                 },
               })
-              .then((response: AxiosResponse<number[]>) => {
-                setMeshGradient(response.data);
-                setLoadingGradientMap(false);
-              });
-          }
-          break;
-        case GradientMode.AVERAGE:
-          if (subject.index !== undefined) {
-            server
-              .get("/contrast_gradient_averaged", {
-                params: {
-                  subject_index: subject.index,
-                  contrast_index: contrast.index,
-                  mesh: meshSupport,
-                },
-              })
               .then((response: AxiosResponse<number[][]>) => {
-                setGradientAverageMap(response.data);
+                setGradient(response.data);
                 setLoadingGradientMap(false);
               });
           }
@@ -483,15 +464,27 @@ const SurfaceExplorer = () => {
         {sharedState && loadingGradientMap ? (
           <TextualLoader text="Loading gradient map..." />
         ) : null}
-        {sharedState ? (
+        {sharedState && panes.length > 1 ? (
           <Colorbar
             colormap={
               surfaceMode === SurfaceMode.GRADIENT
                 ? colormaps["single_diverging_heat"]
                 : colormaps[colormapName]
             }
-            vmin={filterSurface ? lowThresholdMin : getMin(surfaceMap)}
-            vmax={filterSurface ? highThresholdMax : getMax(surfaceMap)}
+            vmin={
+              filterSurface
+                ? lowThresholdMin
+                : surfaceMode === SurfaceMode.CONTRAST
+                ? getMin(surfaceMap)
+                : getMin(gradient)
+            }
+            vmax={
+              filterSurface
+                ? highThresholdMax
+                : surfaceMode === SurfaceMode.CONTRAST
+                ? getMax(surfaceMap)
+                : getMax(gradient)
+            }
             unit={
               surfaceMode === SurfaceMode.CONTRAST ? "Z-Score" : "Z-Score / mm"
             }
@@ -621,13 +614,8 @@ const SurfaceExplorer = () => {
                 sharedContrast={contrast}
                 sharedSurfaceMap={surfaceMap}
                 sharedMeanSurfaceMap={meanSurfaceMap}
-                sharedMeshGradient={
-                  gradientMode === GradientMode.EDGES ? meshGradient : undefined
-                }
                 sharedGradient={
-                  gradientMode === GradientMode.AVERAGE
-                    ? gradientAverageMap
-                    : undefined
+                  gradientMode === GradientMode.LOCAL ? gradient : undefined
                 }
                 sharedVoxelIndex={voxelIndex}
                 setSharedVoxelIndex={(newVoxelIndex: number) => {

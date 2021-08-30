@@ -68,7 +68,6 @@ const ScenePane = ({
   sharedContrast,
   sharedSurfaceMap,
   sharedMeanSurfaceMap = false,
-  sharedMeshGradient,
   sharedGradient,
   sharedVoxelIndex,
   setSharedVoxelIndex = () => {},
@@ -89,11 +88,8 @@ const ScenePane = ({
   const [surfaceMap, setSurfaceMap] = useState<number[] | undefined>();
   const [loadingSurfaceMap, setLoadingSurfaceMap] = useState(false);
   const [meanSurfaceMap, setMeanSurfaceMap] = useState(false);
-  const [meshGradient, setMeshGradient] = useState<number[] | undefined>();
-  const [gradientAverageMap, setGradientAverageMap] = useState<
-    number[][] | undefined
-  >();
-  const [loadingGradientMap, setLoadingGradientMap] = useState(false);
+  const [gradient, setGradient] = useState<number[][] | undefined>();
+  const [loadingGradient, setLoadingGradient] = useState(false);
   const [wireframe] = useState(false);
   const [meshType, setMeshType] = useState(MeshType.PIAL);
   const [meshSupport, setMeshSupport] = useState(MeshSupport.FSAVERAGE5);
@@ -304,9 +300,9 @@ const ScenePane = ({
       }
 
       // Load surfacemap gradient
-      setLoadingGradientMap(true);
+      setLoadingGradient(true);
       switch (gradientMode) {
-        case GradientMode.EDGES:
+        case GradientMode.LOCAL:
           if (subject.index !== undefined) {
             server
               .get("/contrast_gradient", {
@@ -316,30 +312,14 @@ const ScenePane = ({
                   mesh: meshSupport,
                 },
               })
-              .then((response: AxiosResponse<number[]>) => {
-                setMeshGradient(response.data);
-                setLoadingGradientMap(false);
-              });
-          }
-          break;
-        case GradientMode.AVERAGE:
-          if (subject.index !== undefined) {
-            server
-              .get("/contrast_gradient_averaged", {
-                params: {
-                  subject_index: subject.index,
-                  contrast_index: contrast.index,
-                  mesh: meshSupport,
-                },
-              })
               .then((response: AxiosResponse<number[][]>) => {
-                setGradientAverageMap(response.data);
-                setLoadingGradientMap(false);
+                setGradient(response.data);
+                setLoadingGradient(false);
               });
           }
           break;
         default:
-          setLoadingGradientMap(false);
+          setLoadingGradient(false);
           break;
       }
     }
@@ -448,7 +428,7 @@ const ScenePane = ({
       {loadingSurfaceMap ? (
         <TextualLoader text="Loading surface map..." />
       ) : null}
-      {loadingGradientMap ? (
+      {loadingGradient ? (
         <TextualLoader text="Loading gradient map..." />
       ) : null}
       <Colorbar
@@ -457,8 +437,28 @@ const ScenePane = ({
             ? colormaps["single_diverging_heat"]
             : colormaps[colormapName]
         }
-        vmin={filterSurface ? lowThresholdMin : getMin(surfaceMap)}
-        vmax={filterSurface ? highThresholdMax : getMax(surfaceMap)}
+        vmin={
+          filterSurface
+            ? lowThresholdMin
+            : surfaceMode === SurfaceMode.CONTRAST
+            ? sharedState
+              ? getMin(sharedSurfaceMap)
+              : getMin(surfaceMap)
+            : sharedState
+            ? getMin(sharedGradient)
+            : getMin(gradient)
+        }
+        vmax={
+          filterSurface
+            ? highThresholdMax
+            : surfaceMode === SurfaceMode.CONTRAST
+            ? sharedState
+              ? getMax(sharedSurfaceMap)
+              : getMax(surfaceMap)
+            : sharedState
+            ? getMax(sharedGradient)
+            : getMax(gradient)
+        }
         unit={surfaceMode === SurfaceMode.CONTRAST ? "Z-Score" : "Z-Score / mm"}
       />
       <ParentSize className="scene-container" debounceTime={10}>
@@ -474,8 +474,7 @@ const ScenePane = ({
             colormap={colormaps[colormapName]}
             voxelIndex={sharedState ? sharedVoxelIndex : voxelIndex}
             surfaceMap={sharedState ? sharedSurfaceMap : surfaceMap}
-            meshGradient={sharedState ? sharedMeshGradient : meshGradient}
-            gradient={sharedState ? sharedGradient : gradientAverageMap}
+            gradient={sharedState ? sharedGradient : gradient}
             meshType={sharedState ? sharedMeshType : meshType}
             meshSupport={sharedState ? sharedMeshSupport : meshSupport}
             subjectLabel={

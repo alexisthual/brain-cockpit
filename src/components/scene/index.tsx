@@ -17,13 +17,12 @@ import {
   View,
 } from "constants/index";
 import { Hotspots, IHotspot } from "./hotspots";
-import { MeshGradient, CustomGradient } from "./gradient";
+import { CustomGradient } from "./gradient";
 import "./style.scss";
 
 interface IProps {
   clickedVoxelCallback?: any;
   surfaceMap?: number[];
-  meshGradient?: number[];
   gradient?: number[][];
   width: number;
   height: number;
@@ -500,62 +499,13 @@ class Scene extends Component<IProps, IState> {
     }
 
     // Update gradient
-    // In case both gradient and gradient norms are available,
-    // give priority to gradient.
-    if (
-      this.props.gradient !== undefined &&
-      this.props.gradient !== prevProps.gradient
-    ) {
-      if (this.gradient === undefined) {
+    if (this.props.gradient !== prevProps.gradient) {
+      if (this.props.gradient !== undefined) {
         const gradient = new CustomGradient(this.object, this.props.gradient);
         this.scene.add(gradient);
         this.gradient = gradient;
-      } else {
-        if (this.props.gradient.length !== this.gradient.nVertices) {
-          // Either there was previously a MeshGradient being displayed...
-          this.scene.remove(this.gradient);
-          const gradient = new CustomGradient(this.object, this.props.gradient);
-          this.scene.add(gradient);
-          this.gradient = gradient;
-        } else {
-          // ...Or there was a Gradient
-          this.gradient.update(this.props.gradient);
-        }
-      }
-    } else if (
-      this.props.meshGradient !== undefined &&
-      this.props.meshGradient !== prevProps.meshGradient
-    ) {
-      // Load edges mesh if need be
-      if (this.edgesMesh === undefined) {
-        this.edgesMesh = await Scene.loadGradientMesh(
-          this.props.meshSupport,
-          this.props.meshType,
-          this.props.hemi
-        );
-      }
-
-      if (this.gradient === undefined) {
-        const gradient = new MeshGradient(
-          this.edgesMesh,
-          this.props.meshGradient
-        );
-        this.scene.add(gradient);
-        this.gradient = gradient;
-      } else {
-        if (this.props.meshGradient.length !== this.gradient.nVertices) {
-          // Either there was previously a Gradient being displayed...
-          this.scene.remove(this.gradient);
-          const gradient = new MeshGradient(
-            this.edgesMesh,
-            this.props.meshGradient
-          );
-          this.scene.add(gradient);
-          this.gradient = gradient;
-        } else {
-          // ...Or there was a MeshGradient
-          this.gradient.update(this.props.meshGradient);
-        }
+      } else if (this.gradient !== undefined) {
+        this.scene.remove(this.gradient);
       }
     }
   }
@@ -593,19 +543,6 @@ class Scene extends Component<IProps, IState> {
 
     if (this.props.gradient !== undefined) {
       const gradient = new CustomGradient(this.object, this.props.gradient);
-      scene.add(gradient);
-      this.gradient = gradient;
-    } else if (this.props.meshGradient !== undefined) {
-      this.edgesMesh = await Scene.loadGradientMesh(
-        this.props.meshSupport,
-        this.props.meshType,
-        this.props.hemi
-      );
-
-      const gradient = new MeshGradient(
-        this.edgesMesh,
-        this.props.meshGradient
-      );
       scene.add(gradient);
       this.gradient = gradient;
     }
