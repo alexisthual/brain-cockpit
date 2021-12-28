@@ -106,9 +106,9 @@ const PaneControls = ({ rows }: IProps) => {
                               ? input.iconActive
                               : input.iconInactive ?? input.iconActive
                           }
-                          onClick={() => {
+                          onClick={(event: React.MouseEvent<HTMLElement>) => {
                             if (input.onChangeCallback) {
-                              input.onChangeCallback();
+                              input.onChangeCallback(event);
                             }
                           }}
                           title={input.title}
@@ -127,9 +127,11 @@ const PaneControls = ({ rows }: IProps) => {
                           />
                           <Switch
                             checked={input.value as boolean | undefined}
-                            onChange={() => {
+                            onChange={(
+                              event: React.FormEvent<HTMLInputElement>
+                            ) => {
                               if (input.onChangeCallback) {
-                                input.onChangeCallback();
+                                input.onChangeCallback(event);
                               }
                             }}
                           />
@@ -147,9 +149,12 @@ const PaneControls = ({ rows }: IProps) => {
                           filterable={false}
                           items={input.values ?? []}
                           itemRenderer={stringRenderer}
-                          onItemSelect={(newItem: string) => {
+                          onItemSelect={(
+                            newItem: string,
+                            event?: React.SyntheticEvent<HTMLElement>
+                          ) => {
                             if (input.onChangeCallback) {
-                              input.onChangeCallback(newItem);
+                              input.onChangeCallback(newItem, event);
                             }
                           }}
                         >
@@ -170,9 +175,12 @@ const PaneControls = ({ rows }: IProps) => {
                           noResults={
                             <MenuItem disabled={true} text="No results." />
                           }
-                          onItemSelect={(newItem: ContrastLabel) => {
+                          onItemSelect={(
+                            newItem: ContrastLabel,
+                            event?: React.SyntheticEvent<HTMLElement>
+                          ) => {
                             if (input.onChangeCallback) {
-                              input.onChangeCallback(newItem);
+                              input.onChangeCallback(newItem, event);
                             }
                           }}
                           onQueryChange={(query: string) => {

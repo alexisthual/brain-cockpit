@@ -449,28 +449,61 @@ const SurfacePane = ({
                 inputType: InputType.SELECT_STRING,
                 value: state.meshSupport,
                 values: Object.keys(MeshSupport),
-                onChangeCallback: (newValue: string) =>
-                  changeState("meshSupport")(
-                    MeshSupport[newValue as keyof typeof MeshSupport]
-                  ),
+                onChangeCallback: (
+                  newValue: string,
+                  event: React.SyntheticEvent<HTMLElement>
+                ) => {
+                  if ((event as any).altKey) {
+                    paneCallbacks?.updateAllPanesState(
+                      "meshSupport",
+                      MeshSupport[newValue as keyof typeof MeshSupport]
+                    );
+                  } else {
+                    changeState("meshSupport")(
+                      MeshSupport[newValue as keyof typeof MeshSupport]
+                    );
+                  }
+                },
               },
               {
                 inputType: InputType.SELECT_STRING,
                 value: state.meshType,
                 values: Object.keys(MeshType),
-                onChangeCallback: (newValue: string) =>
-                  changeState("meshType")(
-                    MeshType[newValue as keyof typeof MeshType]
-                  ),
+                onChangeCallback: (
+                  newValue: string,
+                  event: React.SyntheticEvent<HTMLElement>
+                ) => {
+                  if ((event as any).altKey) {
+                    paneCallbacks?.updateAllPanesState(
+                      "meshType",
+                      MeshType[newValue as keyof typeof MeshType]
+                    );
+                  } else {
+                    changeState("meshType")(
+                      MeshType[newValue as keyof typeof MeshType]
+                    );
+                  }
+                },
               },
               {
                 inputType: InputType.SELECT_STRING,
                 value: state.hemi,
                 values: Object.keys(HemisphereSide),
-                onChangeCallback: (newValue: string) =>
-                  changeState("hemi")(
-                    HemisphereSide[newValue as keyof typeof HemisphereSide]
-                  ),
+                onChangeCallback: (
+                  newValue: string,
+                  event: React.SyntheticEvent<HTMLElement>
+                ) => {
+                  if ((event as any).altKey) {
+                    paneCallbacks?.updateAllPanesState(
+                      "hemi",
+                      HemisphereSide[newValue as keyof typeof HemisphereSide]
+                    );
+                  } else {
+                    changeState("hemi")(
+                      HemisphereSide[newValue as keyof typeof HemisphereSide]
+                    );
+                  }
+                },
               },
             ],
           },
@@ -481,14 +514,35 @@ const SurfacePane = ({
                 inputType: InputType.SELECT_STRING,
                 value: subjectLabels[state.subject],
                 values: subjectLabels,
-                onChangeCallback: (newValue: string) =>
-                  changeState("subject")(subjectLabels.indexOf(newValue)),
+                onChangeCallback: (
+                  newValue: string,
+                  event: React.SyntheticEvent<HTMLElement>
+                ) => {
+                  if ((event as any).altKey) {
+                    paneCallbacks?.updateAllPanesState(
+                      "subject",
+                      subjectLabels.indexOf(newValue)
+                    );
+                  } else {
+                    changeState("subject")(subjectLabels.indexOf(newValue));
+                  }
+                },
               },
               {
                 inputType: InputType.TWO_STATE_TOGGLE,
                 value: state.meanSurfaceMap,
-                onChangeCallback: () =>
-                  changeState("meanSurfaceMap")(!state.meanSurfaceMap),
+                onChangeCallback: (
+                  event: React.FormEvent<HTMLInputElement>
+                ) => {
+                  if ((event.nativeEvent as any).altKey) {
+                    paneCallbacks?.updateAllPanesState(
+                      "meanSurfaceMap",
+                      !state.meanSurfaceMap
+                    );
+                  } else {
+                    changeState("meanSurfaceMap")(!state.meanSurfaceMap);
+                  }
+                },
                 iconLeft: "person",
                 iconRight: "people",
                 title: "Mean across subjects",
@@ -502,14 +556,33 @@ const SurfacePane = ({
                 inputType: InputType.SELECT_CONTRAST,
                 value: contrastLabels[state.contrast],
                 values: contrastLabels,
-                onChangeCallback: (newValue: ContrastLabel) =>
-                  changeState("contrast")(contrastLabels.indexOf(newValue)),
+                onChangeCallback: (
+                  newValue: ContrastLabel,
+                  event: React.SyntheticEvent<HTMLElement>
+                ) => {
+                  if ((event as any).altKey) {
+                    paneCallbacks?.updateAllPanesState(
+                      "contrast",
+                      contrastLabels.indexOf(newValue)
+                    );
+                  } else {
+                    changeState("contrast")(contrastLabels.indexOf(newValue));
+                  }
+                },
               },
               {
                 inputType: InputType.BUTTON,
                 value: state.showDescription,
-                onChangeCallback: () =>
-                  changeState("showDescription")(!state.showDescription),
+                onChangeCallback: (event: React.MouseEvent<HTMLElement>) => {
+                  if (event.altKey) {
+                    paneCallbacks?.updateAllPanesState(
+                      "showDescription",
+                      !state.showDescription
+                    );
+                  } else {
+                    changeState("showDescription")(!state.showDescription);
+                  }
+                },
                 iconActive: "info-sign",
               },
             ],
