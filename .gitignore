@@ -14,3 +14,5 @@ __pycache__
 .sync-config.cson
 build
 .vscode
+
+.ipynb_checkpoints
