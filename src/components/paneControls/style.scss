@@ -10,12 +10,12 @@
 
   .pane-controls-row {
     display: grid;
-    grid-template-columns: 80px auto;
+    grid-template-columns: 70px auto;
     grid-template-rows: auto;
     align-content: center;
 
     & > * {
-      padding: 3px 0px;
+      padding: 0px 0px 5px 0px;
     }
 
     .header-item-label {
@@ -38,6 +38,42 @@
 
       display: flex;
       align-items: center;
+    }
+
+    // Remove radius when part of button group
+    .bp3-button-group:not(.bp3-minimal) > .custom-button:not(:first-child) {
+      border-bottom-left-radius: 0;
+      border-top-left-radius: 0;
+    }
+
+    .bp3-button-group:not(.bp3-minimal) > .custom-button:not(:last-child) {
+      border-bottom-right-radius: 0;
+      border-top-right-radius: 0;
+    }
+
+    //
+    .two-state-toggle {
+      padding: 4px 8px;
+      display: flex;
+      flex-direction: row;
+
+      align-items: center;
+
+      box-shadow: inset 0 0 0 1px rgb(16 22 26 / 20%),
+        inset 0 -1px 0 rgb(16 22 26 / 10%);
+      border-radius: 3px;
+
+      .bp3-icon {
+        color: $gray4;
+
+        &:not(:last-child) {
+          margin-right: 4px;
+        }
+      }
+
+      .bp3-switch {
+        margin: 0px;
+      }
     }
   }
 }

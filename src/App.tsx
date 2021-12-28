@@ -32,10 +32,7 @@ const App = () => {
       <div id="app-container">
         <div id="navbar">
           {process.env.REACT_APP_CONDITIONS_VIEW === "true" ? (
-            <Tooltip
-              content="IBC conditions on surface"
-              position={Position.RIGHT}
-            >
+            <Tooltip content="IBC dataset explorer" position={Position.RIGHT}>
               <NavLink className="view-button" exact to="/">
                 <Icon icon="symbol-square" />
               </NavLink>
