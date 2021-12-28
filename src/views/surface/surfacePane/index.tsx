@@ -26,6 +26,7 @@ import {
   modulo,
   SurfaceMode,
 } from "constants/index";
+import "./style.scss";
 
 export interface SurfacePaneState {
   subject: number;
@@ -350,12 +351,12 @@ const SurfacePane = ({
   ]);
 
   return (
-    <div className="scene" ref={panelEl}>
+    <div className="surface-pane scene" ref={panelEl}>
       <CloseButton closeCallback={closeCallback} />
       <PaneControls
         rows={[
           {
-            label: "Mesh Support",
+            label: "Mesh",
             inputs: [
               {
                 inputType: InputType.SELECT_STRING,
@@ -366,11 +367,6 @@ const SurfacePane = ({
                     MeshSupport[newValue as keyof typeof MeshSupport]
                   ),
               },
-            ],
-          },
-          {
-            label: "Mesh Type",
-            inputs: [
               {
                 inputType: InputType.SELECT_STRING,
                 value: state.meshType,
@@ -380,11 +376,6 @@ const SurfacePane = ({
                     MeshType[newValue as keyof typeof MeshType]
                   ),
               },
-            ],
-          },
-          {
-            label: "Hemi",
-            inputs: [
               {
                 inputType: InputType.SELECT_STRING,
                 value: state.hemi,
@@ -407,12 +398,12 @@ const SurfacePane = ({
                   changeState("subject")(subjectLabels.indexOf(newValue)),
               },
               {
-                inputType: InputType.BUTTON,
+                inputType: InputType.TWO_STATE_TOGGLE,
                 value: state.meanSurfaceMap,
                 onChangeCallback: () =>
                   changeState("meanSurfaceMap")(!state.meanSurfaceMap),
-                iconActive: "group-objects",
-                iconInactive: "ungroup-objects",
+                iconLeft: "person",
+                iconRight: "people",
                 title: "Mean across subjects",
               },
             ],

@@ -1,0 +1,9 @@
+@import "~@blueprintjs/core/lib/scss/variables";
+
+.surface-pane {
+  border-top: 5px solid $light-gray1;
+
+  &:hover {
+    border-top: 5px solid $blue3;
+  }
+}

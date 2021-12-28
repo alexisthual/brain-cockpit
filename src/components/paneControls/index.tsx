@@ -1,4 +1,11 @@
-import { Button, ButtonGroup, Colors, Icon, MenuItem } from "@blueprintjs/core";
+import {
+  Button,
+  ButtonGroup,
+  Colors,
+  Icon,
+  MenuItem,
+  Switch,
+} from "@blueprintjs/core";
 import { IconName } from "@blueprintjs/icons";
 import { Select } from "@blueprintjs/select";
 import React, { useState } from "react";
@@ -15,6 +22,7 @@ export enum InputType {
   LABEL = "label",
   SELECT_STRING = "select_string",
   SELECT_CONTRAST = "select_contrast",
+  TWO_STATE_TOGGLE = "two_state_toggle",
 }
 
 interface PaneControlsInput {
@@ -25,6 +33,8 @@ interface PaneControlsInput {
   iconActive?: IconName;
   iconInactive?: IconName;
   title?: string;
+  iconLeft?: IconName;
+  iconRight?: IconName;
 }
 
 interface PaneControlsRow {
@@ -105,6 +115,31 @@ const PaneControls = ({ rows }: IProps) => {
                         />
                       );
                       break;
+                    case InputType.TWO_STATE_TOGGLE:
+                      element = (
+                        <div
+                          key={`input-${inputIndex}`}
+                          className="custom-button two-state-toggle"
+                        >
+                          <Icon
+                            icon={input.iconLeft}
+                            color={!input.value ? Colors.GRAY2 : Colors.GRAY5}
+                          />
+                          <Switch
+                            checked={input.value as boolean | undefined}
+                            onChange={() => {
+                              if (input.onChangeCallback) {
+                                input.onChangeCallback();
+                              }
+                            }}
+                          />
+                          <Icon
+                            icon={input.iconRight}
+                            color={input.value ? Colors.GRAY2 : Colors.GRAY5}
+                          />
+                        </div>
+                      );
+                      break;
                     case InputType.SELECT_STRING:
                       element = (
                         <Select<string>
@@ -166,11 +201,7 @@ const PaneControls = ({ rows }: IProps) => {
                       break;
                   }
 
-                  return (
-                    <div key={`pane-controls-item-${inputIndex}`}>
-                      {element}
-                    </div>
-                  );
+                  return element;
                 }
               )}
             </ButtonGroup>
