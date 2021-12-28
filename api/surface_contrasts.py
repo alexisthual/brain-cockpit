@@ -20,6 +20,7 @@ REACT_APP_CONDITIONS_VIEW = bool(
     strtobool(os.getenv("REACT_APP_CONDITIONS_VIEW"))
 )
 AVAILABLE_GIFTI_FILES_DB = os.getenv("AVAILABLE_GIFTI_FILES_DB")
+DATA_DESCRIPTION_FILE_PATH = os.getenv("DATA_DESCRIPTION_FILE_PATH")
 MESH_PATH = os.getenv("MESH_PATH")
 
 mesh_shape = {
@@ -202,6 +203,12 @@ def load_contrasts():
     @app.route("/contrast_labels", methods=["GET"])
     def get_contrast_labels():
         return jsonify(tasks_contrasts)
+
+    @app.route("/ibc_descriptions", methods=["GET"])
+    def get_ibc_descriptions():
+        with open(DATA_DESCRIPTION_FILE_PATH, "r") as f:
+            descriptions = json.load(f)
+            return jsonify(descriptions)
 
     @app.route("/mesh/<path:path>", methods=["GET"])
     def get_mesh(path):

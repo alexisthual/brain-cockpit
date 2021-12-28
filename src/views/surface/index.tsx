@@ -86,6 +86,10 @@ const SurfaceExplorer = () => {
   // Load state from url
   const [state, setState] = useSurfaceState();
 
+  //
+  // Util functions to modify view state
+  //
+
   const addPane = useCallback(() => {
     const newState = {
       ...state,
@@ -180,7 +184,9 @@ const SurfaceExplorer = () => {
     setState(newState);
   };
 
-  // Set key events
+  //
+  // Keyboard events
+  //
 
   // N
   const keyAddPane = useCallback(
@@ -202,9 +208,11 @@ const SurfaceExplorer = () => {
   // Label information
   const [subjectLabels, setSubjectLabels] = useState<string[]>([]);
   const [contrastLabels, setContrastLabels] = useState<ContrastLabel[]>([]);
+  const [datasetDescriptions, setDatasetDescriptions] = useState<any>({});
   // Page layout
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [showGridHelper, setShowGridHelper] = useState(true);
+  // Surface map filtering and normalisation
   const [lowThresholdMin, setLowThresholdMin] = useState(-10);
   const [lowThresholdMax, setLowThresholdMax] = useState(0);
   const [highThresholdMin, setHighThresholdMin] = useState(0);
@@ -224,18 +232,23 @@ const SurfaceExplorer = () => {
       // Load static data
       const subjectLabels = server.get<string[]>("subjects");
       const contrastLabels = server.get<string[][]>("contrast_labels");
+      const datasetDescriptions = server.get<any>("ibc_descriptions");
 
       // Wait for all data to be loaded before setting app state
-      Promise.all([subjectLabels, contrastLabels]).then((values) => {
-        setSubjectLabels(values[0].data);
+      Promise.all([subjectLabels, contrastLabels, datasetDescriptions]).then(
+        (values) => {
+          setSubjectLabels(values[0].data);
 
-        setContrastLabels(
-          values[1].data.map((label: any) => ({
-            task: label[0],
-            contrast: label[1],
-          }))
-        );
-      });
+          setContrastLabels(
+            values[1].data.map((label: any) => ({
+              task: label[0],
+              contrast: label[1],
+            }))
+          );
+
+          setDatasetDescriptions(values[2].data);
+        }
+      );
     };
 
     fetchAllData();
@@ -309,6 +322,7 @@ const SurfaceExplorer = () => {
                 }}
                 subjectLabels={subjectLabels}
                 contrastLabels={contrastLabels}
+                datasetDescriptions={datasetDescriptions}
                 filterSurface={filterSurface}
                 lowThresholdMin={filterSurface ? lowThresholdMin : undefined}
                 lowThresholdMax={filterSurface ? lowThresholdMax : undefined}

@@ -1,3 +1,4 @@
+import { Callout } from "@blueprintjs/core";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import { AxiosError, AxiosResponse } from "axios";
 import React, {
@@ -17,6 +18,7 @@ import TextualLoader from "components/textualLoader";
 import {
   colormaps,
   ContrastLabel,
+  DatasetDescriptions,
   getMax,
   getMin,
   GradientMode,
@@ -36,6 +38,7 @@ export interface SurfacePaneState {
   meshType: MeshType;
   hemi: HemisphereSide;
   meanSurfaceMap?: boolean;
+  showDescription?: boolean;
   other?: string;
 }
 
@@ -46,6 +49,7 @@ export const defaultPaneState: SurfacePaneState = {
   meshType: MeshType.PIAL,
   hemi: HemisphereSide.LEFT,
   meanSurfaceMap: false,
+  showDescription: false,
 };
 
 interface Props {
@@ -60,6 +64,7 @@ interface Props {
   colormapName?: string;
   subjectLabels: string[];
   contrastLabels: ContrastLabel[];
+  datasetDescriptions: DatasetDescriptions;
   filterSurface?: boolean;
   lowThresholdMin?: number;
   lowThresholdMax?: number;
@@ -78,6 +83,7 @@ const SurfacePane = ({
   colormapName = "diverging_temperature",
   subjectLabels = [],
   contrastLabels = [],
+  datasetDescriptions = {},
   filterSurface,
   lowThresholdMin,
   lowThresholdMax,
@@ -237,6 +243,25 @@ const SurfacePane = ({
     [state.meanSurfaceMap, paneCallbacks, changeState]
   );
 
+  // O
+  const toggleDescription = useCallback(
+    (event: any) => {
+      if (event.target.matches("input")) return;
+
+      if (panelEl.current !== null && panelEl.current.matches(":hover")) {
+        if (event.isComposing || (event.keyCode === 79 && event.altKey)) {
+          paneCallbacks?.updateAllPanesState(
+            "showDescription",
+            !state.showDescription
+          );
+        } else if (event.isComposing || event.keyCode === 79) {
+          changeState("showDescription")(!state.showDescription);
+        }
+      }
+    },
+    [state.showDescription, paneCallbacks, changeState]
+  );
+
   useEffect(() => {
     window.addEventListener("keydown", incrementContrast);
     window.addEventListener("keydown", decrementContrast);
@@ -244,6 +269,7 @@ const SurfacePane = ({
     window.addEventListener("keydown", decrementSubject);
     window.addEventListener("keydown", closePane);
     window.addEventListener("keydown", toggleMeanContrastMap);
+    window.addEventListener("keydown", toggleDescription);
     return () => {
       window.removeEventListener("keydown", incrementContrast);
       window.removeEventListener("keydown", decrementContrast);
@@ -251,6 +277,7 @@ const SurfacePane = ({
       window.removeEventListener("keydown", decrementSubject);
       window.removeEventListener("keydown", closePane);
       window.removeEventListener("keydown", toggleMeanContrastMap);
+      window.removeEventListener("keydown", toggleDescription);
     };
   }, [
     incrementContrast,
@@ -259,6 +286,7 @@ const SurfacePane = ({
     decrementSubject,
     closePane,
     toggleMeanContrastMap,
+    toggleDescription,
   ]);
 
   // Update contrast map when subject or contrast change
@@ -350,9 +378,68 @@ const SurfacePane = ({
     surfaceMode,
   ]);
 
+  //
+  // Show or hide contrast descriptions
+  //
+
+  const [descriptions, setDescriptions] = useState<any>([]);
+
+  useEffect(() => {
+    let newDescriptions = [];
+
+    // Add task description
+    const task = contrastLabels[state.contrast]?.task;
+    if (task !== undefined) {
+      newDescriptions.push([task, datasetDescriptions[task]?.description]);
+    }
+
+    // Add contrast / condition description
+    const contrast = contrastLabels[state.contrast]?.contrast;
+    if (contrast !== undefined) {
+      newDescriptions.push([
+        contrast,
+        datasetDescriptions[task]?.maps[contrast],
+      ]);
+    }
+
+    // If map is contrast, try to add the descriptions
+    // of all conditions it results from
+    if (
+      task !== undefined &&
+      contrast !== undefined &&
+      datasetDescriptions[task] !== undefined &&
+      contrast.indexOf("-") !== -1
+    ) {
+      const conditions = contrast.split("-");
+      for (const condition of conditions) {
+        if (condition in datasetDescriptions[task]?.maps) {
+          newDescriptions.push([
+            condition,
+            datasetDescriptions[task]?.maps[condition],
+          ]);
+        }
+      }
+    }
+
+    setDescriptions(newDescriptions);
+  }, [state.contrast, datasetDescriptions, contrastLabels]);
+
   return (
     <div className="surface-pane scene" ref={panelEl}>
       <CloseButton closeCallback={closeCallback} />
+      {state.showDescription ? (
+        <div className="description-callout">
+          <Callout>
+            {descriptions.map((description: any) => {
+              return (
+                <p key={`description-${description[0]}`}>
+                  <strong>{description[0]}:</strong> {description[1]}
+                </p>
+              );
+            })}
+          </Callout>
+        </div>
+      ) : null}
       <PaneControls
         rows={[
           {
@@ -417,6 +504,13 @@ const SurfacePane = ({
                 values: contrastLabels,
                 onChangeCallback: (newValue: ContrastLabel) =>
                   changeState("contrast")(contrastLabels.indexOf(newValue)),
+              },
+              {
+                inputType: InputType.BUTTON,
+                value: state.showDescription,
+                onChangeCallback: () =>
+                  changeState("showDescription")(!state.showDescription),
+                iconActive: "info-sign",
               },
             ],
           },

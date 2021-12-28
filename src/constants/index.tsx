@@ -83,6 +83,15 @@ export type ContrastLabel = {
   contrast: string;
 };
 
+export interface DatasetDescriptions {
+  [protocol: string]: {
+    description: string;
+    maps: {
+      [condition: string]: string;
+    };
+  };
+}
+
 export const contrastLabelToId = (label: ContrastLabel) => {
   return `${label.task}-${label.contrast}`;
 };
