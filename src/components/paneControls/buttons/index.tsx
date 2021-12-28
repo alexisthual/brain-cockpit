@@ -6,41 +6,30 @@ import "./style.scss";
 interface Props {
   orientation?: Orientation;
   orientationChangeCallback: () => void;
-  meanFingerprint: boolean;
-  meanChangeCallback: () => void;
   clickCloseCallback: () => void;
 }
 
-const PanelButtons = ({
+const PaneButtons = ({
   orientation,
   orientationChangeCallback,
-  meanFingerprint,
-  meanChangeCallback,
   clickCloseCallback,
 }: Props) => {
   return (
     <div className={`pane-buttons ${orientation}-orientation`}>
       <Button
-        active={meanFingerprint}
-        icon={meanFingerprint ? "ungroup-objects" : "group-objects"}
-        onClick={meanChangeCallback}
-        outlined
-        title={"Mean across subjects"}
-      />
-      <Button
         icon={"rotate-page"}
         onClick={orientationChangeCallback}
         outlined
-        title="Change panel orientation"
+        title="Change pane orientation"
       />
       <Button
         icon={"cross"}
         onClick={clickCloseCallback}
         outlined
-        title="Close panel"
+        title="Close pane"
       />
     </div>
   );
 };
 
-export default PanelButtons;
+export default PaneButtons;

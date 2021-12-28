@@ -7,8 +7,8 @@ import { server } from "App";
 import Colorbar from "components/colorbar";
 import ContrastFingerprint from "components/contrastFingerprint";
 import DistanceBars from "./distanceBars";
-import InfoPanel, { InputType } from "components/infoPanel";
-import PanelButtons from "components/infoPanel/buttons";
+import PaneControls, { InputType } from "components/paneControls";
+import PaneButtons from "components/paneControls/buttons";
 import PanesButtons from "./panesButtons";
 import ScenePane from "./scenePane";
 import TextualLoader from "components/textualLoader";
@@ -316,7 +316,7 @@ const FunctionalDistanceExplorer = () => {
           }}
         />
         {sharedState ? (
-          <InfoPanel
+          <PaneControls
             rows={[
               {
                 label: "Metric",
@@ -411,7 +411,7 @@ const FunctionalDistanceExplorer = () => {
               : Orientation.HORIZONTAL
           }-orientation`}
         >
-          <PanelButtons
+          <PaneButtons
             orientationChangeCallback={() => {
               switch (orientation) {
                 case Orientation.VERTICAL:
@@ -421,10 +421,6 @@ const FunctionalDistanceExplorer = () => {
                   setOrientation(Orientation.VERTICAL);
                   break;
               }
-            }}
-            meanFingerprint={meanFingerprint}
-            meanChangeCallback={() => {
-              setMeanFingerprint(!meanFingerprint);
             }}
             clickCloseCallback={() => {
               setVoxelIndex(undefined);

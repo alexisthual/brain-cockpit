@@ -5,8 +5,8 @@ import React, { useCallback, useEffect, useReducer, useState } from "react";
 import { server } from "App";
 import Colorbar from "components/colorbar";
 import ContrastFingerprint from "components/contrastFingerprint";
-import InfoPanel, { InputType } from "components/infoPanel";
-import PanelButtons from "components/infoPanel/buttons";
+import PaneControls, { InputType } from "components/paneControls";
+import PaneButtons from "components/paneControls/buttons";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
 import {
@@ -221,7 +221,7 @@ const RegressionExplorer = () => {
         voxelIndex !== undefined ? `${orientation}-orientation` : ""
       }`}
     >
-      <InfoPanel
+      <PaneControls
         rows={[
           {
             label: "Model",
@@ -290,7 +290,7 @@ const RegressionExplorer = () => {
       </div>
       {voxelIndex !== undefined ? (
         <div className="fingerprint">
-          <PanelButtons
+          <PaneButtons
             orientation={
               orientation === Orientation.VERTICAL
                 ? Orientation.HORIZONTAL
@@ -305,10 +305,6 @@ const RegressionExplorer = () => {
                   setOrientation(Orientation.VERTICAL);
                   break;
               }
-            }}
-            meanFingerprint={meanFingerprint}
-            meanChangeCallback={() => {
-              setMeanFingerprint(!meanFingerprint);
             }}
             clickCloseCallback={() => {
               setVoxelIndex(undefined);

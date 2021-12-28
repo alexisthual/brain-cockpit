@@ -1,170 +1,222 @@
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import { AxiosResponse } from "axios";
 import { nanoid } from "nanoid";
-import React, { useCallback, useEffect, useReducer, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { useHistory } from "react-router-dom";
+import * as qs from "qs";
 
-import Colorbar from "components/colorbar";
 import ContrastFingerprint from "components/contrastFingerprint";
-import InfoPanel, { InputType } from "components/infoPanel";
-import PanelButtons from "components/infoPanel/buttons";
-import PanesButtons from "./panesButtons";
-import ScenePane from "./scenePane";
-import TextualLoader from "components/textualLoader";
-import {
-  ActionLabel,
-  ActionPane,
-  colormaps,
-  Contrast,
-  ContrastLabel,
-  getMax,
-  getMin,
-  GradientMode,
-  HemisphereSide,
-  MeshSupport,
-  MeshType,
-  Orientation,
-  Subject,
-  SurfaceMode,
-  modulo,
-} from "constants/index";
+import PaneControls from "components/paneControls/buttons";
+import SurfaceControls from "./surfaceControls";
+import SurfacePane, { defaultPaneState, SurfacePaneState } from "./surfacePane";
+import { ContrastLabel, Orientation, modulo } from "constants/index";
 import { server } from "App";
 
+interface SurfaceViewState {
+  panes: { [paneId: string]: SurfacePaneState };
+}
+
+// Custom hook to load state from URL
+const useSurfaceState = (): [
+  SurfaceViewState,
+  React.Dispatch<React.SetStateAction<SurfaceViewState>>
+] => {
+  // Load state from URL and convert it to SurfaceViewState
+  // (decode booleans and numbers with custom decoder)
+  let urlState = qs.parse(window.location.search, {
+    ignoreQueryPrefix: true,
+    decoder(str, _, charset) {
+      const strWithoutPlus = str.replace(/\+/g, " ");
+      if (charset === "iso-8859-1") {
+        // unescape never throws, no try...catch needed:
+        return strWithoutPlus.replace(/%[0-9a-f]{2}/gi, unescape);
+      }
+
+      if (/^(\d+|\d*\.\d+)$/.test(str)) {
+        return parseFloat(str);
+      }
+
+      const keywords = {
+        true: true,
+        false: false,
+        null: null,
+        undefined,
+      } as any;
+
+      if (str in keywords) {
+        return keywords[str];
+      }
+
+      // utf-8
+      try {
+        return decodeURIComponent(strWithoutPlus);
+      } catch (e) {
+        return strWithoutPlus;
+      }
+    },
+  });
+  // as unknown) as SurfaceViewState;
+
+  // If no panes are present, create one with default state
+  if (urlState.panes === undefined) {
+    urlState = {
+      ...urlState,
+      panes: {
+        [nanoid()]: defaultPaneState,
+      },
+    };
+  }
+
+  // Instantiate new state
+  const [state, setState] = useState<any>(urlState);
+
+  // Update URL on state change
+  const history = useHistory();
+
+  useEffect(() => {
+    history.push({
+      search: qs.stringify(state),
+    });
+  }, [state, history]);
+
+  return [state, setState];
+};
+
 const SurfaceExplorer = () => {
+  // Load state from url
+  const [state, setState] = useSurfaceState();
+
+  const addPane = useCallback(() => {
+    const newState = {
+      ...state,
+      panes: {
+        ...state.panes,
+        [nanoid()]: defaultPaneState,
+      },
+    };
+
+    setState(newState);
+  }, [state, setState]);
+
+  const removePane = useCallback(
+    (paneId: string) => {
+      console.log("removePane");
+      if (paneId in state.panes) {
+        console.log(state);
+        // Filter-out pane with matching id
+        const { [paneId]: newValue, ...selectedPanes } = state.panes;
+        const newState = {
+          ...state,
+          panes: selectedPanes,
+        };
+        setState(newState);
+      }
+    },
+    [state, setState]
+  );
+
+  const updatePaneState = (paneId: string, paneState: SurfacePaneState) => {
+    const newState = {
+      ...state,
+      panes: {
+        ...state.panes,
+        [paneId]: paneState,
+      },
+    };
+
+    setState(newState);
+  };
+
+  const updatePaneKey = (paneId: string, key: string, value: any) => {
+    const newState = {
+      ...state,
+      panes: {
+        ...state.panes,
+        [paneId]: {
+          ...state.panes[paneId],
+          [key]: value,
+        },
+      },
+    };
+
+    setState(newState);
+  };
+
+  const updateAllPanesState = (key: string, value: any) => {
+    const newState = {
+      ...state,
+      panes: Object.fromEntries(
+        Object.entries(state.panes).map(([k, v]) => {
+          return [
+            k,
+            {
+              ...v,
+              [key]: value,
+            },
+          ];
+        })
+      ),
+    };
+
+    setState(newState);
+  };
+
+  const shiftAllPanes = (key: string, shift: number, n: number) => {
+    const newState = {
+      ...state,
+      panes: Object.fromEntries(
+        Object.entries(state.panes).map(([k, v]) => {
+          return [
+            k,
+            {
+              ...v,
+              [key]: modulo((state.panes[k] as any)[key] + shift, n),
+            },
+          ];
+        })
+      ),
+    };
+
+    setState(newState);
+  };
+
+  // Set key events
+
+  // N
+  const keyAddPane = useCallback(
+    (event: any) => {
+      if (event.isComposing || event.keyCode === 78) {
+        addPane();
+      }
+    },
+    [addPane]
+  );
+
+  useEffect(() => {
+    window.addEventListener("keydown", keyAddPane);
+    return () => {
+      window.removeEventListener("keydown", keyAddPane);
+    };
+  }, [keyAddPane]);
+
+  // Label information
   const [subjectLabels, setSubjectLabels] = useState<string[]>([]);
   const [contrastLabels, setContrastLabels] = useState<ContrastLabel[]>([]);
-  const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
-  const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
-  const [loadingFingerprint, setLoadingFingerprint] = useState(false);
-  const [meanFingerprint, setMeanFingerprint] = useState(false);
-  const [surfaceMap, setSurfaceMap] = useState<number[] | undefined>();
-  const [loadingContrastMap, setLoadingSurfaceMap] = useState(false);
-  const [meanSurfaceMap, setMeanContrastMap] = useState(false);
-  const gradientModeReducer = (
-    gradientMode: GradientMode,
-    action: ActionLabel
-  ): GradientMode => {
-    let newIndex = Object.keys(GradientMode).indexOf(gradientMode);
-    const n = Object.values(GradientMode).length;
-    switch (action.type) {
-      case "increment":
-        newIndex = modulo(newIndex + 1, n);
-        break;
-      case "decrement":
-        newIndex = modulo(newIndex - 1, n);
-        break;
-      default:
-        break;
-    }
-    return Object.values(GradientMode)[newIndex];
-  };
-  const [gradientMode, setGradientMode] = useReducer(
-    gradientModeReducer,
-    GradientMode.NONE
-  );
-  const surfaceModeReducer = (
-    surfaceMode: SurfaceMode,
-    action: ActionLabel
-  ): SurfaceMode => {
-    let newIndex = Object.keys(SurfaceMode).indexOf(surfaceMode);
-    const n = Object.values(SurfaceMode).length;
-    switch (action.type) {
-      case "increment":
-        newIndex = modulo(newIndex + 1, n);
-        break;
-      case "decrement":
-        newIndex = modulo(newIndex - 1, n);
-        break;
-      default:
-        break;
-    }
-    return Object.values(SurfaceMode)[newIndex];
-  };
-  const [surfaceMode, setSurfaceMode] = useReducer(
-    surfaceModeReducer,
-    SurfaceMode.CONTRAST
-  );
-  const [loadingGradientMap, setLoadingGradientMap] = useState(false);
-  const [gradient, setGradient] = useState<number[][] | undefined>();
-  const [showGridHelper, setShowGridHelper] = useState(true);
-
+  // Page layout
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
-  const [wireframe, setWireframe] = useState(false);
-  const [meshType, setMeshType] = useState(MeshType.PIAL);
-  const [meshSupport, setMeshSupport] = useState(MeshSupport.FSAVERAGE5);
-  const [hemi, setHemi] = useState(HemisphereSide.LEFT);
-  const [sharedState, setSharedState] = useState(true);
+  const [showGridHelper, setShowGridHelper] = useState(true);
   const [lowThresholdMin, setLowThresholdMin] = useState(-10);
   const [lowThresholdMax, setLowThresholdMax] = useState(0);
   const [highThresholdMin, setHighThresholdMin] = useState(0);
   const [highThresholdMax, setHighThresholdMax] = useState(10);
   const [filterSurface, setFilterSurface] = useState(true);
-
-  const colormapName = "diverging_temperature";
-
-  const subjectReducer = (state: Subject, action: ActionLabel): Subject => {
-    let newIndex = state.index;
-    let n = subjectLabels.length;
-    switch (action.type) {
-      case "increment":
-        newIndex = modulo((state.index ?? 0) + 1, n);
-        break;
-      case "decrement":
-        newIndex = modulo((state.index ?? 0) - 1, n);
-        break;
-      default:
-        newIndex = modulo(action.payload ?? 0, n);
-        break;
-    }
-    return {
-      index: newIndex,
-      label: subjectLabels[newIndex],
-    };
-  };
-  const [subject, setSubject] = useReducer(subjectReducer, {} as Subject);
-
-  const contrastReducer = (state: Contrast, action: ActionLabel): Contrast => {
-    let newIndex = state.index;
-    let n = contrastLabels.length;
-    switch (action.type) {
-      case "increment":
-        newIndex = modulo((state.index ?? 0) + 1, n);
-        break;
-      case "decrement":
-        newIndex = modulo((state.index ?? 0) - 1, n);
-        break;
-      default:
-        newIndex = modulo(action.payload ?? 0, n);
-        break;
-    }
-    return {
-      index: newIndex,
-      label: contrastLabels[newIndex],
-    };
-  };
-  const [contrast, setContrast] = useReducer(contrastReducer, {} as Contrast);
-
-  const panesReducer = (state: string[], action: ActionPane): string[] => {
-    const newState = [...state];
-
-    switch (action.type) {
-      case "add":
-        newState.push(nanoid());
-        break;
-      case "remove":
-        if (action.payload !== undefined) {
-          const index = state.indexOf(action.payload);
-          if (index >= 0) {
-            newState.splice(index, 1);
-          }
-        }
-        break;
-      default:
-        break;
-    }
-
-    return newState;
-  };
-  const [panes, setPanes] = useReducer(panesReducer, [nanoid()]);
+  // Fingerprint
+  const [selectedPaneId, setSelectedPaneId] = useState<string | undefined>(
+    undefined
+  );
+  const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
+  const [loadingFingerprint, setLoadingFingerprint] = useState(false);
+  // const [meanFingerprint, setMeanFingerprint] = useState(false);
 
   // Initialise all pane state variables
   useEffect(() => {
@@ -176,9 +228,6 @@ const SurfaceExplorer = () => {
       // Wait for all data to be loaded before setting app state
       Promise.all([subjectLabels, contrastLabels]).then((values) => {
         setSubjectLabels(values[0].data);
-        if (values[0].data.length > 0) {
-          setSubject({ payload: 0 });
-        }
 
         setContrastLabels(
           values[1].data.map((label: any) => ({
@@ -186,259 +235,36 @@ const SurfaceExplorer = () => {
             contrast: label[1],
           }))
         );
-        if (values[1].data.length > 0) {
-          setContrast({ payload: 0 });
-        }
       });
     };
 
     fetchAllData();
   }, []);
 
-  // Set key events
-
-  // L
-  const incrementContrast = useCallback(
-    (event: any) => {
-      if (event.target.matches("input")) return;
-
-      if (event.isComposing || event.keyCode === 76) {
-        if (sharedState) {
-          setContrast({ type: "increment" });
-        }
-      }
-    },
-    [sharedState]
-  );
-  useEffect(() => {
-    window.addEventListener("keydown", incrementContrast);
-    return () => window.removeEventListener("keydown", incrementContrast);
-  }, [incrementContrast]);
-
-  // J
-  const decrementContrast = useCallback(
-    (event: any) => {
-      if (event.target.matches("input")) return;
-
-      if (event.isComposing || event.keyCode === 74) {
-        if (sharedState) {
-          setContrast({ type: "decrement" });
-        }
-      }
-    },
-    [sharedState]
-  );
-  useEffect(() => {
-    window.addEventListener("keydown", decrementContrast);
-    return () => window.removeEventListener("keydown", decrementContrast);
-  }, [decrementContrast]);
-
-  // I
-  const incrementSubject = useCallback(
-    (event: any) => {
-      if (event.target.matches("input")) return;
-
-      if (event.isComposing || event.keyCode === 73) {
-        if (sharedState && !meanSurfaceMap) {
-          setSubject({ type: "increment" });
-        }
-      }
-    },
-    [sharedState, meanSurfaceMap]
-  );
-  useEffect(() => {
-    window.addEventListener("keydown", incrementSubject);
-    return () => window.removeEventListener("keydown", incrementSubject);
-  }, [incrementSubject]);
-
-  // K
-  const decrementSubject = useCallback(
-    (event: any) => {
-      if (event.target.matches("input")) return;
-
-      if (event.isComposing || event.keyCode === 75) {
-        if (sharedState && !meanSurfaceMap) {
-          setSubject({ type: "decrement" });
-        }
-      }
-    },
-    [sharedState, meanSurfaceMap]
-  );
-  useEffect(() => {
-    window.addEventListener("keydown", decrementSubject);
-    return () => window.removeEventListener("keydown", decrementSubject);
-  }, [decrementSubject]);
-
-  // U
-  const toggleMeanContrastMap = useCallback(
-    (event: any) => {
-      if (event.target.matches("input")) return;
-
-      if (event.isComposing || event.keyCode === 85) {
-        if (sharedState) {
-          setMeanContrastMap((prevMeanContrastMap) => !prevMeanContrastMap);
-        }
-      }
-    },
-    [sharedState]
-  );
-  useEffect(() => {
-    window.addEventListener("keydown", toggleMeanContrastMap);
-    return () => window.removeEventListener("keydown", toggleMeanContrastMap);
-  }, [toggleMeanContrastMap]);
-
-  // O
-  const toggleMeanFingerprint = useCallback(
-    (event: any) => {
-      if (event.target.matches("input")) return;
-
-      if (event.isComposing || event.keyCode === 79) {
-        if (sharedState) {
-          setMeanFingerprint((prevMeanFingerprint) => !prevMeanFingerprint);
-        }
-      }
-    },
-    [sharedState]
-  );
-  useEffect(() => {
-    window.addEventListener("keydown", toggleMeanFingerprint);
-    return () => window.removeEventListener("keydown", toggleMeanFingerprint);
-  }, [toggleMeanFingerprint]);
-
-  // W
-  const toggleWireframe = useCallback(
-    (event: any) => {
-      if (event.target.matches("input")) return;
-
-      if (event.isComposing || event.keyCode === 87) {
-        if (sharedState) {
-          setWireframe((prevWireframe) => !prevWireframe);
-        }
-      }
-    },
-    [sharedState]
-  );
-  useEffect(() => {
-    window.addEventListener("keydown", toggleWireframe);
-    return () => window.removeEventListener("keydown", toggleWireframe);
-  }, [toggleWireframe]);
-
-  // N
-  const addPane = useCallback((event: any) => {
-    if (event.target.matches("input")) return;
-
-    if (event.isComposing || event.keyCode === 78) {
-      setPanes({ type: "add" });
-    }
-  }, []);
-  useEffect(() => {
-    window.addEventListener("keydown", addPane);
-    return () => window.removeEventListener("keydown", addPane);
-  }, [addPane]);
-
-  // Update contrast map when subject or contrast change
-  useEffect(() => {
-    if (contrast.index !== undefined) {
-      // Load surfacemap
-      setLoadingSurfaceMap(true);
-      if (meanSurfaceMap) {
-        server
-          .get(
-            surfaceMode === SurfaceMode.CONTRAST
-              ? "/contrast_mean"
-              : "/contrast_gradient_norm_mean",
-            {
-              params: {
-                contrast_index: contrast.index,
-                mesh: meshSupport,
-                hemi: hemi,
-              },
-            }
-          )
-          .then((response: AxiosResponse<number[]>) => {
-            setSurfaceMap(response.data);
-            setLoadingSurfaceMap(false);
-          });
-      } else if (subject.index !== undefined) {
-        server
-          .get(
-            surfaceMode === SurfaceMode.CONTRAST
-              ? "/contrast"
-              : "/contrast_gradient_norm",
-            {
-              params: {
-                subject_index: subject.index,
-                contrast_index: contrast.index,
-                mesh: meshSupport,
-                hemi: hemi,
-              },
-            }
-          )
-          .then((response: AxiosResponse<number[] | undefined>) => {
-            setSurfaceMap(response.data ?? []);
-            setLoadingSurfaceMap(false);
-          });
-      } else {
-        setLoadingSurfaceMap(false);
-      }
-
-      // Load surfacemap gradient
-      setLoadingGradientMap(true);
-      switch (gradientMode) {
-        case GradientMode.LOCAL:
-          if (subject.index !== undefined) {
-            server
-              .get("/contrast_gradient", {
-                params: {
-                  subject_index: subject.index,
-                  contrast_index: contrast.index,
-                  mesh: meshSupport,
-                },
-              })
-              .then((response: AxiosResponse<number[][]>) => {
-                setGradient(response.data);
-                setLoadingGradientMap(false);
-              });
-          }
-          break;
-        default:
-          setLoadingGradientMap(false);
-          break;
-      }
-    }
-  }, [
-    subject,
-    contrast,
-    meanSurfaceMap,
-    hemi,
-    gradientMode,
-    surfaceMode,
-    meshSupport,
-  ]);
-
   // Update fingerprint when voxelIndex or subjectIndex change
   useEffect(() => {
-    if (voxelIndex !== undefined) {
+    if (selectedPaneId !== undefined) {
       setLoadingFingerprint(true);
-      if (meanFingerprint) {
-        server
-          .get("/voxel_fingerprint_mean", {
-            params: {
-              voxel_index: voxelIndex,
-              mesh: meshSupport,
-            },
-          })
-          .then((response: AxiosResponse<number[]>) => {
-            setContrastFingerprint(response.data);
-            setLoadingFingerprint(false);
-          });
-      } else if (subject.index !== undefined) {
+      // if (meanFingerprint) {
+      //   server
+      //     .get("/voxel_fingerprint_mean", {
+      //       params: {
+      //         voxel_index: voxelIndex,
+      //         mesh: meshSupport,
+      //       },
+      //     })
+      //     .then((response: AxiosResponse<number[]>) => {
+      //       setContrastFingerprint(response.data);
+      //       setLoadingFingerprint(false);
+      //     });
+      if (state.panes[selectedPaneId].selectedVoxel !== undefined) {
+        const pane = state.panes[selectedPaneId];
         server
           .get("/voxel_fingerprint", {
             params: {
-              subject_index: subject.index,
-              voxel_index: voxelIndex,
-              mesh: meshSupport,
+              subject_index: pane.subject,
+              voxel_index: pane.selectedVoxel,
+              mesh: pane.meshSupport,
             },
           })
           .then((response: AxiosResponse<number[]>) => {
@@ -449,198 +275,54 @@ const SurfaceExplorer = () => {
         setLoadingFingerprint(false);
       }
     }
-  }, [voxelIndex, subject, meanFingerprint, meshSupport]);
+  }, [selectedPaneId, state.panes]);
 
   return (
     <div
       className={`main-container ${
-        voxelIndex !== undefined ? `${orientation}-orientation` : ""
+        selectedPaneId !== undefined ? `${orientation}-orientation` : ""
       }`}
     >
       <div className="scenes">
-        {sharedState && loadingContrastMap ? (
-          <TextualLoader text="Loading surface map..." />
-        ) : null}
-        {sharedState && loadingGradientMap ? (
-          <TextualLoader text="Loading gradient map..." />
-        ) : null}
-        {sharedState && panes.length > 1 ? (
-          <Colorbar
-            colormap={
-              surfaceMode === SurfaceMode.GRADIENT
-                ? colormaps["single_diverging_heat"]
-                : colormaps[colormapName]
-            }
-            vmin={
-              filterSurface
-                ? lowThresholdMin
-                : surfaceMode === SurfaceMode.CONTRAST
-                ? getMin(surfaceMap)
-                : getMin(gradient)
-            }
-            vmax={
-              filterSurface
-                ? highThresholdMax
-                : surfaceMode === SurfaceMode.CONTRAST
-                ? getMax(surfaceMap)
-                : getMax(gradient)
-            }
-            unit={
-              surfaceMode === SurfaceMode.CONTRAST ? "Z-Score" : "Z-Score / mm"
-            }
-          />
-        ) : null}
-        <PanesButtons
-          addPaneCallback={() => {
-            setPanes({ type: "add" });
-          }}
+        <SurfaceControls
+          addPaneCallback={addPane}
           filterSurface={filterSurface}
           filterSurfaceCallback={() => setFilterSurface(!filterSurface)}
-          sharedState={sharedState}
-          sharedStateCallback={() => setSharedState(!sharedState)}
-          gradientMode={gradientMode}
-          showGradientCallback={() => setGradientMode({ type: "increment" })}
           showGridHelper={showGridHelper}
           showGridHelperCallback={() => setShowGridHelper(!showGridHelper)}
-          surfaceMode={surfaceMode}
-          showSurfaceCallback={() => setSurfaceMode({ type: "increment" })}
         />
-        {sharedState ? (
-          <InfoPanel
-            rows={[
-              {
-                label: "Mesh Support",
-                inputs: [
-                  {
-                    inputType: InputType.SELECT_STRING,
-                    value: meshSupport,
-                    values: Object.keys(MeshSupport),
-                    onChangeCallback: (newValue: string) =>
-                      setMeshSupport(
-                        MeshSupport[newValue as keyof typeof MeshSupport]
-                      ),
-                  },
-                ],
-              },
-              {
-                label: "Mesh Type",
-                inputs: [
-                  {
-                    inputType: InputType.SELECT_STRING,
-                    value: meshType,
-                    values: Object.keys(MeshType),
-                    onChangeCallback: (newValue: string) =>
-                      setMeshType(MeshType[newValue as keyof typeof MeshType]),
-                  },
-                ],
-              },
-              {
-                label: "Hemi",
-                inputs: [
-                  {
-                    inputType: InputType.SELECT_STRING,
-                    value: hemi,
-                    values: Object.keys(HemisphereSide),
-                    onChangeCallback: (newValue: string) =>
-                      setHemi(
-                        HemisphereSide[newValue as keyof typeof HemisphereSide]
-                      ),
-                  },
-                ],
-              },
-              {
-                label: "Subject",
-                inputs: [
-                  {
-                    inputType: InputType.SELECT_STRING,
-                    value: subject.label,
-                    values: subjectLabels,
-                    onChangeCallback: (newValue: string) =>
-                      setSubject({ payload: subjectLabels.indexOf(newValue) }),
-                  },
-                  {
-                    inputType: InputType.BUTTON,
-                    value: meanSurfaceMap,
-                    onChangeCallback: () => setMeanContrastMap(!meanSurfaceMap),
-                    iconActive: "group-objects",
-                    iconInactive: "ungroup-objects",
-                    title: "Mean across subjects",
-                  },
-                ],
-              },
-              {
-                label: "Contrast",
-                inputs: [
-                  {
-                    inputType: InputType.SELECT_CONTRAST,
-                    value: contrast.label,
-                    values: contrastLabels,
-                    onChangeCallback: (newValue: ContrastLabel) =>
-                      setContrast({
-                        payload: contrastLabels.indexOf(newValue),
-                      }),
-                  },
-                ],
-              },
-              {
-                label: "Voxel",
-                inputs: [
-                  {
-                    inputType: InputType.LABEL,
-                    value: voxelIndex ? voxelIndex.toString() : undefined,
-                  },
-                ],
-              },
-            ]}
-          />
-        ) : null}
         <div className="scene-panes">
-          {panes.map((paneId: string) => {
+          {Object.keys(state.panes).map((paneId: string) => {
+            const pane = state.panes[paneId];
             return (
-              <ScenePane
+              <SurfacePane
                 key={`scene-pane-${paneId}`}
-                closeCallback={() => {
-                  setPanes({ type: "remove", payload: paneId });
+                paneId={paneId}
+                paneState={pane}
+                paneCallbacks={{
+                  updatePaneState,
+                  updateAllPanesState,
+                  shiftAllPanes,
                 }}
-                colormapName={
-                  surfaceMode === SurfaceMode.GRADIENT
-                    ? "single_diverging_heat"
-                    : colormapName
-                }
+                closeCallback={() => {
+                  removePane(paneId);
+                }}
                 subjectLabels={subjectLabels}
                 contrastLabels={contrastLabels}
-                sharedState={sharedState}
-                sharedSubject={subject}
-                sharedContrast={contrast}
-                sharedSurfaceMap={surfaceMap}
-                sharedMeanSurfaceMap={meanSurfaceMap}
-                sharedGradient={
-                  gradientMode === GradientMode.LOCAL ? gradient : undefined
-                }
-                sharedVoxelIndex={voxelIndex}
-                setSharedVoxelIndex={(newVoxelIndex: number) => {
-                  setVoxelIndex(newVoxelIndex);
-                }}
-                sharedWireframe={wireframe}
-                sharedMeshType={meshType}
-                sharedMeshSupport={meshSupport}
-                sharedHemi={hemi}
                 filterSurface={filterSurface}
                 lowThresholdMin={filterSurface ? lowThresholdMin : undefined}
                 lowThresholdMax={filterSurface ? lowThresholdMax : undefined}
                 highThresholdMin={filterSurface ? highThresholdMin : undefined}
                 highThresholdMax={filterSurface ? highThresholdMax : undefined}
                 showGridHelper={showGridHelper}
-                gradientMode={gradientMode}
-                surfaceMode={surfaceMode}
               />
             );
           })}
         </div>
       </div>
-      {voxelIndex !== undefined ? (
+      {selectedPaneId !== undefined ? (
         <div className="fingerprint">
-          <PanelButtons
+          <PaneControls
             orientation={
               orientation === Orientation.VERTICAL
                 ? Orientation.HORIZONTAL
@@ -656,12 +338,8 @@ const SurfaceExplorer = () => {
                   break;
               }
             }}
-            meanFingerprint={meanFingerprint}
-            meanChangeCallback={() => {
-              setMeanFingerprint(!meanFingerprint);
-            }}
             clickCloseCallback={() => {
-              setVoxelIndex(undefined);
+              setSelectedPaneId(undefined);
             }}
           />
           <ParentSize className="fingerprint-container" debounceTime={10}>
@@ -669,11 +347,8 @@ const SurfaceExplorer = () => {
               <ContrastFingerprint
                 loading={loadingFingerprint}
                 clickedLabelCallback={(contrastIndex: number) => {
-                  if (sharedState) {
-                    setContrast({ payload: contrastIndex });
-                  }
+                  updatePaneKey(selectedPaneId, "contrast", contrastIndex);
                 }}
-                selectedContrast={contrast}
                 orientation={
                   orientation === Orientation.VERTICAL
                     ? Orientation.HORIZONTAL

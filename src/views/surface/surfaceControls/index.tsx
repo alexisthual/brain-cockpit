@@ -8,8 +8,6 @@ interface Props {
   addPaneCallback: () => void;
   filterSurface: boolean;
   filterSurfaceCallback: () => void;
-  sharedState: boolean;
-  sharedStateCallback: () => void;
   gradientMode?: GradientMode;
   showGradientCallback?: () => void;
   showGridHelper?: boolean;
@@ -18,12 +16,10 @@ interface Props {
   showSurfaceCallback?: () => void;
 }
 
-const PanesButtons = ({
+const SurfaceControls = ({
   addPaneCallback = () => {},
   filterSurface,
   filterSurfaceCallback = () => {},
-  sharedState,
-  sharedStateCallback = () => {},
   gradientMode,
   showGradientCallback = () => {},
   showGridHelper,
@@ -55,7 +51,7 @@ const PanesButtons = ({
   }
 
   return (
-    <div className="panes-buttons">
+    <div className="surface-controls">
       <Button
         active={showGridHelper}
         icon={"grid"}
@@ -80,15 +76,9 @@ const PanesButtons = ({
         onClick={filterSurfaceCallback}
         outlined
       />
-      <Button
-        active={sharedState}
-        icon={sharedState ? "lock" : "unlock"}
-        onClick={sharedStateCallback}
-        outlined
-      />
       <Button icon="plus" onClick={addPaneCallback} outlined />
     </div>
   );
 };
 
-export default PanesButtons;
+export default SurfaceControls;

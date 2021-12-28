@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 
-import InfoPanel, { InputType } from "components/infoPanel";
+import PaneControls, { InputType } from "components/paneControls";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
 import {
@@ -164,7 +164,7 @@ const ScenePane = ({
     <div className="scene" ref={panelEl}>
       <PaneButtons closeCallback={closeCallback} />
       {!sharedState ? (
-        <InfoPanel
+        <PaneControls
           rows={[
             {
               label: "Metric",

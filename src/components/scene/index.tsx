@@ -214,7 +214,11 @@ class Scene extends Component<IProps, IState> {
         new THREE.BufferAttribute(new Float32Array(count * 3), 3)
       );
     }
-    if (surfaceMap !== undefined && colormap !== undefined) {
+    if (
+      surfaceMap !== undefined &&
+      surfaceMap !== null &&
+      colormap !== undefined
+    ) {
       object = Scene.coloriseFromSurfaceMap(
         object,
         surfaceMap,

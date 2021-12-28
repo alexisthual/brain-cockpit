@@ -7,12 +7,12 @@ interface Props {
   closeCallback: () => void;
 }
 
-const PaneButtons = ({ closeCallback = () => {} }: Props) => {
+const CloseButton = ({ closeCallback = () => {} }: Props) => {
   return (
-    <div className="scene-pane-buttons">
+    <div className="close-button">
       <Button icon="cross" onClick={closeCallback} outlined />
     </div>
   );
 };
 
-export default PaneButtons;
+export default CloseButton;
