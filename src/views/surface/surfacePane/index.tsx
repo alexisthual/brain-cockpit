@@ -39,7 +39,6 @@ export interface SurfacePaneState {
   hemi: HemisphereSide;
   meanSurfaceMap?: boolean;
   showDescription?: boolean;
-  other?: string;
 }
 
 export const defaultPaneState: SurfacePaneState = {
@@ -376,6 +375,7 @@ const SurfacePane = ({
     state.meshSupport,
     state.subject,
     surfaceMode,
+    gradientMode,
   ]);
 
   //
@@ -583,7 +583,7 @@ const SurfacePane = ({
                     changeState("showDescription")(!state.showDescription);
                   }
                 },
-                iconActive: "info-sign",
+                iconActive: "manual",
               },
             ],
           },
