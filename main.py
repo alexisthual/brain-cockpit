@@ -7,6 +7,7 @@ from api import app
 
 from api.surface_contrasts import load_contrasts
 from api.surface_gradient import load_gradients
+from api.alignments import load_alignments
 
 # These functions are exposed for specific experiments
 # whose data might not be publicly available
@@ -27,6 +28,7 @@ REACT_APP_API_PORT = os.getenv("REACT_APP_API_PORT")
 def create_app():
     load_contrasts()
     load_gradients()
+    load_alignments()
 
     load_regressed_coordinates()
     load_correlations()

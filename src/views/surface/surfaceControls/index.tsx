@@ -58,18 +58,22 @@ const SurfaceControls = ({
         onClick={showGridHelperCallback}
         outlined
       />
-      <Button
-        icon={"function"}
-        onClick={showSurfaceCallback}
-        text={surfaceButtonText}
-        outlined
-      />
-      <Button
-        icon={"flows"}
-        onClick={showGradientCallback}
-        text={gradientButtonText}
-        outlined
-      />
+      {process.env.REACT_APP_ENABLE_GRADIENTS === "true" ? (
+        <>
+          <Button
+            icon={"function"}
+            onClick={showSurfaceCallback}
+            text={surfaceButtonText}
+            outlined
+          />
+          <Button
+            icon={"flows"}
+            onClick={showGradientCallback}
+            text={gradientButtonText}
+            outlined
+          />
+        </>
+      ) : null}
       <Button
         active={filterSurface}
         icon={"filter"}

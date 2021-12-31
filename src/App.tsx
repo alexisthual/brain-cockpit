@@ -15,6 +15,7 @@ import {
   Switch,
 } from "react-router-dom";
 
+import AlignmentsExplorer from "views/alignments";
 import CutsExplorer from "views/cuts";
 import FunctionalDistanceExplorer from "views/functionalDistance";
 import KnnExplorer from "views/knn";
@@ -34,7 +35,14 @@ const App = () => {
           {process.env.REACT_APP_CONDITIONS_VIEW === "true" ? (
             <Tooltip content="IBC dataset explorer" position={Position.RIGHT}>
               <NavLink className="view-button" exact to="/">
-                <Icon icon="symbol-square" />
+                <Icon icon="database" />
+              </NavLink>
+            </Tooltip>
+          ) : null}
+          {process.env.REACT_APP_ALIGNMENTS_VIEW === "true" ? (
+            <Tooltip content="IBC subject alignments" position={Position.RIGHT}>
+              <NavLink className="view-button" exact to="/">
+                <Icon icon="swap-horizontal" />
               </NavLink>
             </Tooltip>
           ) : null}
@@ -80,6 +88,11 @@ const App = () => {
           {process.env.REACT_APP_SLICE_VIEW === "true" ? (
             <Route exact path="/cuts">
               <CutsExplorer />
+            </Route>
+          ) : null}
+          {process.env.REACT_APP_ALIGNMENTS_VIEW === "true" ? (
+            <Route exact path="/alignments">
+              <AlignmentsExplorer />
             </Route>
           ) : null}
           {process.env.REACT_APP_EXPERIMENT_REGRESSION_VIEW === "true" ? (

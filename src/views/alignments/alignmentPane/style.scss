@@ -1,0 +1,17 @@
+@import "~@blueprintjs/core/lib/scss/variables";
+
+.surface-pane {
+  border-bottom: 5px solid $light-gray1;
+  position: relative;
+
+  &:hover {
+    border-bottom: 5px solid $gray3;
+  }
+
+  .description-callout {
+    position: absolute;
+    bottom: 40px;
+    z-index: 2;
+    padding: 10px;
+  }
+}
