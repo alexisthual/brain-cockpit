@@ -11,6 +11,7 @@ import {
   BrowserRouter as Router,
   Link,
   NavLink,
+  Redirect,
   Route,
   Switch,
 } from "react-router-dom";
@@ -28,6 +29,14 @@ export const server = axios.create({
 });
 
 const App = () => {
+  let defaultUrl = "/";
+  // Change default url depending on available modules
+  if (process.env.REACT_APP_CONDITIONS_VIEW === "true") {
+    defaultUrl = "/ibc";
+  } else if (process.env.REACT_APP_ALIGNMENTS_VIEW === "true") {
+    defaultUrl = "/alignments";
+  }
+
   return (
     <Router>
       <div id="app-container">
@@ -83,8 +92,13 @@ const App = () => {
         </div>
         <Switch>
           <Route exact path="/">
-            <SurfaceExplorer />
+            <Redirect to={defaultUrl} />
           </Route>
+          {process.env.REACT_APP_CONDITIONS_VIEW === "true" ? (
+            <Route exact path="/ibc">
+              <SurfaceExplorer />
+            </Route>
+          ) : null}
           {process.env.REACT_APP_SLICE_VIEW === "true" ? (
             <Route exact path="/cuts">
               <CutsExplorer />
