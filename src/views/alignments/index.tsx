@@ -14,14 +14,32 @@ import {
   HemisphereSide,
   Orientation,
   MeshSupport,
-  modulo,
 } from "constants/index";
 import { server } from "App";
+
+export enum ViewLayout {
+  ALIGNMENT = "Alignment",
+  CONTRAST = "Contrast",
+}
+
+export enum AlignmentRole {
+  SOURCE = "source",
+  TARGET = "target",
+}
+
+export enum AlignmentIntent {
+  SINGLE_VOXEL = "single_voxel",
+  ALIGNED_CONTRAST = "aligned_contrast",
+  TRUE_CONTRAST = "true_contrast",
+  ALIGNMENT_ERROR = "alignment_error",
+}
 
 export interface AlignmentViewState {
   model?: string;
   meshSupport: MeshSupport;
   hemi: HemisphereSide;
+  viewLayout: ViewLayout;
+  contrast?: number;
   source: {
     subject: number;
     selectedVoxel?: number;
@@ -136,12 +154,13 @@ const AlignmentsExplorer = () => {
     model: undefined,
     meshSupport: MeshSupport.FSAVERAGE5,
     hemi: HemisphereSide.LEFT,
+    viewLayout: ViewLayout.ALIGNMENT,
     source: {
-      subject: 0,
-      selectedVoxel: 0,
+      subject: 5,
+      selectedVoxel: 6680,
     },
     target: {
-      subject: 1,
+      subject: 7,
       selectedVoxel: undefined,
     },
   });
@@ -174,18 +193,29 @@ const AlignmentsExplorer = () => {
         (values) => {
           setSubjectLabels(values[0].data);
 
-          setContrastLabels(
-            values[1].data.map((label: any) => ({
-              task: label[0],
-              contrast: label[1],
-            }))
-          );
+          // Parse contrasts
+          const contrastLabels = values[1].data.map((label: any) => ({
+            task: label[0],
+            contrast: label[1],
+          }));
+          setContrastLabels(contrastLabels);
+          // Set current contrast to first contrast of list
+          if (contrastLabels.length > 0) {
+            setState((state: AlignmentViewState) => {
+              return {
+                ...state,
+                contrast: 0,
+              };
+            });
+          }
 
           setModelLabels(values[2].data);
           if (values[2].data.length > 0) {
-            setState({
-              ...state,
-              model: values[2].data[0],
+            setState((state: AlignmentViewState) => {
+              return {
+                ...state,
+                model: values[2].data[0],
+              };
             });
           }
         }
@@ -194,6 +224,92 @@ const AlignmentsExplorer = () => {
 
     fetchAllData();
   }, []);
+
+  let panes = null;
+
+  switch (state.viewLayout) {
+    case ViewLayout.ALIGNMENT:
+      panes = (
+        <>
+          <div className="scene-row">
+            <AlignmentPane
+              alignmentState={state}
+              setAlignmentState={setState}
+              paneRole={AlignmentRole.SOURCE}
+              paneIntent={AlignmentIntent.SINGLE_VOXEL}
+              subjectLabels={subjectLabels}
+              showGridHelper={showGridHelper}
+              colormapName={"viridis"}
+              paneLabel={"SOURCE SUBJECT"}
+            />
+            <AlignmentPane
+              alignmentState={state}
+              setAlignmentState={setState}
+              paneRole={AlignmentRole.TARGET}
+              paneIntent={AlignmentIntent.SINGLE_VOXEL}
+              subjectLabels={subjectLabels}
+              showGridHelper={showGridHelper}
+              colormapName={"viridis"}
+              paneLabel={"TARGET SUBJECT"}
+            />
+          </div>
+        </>
+      );
+      break;
+    case ViewLayout.CONTRAST:
+      panes = (
+        <>
+          <div className="scene-row">
+            <div className="scene-row-label">SOURCE SUBJECT</div>
+            <AlignmentPane
+              alignmentState={state}
+              setAlignmentState={setState}
+              paneRole={AlignmentRole.SOURCE}
+              paneIntent={AlignmentIntent.TRUE_CONTRAST}
+              subjectLabels={subjectLabels}
+              showGridHelper={showGridHelper}
+              colormapName={"diverging_temperature"}
+              paneLabel={"ORIGINAL CONTRAST"}
+            />
+            <AlignmentPane
+              alignmentState={state}
+              setAlignmentState={setState}
+              paneRole={AlignmentRole.SOURCE}
+              paneIntent={AlignmentIntent.ALIGNED_CONTRAST}
+              subjectLabels={subjectLabels}
+              showGridHelper={showGridHelper}
+              colormapName={"diverging_temperature"}
+              paneLabel={"TRANSFORMED CONTRAST"}
+            />
+          </div>
+          <div className="scene-row">
+            <div className="scene-row-label">TARGET SUBJECT</div>
+            <AlignmentPane
+              alignmentState={state}
+              setAlignmentState={setState}
+              paneRole={AlignmentRole.TARGET}
+              paneIntent={AlignmentIntent.TRUE_CONTRAST}
+              subjectLabels={subjectLabels}
+              showGridHelper={showGridHelper}
+              colormapName={"diverging_temperature"}
+            />
+            <AlignmentPane
+              alignmentState={state}
+              setAlignmentState={setState}
+              paneRole={AlignmentRole.TARGET}
+              paneIntent={AlignmentIntent.ALIGNED_CONTRAST}
+              subjectLabels={subjectLabels}
+              showGridHelper={showGridHelper}
+              colormapName={"diverging_temperature"}
+            />
+          </div>
+        </>
+      );
+      break;
+    default:
+      panes = <div>invalid viewLayout</div>;
+      break;
+  }
 
   return (
     <div
@@ -208,30 +324,33 @@ const AlignmentsExplorer = () => {
           model={state.model}
           modelLabels={modelLabels}
           changeModelCallback={(newModel: string) => {
-            const newState = {
+            setState({
               ...state,
               model: newModel,
-            };
-
-            setState(newState);
+            });
+          }}
+          viewLayout={state.viewLayout}
+          changeViewLayout={(newViewLayout: ViewLayout) => {
+            setState({
+              ...state,
+              viewLayout: newViewLayout,
+            });
+          }}
+          contrast={
+            state.contrast !== undefined
+              ? contrastLabels[state.contrast]
+              : undefined
+          }
+          contrastLabels={contrastLabels}
+          changeContrastLabel={(newContrastLabel: ContrastLabel) => {
+            const newIndex = contrastLabels.indexOf(newContrastLabel);
+            setState({
+              ...state,
+              contrast: newIndex,
+            });
           }}
         />
-        <div className="scene-panes">
-          <AlignmentPane
-            alignmentState={state}
-            setAlignmentState={setState}
-            paneRole={"source"}
-            subjectLabels={subjectLabels}
-            showGridHelper={showGridHelper}
-          />
-          <AlignmentPane
-            alignmentState={state}
-            setAlignmentState={setState}
-            paneRole={"target"}
-            subjectLabels={subjectLabels}
-            showGridHelper={showGridHelper}
-          />
-        </div>
+        <div className="scene-panes">{panes}</div>
       </div>
       {selectedPaneId !== undefined ? (
         <div className="fingerprint">

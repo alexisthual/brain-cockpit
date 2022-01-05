@@ -2,7 +2,9 @@ import { Button } from "@blueprintjs/core";
 import { Select } from "@blueprintjs/select";
 import React from "react";
 
-import { GradientMode, stringRenderer, SurfaceMode } from "constants/index";
+import { ViewLayout } from "../index";
+import SelectContrastLabel from "components/select/selectContrastLabel";
+import { ContrastLabel, stringRenderer } from "constants/index";
 import "./style.scss";
 
 interface Props {
@@ -14,6 +16,17 @@ interface Props {
     newModel: string,
     event?: React.SyntheticEvent<HTMLElement>
   ) => void;
+  viewLayout?: ViewLayout;
+  changeViewLayout: (
+    newMode: ViewLayout,
+    event?: React.SyntheticEvent<HTMLElement>
+  ) => void;
+  contrast?: ContrastLabel;
+  contrastLabels: ContrastLabel[];
+  changeContrastLabel: (
+    newContrastLabel: ContrastLabel,
+    event?: React.SyntheticEvent<HTMLElement>
+  ) => void;
 }
 
 const AlignmentControls = ({
@@ -22,6 +35,11 @@ const AlignmentControls = ({
   model,
   modelLabels,
   changeModelCallback = () => {},
+  viewLayout,
+  changeViewLayout = () => {},
+  contrast,
+  contrastLabels,
+  changeContrastLabel = () => {},
 }: Props) => {
   return (
     <div className="surface-controls">
@@ -31,6 +49,36 @@ const AlignmentControls = ({
         onClick={showGridHelperCallback}
         outlined
       />
+      {viewLayout === ViewLayout.CONTRAST ? (
+        <SelectContrastLabel
+          value={contrast as ContrastLabel}
+          values={contrastLabels}
+          onChangeCallback={(
+            newItem: ContrastLabel,
+            event?: React.SyntheticEvent<HTMLElement>
+          ) => {
+            changeContrastLabel(newItem, event);
+          }}
+        />
+      ) : null}
+      <Select<string>
+        filterable={false}
+        items={Object.keys(ViewLayout)}
+        itemRenderer={stringRenderer}
+        onItemSelect={(
+          newItem: string,
+          event?: React.SyntheticEvent<HTMLElement>
+        ) => {
+          if (changeViewLayout) {
+            changeViewLayout(
+              ViewLayout[newItem as keyof typeof ViewLayout],
+              event
+            );
+          }
+        }}
+      >
+        <Button rightIcon="double-caret-vertical" text={viewLayout} />
+      </Select>
       <Select<string>
         filterable={false}
         items={modelLabels ?? []}
