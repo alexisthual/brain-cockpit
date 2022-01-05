@@ -1,6 +1,7 @@
 from distutils.util import strtobool
 import dotenv
 from flask import jsonify, request, send_from_directory
+from joblib import Memory
 import json
 import nibabel as nib
 import numpy as np
@@ -11,6 +12,8 @@ from tqdm import tqdm
 
 from api import app
 import custom_utils.setup as setup
+
+memory = Memory("/tmp", verbose=0)
 
 # Load environment variables
 setup.load_env()
@@ -85,6 +88,7 @@ def parse_metadata(df):
     return meshes, subjects, tasks_contrasts, sides
 
 
+@memory.cache
 def load_data(df):
     """
     Inputs:

@@ -1,6 +1,7 @@
 from distutils.util import strtobool
 import dotenv
 from flask import jsonify, request
+from joblib import Memory
 import nibabel as nib
 import numpy as np
 import os
@@ -12,6 +13,8 @@ from tqdm import tqdm
 from api import app
 from api.surface_contrasts import parse_metadata
 import custom_utils.setup as setup
+
+memory = Memory("/tmp", verbose=0)
 
 # Load environment variables
 env = setup.load_env()
@@ -30,6 +33,7 @@ GRADIENTS_DATA_PATH = os.getenv("GRADIENTS_DATA_PATH")
 # UTIL FUNCTIONS
 
 
+@memory.cache
 def load_data(meshes, subjects, tasks_contrasts, sides):
     print(f"Loading {len(tasks_contrasts)} gradients...")
     data = dict()
