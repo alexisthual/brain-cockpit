@@ -28,7 +28,6 @@ import {
   modulo,
   SurfaceMode,
 } from "constants/index";
-import "./style.scss";
 
 export interface SurfacePaneState {
   subject: number;
@@ -425,232 +424,237 @@ const SurfacePane = ({
   }, [state.contrast, datasetDescriptions, contrastLabels]);
 
   return (
-    <div className="surface-pane scene" ref={panelEl}>
-      <CloseButton closeCallback={closeCallback} />
-      {state.showDescription ? (
-        <div className="description-callout">
-          <Callout>
-            {descriptions.map((description: any) => {
-              return (
-                <p key={`description-${description[0]}`}>
-                  <strong>{description[0]}:</strong> {description[1]}
-                </p>
-              );
-            })}
-          </Callout>
-        </div>
-      ) : null}
-      <PaneControls
-        rows={[
-          {
-            label: "Mesh",
-            inputs: [
-              {
-                inputType: InputType.SELECT_STRING,
-                value: state.meshSupport,
-                values: Object.keys(MeshSupport),
-                onChangeCallback: (
-                  newValue: string,
-                  event: React.SyntheticEvent<HTMLElement>
-                ) => {
-                  if ((event as any).altKey) {
-                    paneCallbacks?.updateAllPanesState(
-                      "meshSupport",
-                      MeshSupport[newValue as keyof typeof MeshSupport]
-                    );
-                  } else {
-                    changeState("meshSupport")(
-                      MeshSupport[newValue as keyof typeof MeshSupport]
-                    );
-                  }
+    <div className="scene-pane">
+      <div className="scene" ref={panelEl}>
+        <CloseButton closeCallback={closeCallback} />
+        {state.showDescription ? (
+          <div className="description-callout">
+            <Callout>
+              {descriptions.map((description: any) => {
+                return (
+                  <p key={`description-${description[0]}`}>
+                    <strong>{description[0]}:</strong> {description[1]}
+                  </p>
+                );
+              })}
+            </Callout>
+          </div>
+        ) : null}
+        <PaneControls
+          rows={[
+            {
+              label: "Mesh",
+              inputs: [
+                {
+                  inputType: InputType.SELECT_STRING,
+                  value: state.meshSupport,
+                  values: Object.keys(MeshSupport),
+                  onChangeCallback: (
+                    newValue: string,
+                    event: React.SyntheticEvent<HTMLElement>
+                  ) => {
+                    if ((event as any).altKey) {
+                      paneCallbacks?.updateAllPanesState(
+                        "meshSupport",
+                        MeshSupport[newValue as keyof typeof MeshSupport]
+                      );
+                    } else {
+                      changeState("meshSupport")(
+                        MeshSupport[newValue as keyof typeof MeshSupport]
+                      );
+                    }
+                  },
                 },
-              },
-              {
-                inputType: InputType.SELECT_STRING,
-                value: state.meshType,
-                values: Object.keys(MeshType),
-                onChangeCallback: (
-                  newValue: string,
-                  event: React.SyntheticEvent<HTMLElement>
-                ) => {
-                  if ((event as any).altKey) {
-                    paneCallbacks?.updateAllPanesState(
-                      "meshType",
-                      MeshType[newValue as keyof typeof MeshType]
-                    );
-                  } else {
-                    changeState("meshType")(
-                      MeshType[newValue as keyof typeof MeshType]
-                    );
-                  }
+                {
+                  inputType: InputType.SELECT_STRING,
+                  value: state.meshType,
+                  values: Object.keys(MeshType),
+                  onChangeCallback: (
+                    newValue: string,
+                    event: React.SyntheticEvent<HTMLElement>
+                  ) => {
+                    if ((event as any).altKey) {
+                      paneCallbacks?.updateAllPanesState(
+                        "meshType",
+                        MeshType[newValue as keyof typeof MeshType]
+                      );
+                    } else {
+                      changeState("meshType")(
+                        MeshType[newValue as keyof typeof MeshType]
+                      );
+                    }
+                  },
                 },
-              },
-              {
-                inputType: InputType.SELECT_STRING,
-                value: state.hemi,
-                values: Object.keys(HemisphereSide),
-                onChangeCallback: (
-                  newValue: string,
-                  event: React.SyntheticEvent<HTMLElement>
-                ) => {
-                  if ((event as any).altKey) {
-                    paneCallbacks?.updateAllPanesState(
-                      "hemi",
-                      HemisphereSide[newValue as keyof typeof HemisphereSide]
-                    );
-                  } else {
-                    changeState("hemi")(
-                      HemisphereSide[newValue as keyof typeof HemisphereSide]
-                    );
-                  }
+                {
+                  inputType: InputType.SELECT_STRING,
+                  value: state.hemi,
+                  values: Object.keys(HemisphereSide),
+                  onChangeCallback: (
+                    newValue: string,
+                    event: React.SyntheticEvent<HTMLElement>
+                  ) => {
+                    if ((event as any).altKey) {
+                      paneCallbacks?.updateAllPanesState(
+                        "hemi",
+                        HemisphereSide[newValue as keyof typeof HemisphereSide]
+                      );
+                    } else {
+                      changeState("hemi")(
+                        HemisphereSide[newValue as keyof typeof HemisphereSide]
+                      );
+                    }
+                  },
                 },
-              },
-            ],
-          },
-          {
-            label: "Subject",
-            inputs: [
-              {
-                inputType: InputType.SELECT_STRING,
-                value: subjectLabels[state.subject],
-                values: subjectLabels,
-                onChangeCallback: (
-                  newValue: string,
-                  event: React.SyntheticEvent<HTMLElement>
-                ) => {
-                  if ((event as any).altKey) {
-                    paneCallbacks?.updateAllPanesState(
-                      "subject",
-                      subjectLabels.indexOf(newValue)
-                    );
-                  } else {
-                    changeState("subject")(subjectLabels.indexOf(newValue));
-                  }
+              ],
+            },
+            {
+              label: "Subject",
+              inputs: [
+                {
+                  inputType: InputType.SELECT_STRING,
+                  value: subjectLabels[state.subject],
+                  values: subjectLabels,
+                  onChangeCallback: (
+                    newValue: string,
+                    event: React.SyntheticEvent<HTMLElement>
+                  ) => {
+                    if ((event as any).altKey) {
+                      paneCallbacks?.updateAllPanesState(
+                        "subject",
+                        subjectLabels.indexOf(newValue)
+                      );
+                    } else {
+                      changeState("subject")(subjectLabels.indexOf(newValue));
+                    }
+                  },
                 },
-              },
-              {
-                inputType: InputType.TWO_STATE_TOGGLE,
-                value: state.meanSurfaceMap,
-                onChangeCallback: (
-                  event: React.FormEvent<HTMLInputElement>
-                ) => {
-                  if ((event.nativeEvent as any).altKey) {
-                    paneCallbacks?.updateAllPanesState(
-                      "meanSurfaceMap",
-                      !state.meanSurfaceMap
-                    );
-                  } else {
-                    changeState("meanSurfaceMap")(!state.meanSurfaceMap);
-                  }
+                {
+                  inputType: InputType.TWO_STATE_TOGGLE,
+                  value: state.meanSurfaceMap,
+                  onChangeCallback: (
+                    event: React.FormEvent<HTMLInputElement>
+                  ) => {
+                    if ((event.nativeEvent as any).altKey) {
+                      paneCallbacks?.updateAllPanesState(
+                        "meanSurfaceMap",
+                        !state.meanSurfaceMap
+                      );
+                    } else {
+                      changeState("meanSurfaceMap")(!state.meanSurfaceMap);
+                    }
+                  },
+                  iconLeft: "person",
+                  iconRight: "people",
+                  title: "Mean across subjects",
                 },
-                iconLeft: "person",
-                iconRight: "people",
-                title: "Mean across subjects",
-              },
-            ],
-          },
-          {
-            label: "Contrast",
-            inputs: [
-              {
-                inputType: InputType.SELECT_CONTRAST,
-                value: contrastLabels[state.contrast],
-                values: contrastLabels,
-                onChangeCallback: (
-                  newValue: ContrastLabel,
-                  event: React.SyntheticEvent<HTMLElement>
-                ) => {
-                  if ((event as any).altKey) {
-                    paneCallbacks?.updateAllPanesState(
-                      "contrast",
-                      contrastLabels.indexOf(newValue)
-                    );
-                  } else {
-                    changeState("contrast")(contrastLabels.indexOf(newValue));
-                  }
+              ],
+            },
+            {
+              label: "Contrast",
+              inputs: [
+                {
+                  inputType: InputType.SELECT_CONTRAST,
+                  value: contrastLabels[state.contrast],
+                  values: contrastLabels,
+                  onChangeCallback: (
+                    newValue: ContrastLabel,
+                    event: React.SyntheticEvent<HTMLElement>
+                  ) => {
+                    if ((event as any).altKey) {
+                      paneCallbacks?.updateAllPanesState(
+                        "contrast",
+                        contrastLabels.indexOf(newValue)
+                      );
+                    } else {
+                      changeState("contrast")(contrastLabels.indexOf(newValue));
+                    }
+                  },
                 },
-              },
-              {
-                inputType: InputType.BUTTON,
-                value: state.showDescription,
-                onChangeCallback: (event: React.MouseEvent<HTMLElement>) => {
-                  if (event.altKey) {
-                    paneCallbacks?.updateAllPanesState(
-                      "showDescription",
-                      !state.showDescription
-                    );
-                  } else {
-                    changeState("showDescription")(!state.showDescription);
-                  }
+                {
+                  inputType: InputType.BUTTON,
+                  value: state.showDescription,
+                  onChangeCallback: (event: React.MouseEvent<HTMLElement>) => {
+                    if (event.altKey) {
+                      paneCallbacks?.updateAllPanesState(
+                        "showDescription",
+                        !state.showDescription
+                      );
+                    } else {
+                      changeState("showDescription")(!state.showDescription);
+                    }
+                  },
+                  iconActive: "manual",
                 },
-                iconActive: "manual",
-              },
-            ],
-          },
-          {
-            label: "Voxel",
-            inputs: [
-              {
-                inputType: InputType.LABEL,
-                value: voxelIndex ? voxelIndex.toString() : undefined,
-              },
-            ],
-          },
-        ]}
-      />
-      {loadingSurfaceMap ? (
-        <TextualLoader text="Loading surface map..." />
-      ) : null}
-      {loadingGradient ? (
-        <TextualLoader text="Loading gradient map..." />
-      ) : null}
-      <Colorbar
-        colormap={
-          surfaceMode === SurfaceMode.GRADIENT
-            ? colormaps["single_diverging_heat"]
-            : colormaps[colormapName]
-        }
-        vmin={
-          filterSurface
-            ? lowThresholdMin
-            : surfaceMode === SurfaceMode.CONTRAST
-            ? getMin(surfaceMap)
-            : getMin(gradient)
-        }
-        vmax={
-          filterSurface
-            ? highThresholdMax
-            : surfaceMode === SurfaceMode.CONTRAST
-            ? getMax(surfaceMap)
-            : getMax(gradient)
-        }
-        unit={surfaceMode === SurfaceMode.CONTRAST ? "Z-Score" : "Z-Score / mm"}
-      />
-      <ParentSize className="scene-container" debounceTime={10}>
-        {({ width: sceneWidth, height: sceneHeight }) => (
-          <Scene
-            clickedVoxelCallback={(voxelIndex: number) => {
-              setVoxelIndex(voxelIndex);
-            }}
-            colormap={colormaps[colormapName]}
-            voxelIndex={voxelIndex}
-            surfaceMap={surfaceMap}
-            gradient={gradient}
-            meshType={state.meshType}
-            meshSupport={state.meshSupport}
-            subjectLabel={subjectLabels[state.subject]}
-            hemi={state.hemi}
-            wireframe={wireframe}
-            width={sceneWidth}
-            height={sceneHeight}
-            lowThresholdMin={lowThresholdMin}
-            lowThresholdMax={lowThresholdMax}
-            highThresholdMin={highThresholdMin}
-            highThresholdMax={highThresholdMax}
-            showGridHelper={showGridHelper}
-          />
-        )}
-      </ParentSize>
+              ],
+            },
+            {
+              label: "Voxel",
+              inputs: [
+                {
+                  inputType: InputType.LABEL,
+                  value: voxelIndex ? voxelIndex.toString() : undefined,
+                },
+              ],
+            },
+          ]}
+        />
+        {loadingSurfaceMap ? (
+          <TextualLoader text="Loading surface map..." />
+        ) : null}
+        {loadingGradient ? (
+          <TextualLoader text="Loading gradient map..." />
+        ) : null}
+        <Colorbar
+          colormap={
+            surfaceMode === SurfaceMode.GRADIENT
+              ? colormaps["single_diverging_heat"]
+              : colormaps[colormapName]
+          }
+          vmin={
+            filterSurface
+              ? lowThresholdMin
+              : surfaceMode === SurfaceMode.CONTRAST
+              ? getMin(surfaceMap)
+              : getMin(gradient)
+          }
+          vmax={
+            filterSurface
+              ? highThresholdMax
+              : surfaceMode === SurfaceMode.CONTRAST
+              ? getMax(surfaceMap)
+              : getMax(gradient)
+          }
+          unit={
+            surfaceMode === SurfaceMode.CONTRAST ? "Z-Score" : "Z-Score / mm"
+          }
+        />
+        <ParentSize className="scene-container" debounceTime={10}>
+          {({ width: sceneWidth, height: sceneHeight }) => (
+            <Scene
+              clickedVoxelCallback={(voxelIndex: number) => {
+                setVoxelIndex(voxelIndex);
+              }}
+              colormap={colormaps[colormapName]}
+              voxelIndex={voxelIndex}
+              surfaceMap={surfaceMap}
+              gradient={gradient}
+              meshType={state.meshType}
+              meshSupport={state.meshSupport}
+              subjectLabel={subjectLabels[state.subject]}
+              hemi={state.hemi}
+              wireframe={wireframe}
+              width={sceneWidth}
+              height={sceneHeight}
+              lowThresholdMin={lowThresholdMin}
+              lowThresholdMax={lowThresholdMax}
+              highThresholdMin={highThresholdMin}
+              highThresholdMax={highThresholdMax}
+              showGridHelper={showGridHelper}
+            />
+          )}
+        </ParentSize>
+      </div>
+      <div className="scene-pane-hover-bar"></div>
     </div>
   );
 };

@@ -107,15 +107,59 @@
 }
 
 .scene-panes {
+  width: 100%;
   height: 100%;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+
+  .scene-row {
+    flex-grow: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+
+    .scene-row-label {
+      color: $gray1;
+      writing-mode: vertical-lr;
+      transform: rotate(-180deg);
+      text-align: center;
+      background-color: $light-gray2;
+    }
+
+    .scene-pane-label {
+      color: $gray1;
+      text-align: center;
+      background-color: $light-gray4;
+    }
+  }
 }
 
-.scene,
 .scene-pane {
   height: 100%;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .description-callout {
+    position: absolute;
+    bottom: 40px;
+    z-index: 2;
+    padding: 10px;
+  }
+
+  .scene-pane-hover-bar {
+    height: 5px;
+    width: 100%;
+    background-color: $light-gray1;
+  }
+
+  &:hover .scene-pane-hover-bar {
+    background-color: $gray3;
+  }
+}
+
+.scene {
+  flex: 1;
 
   &:not(:last-child) {
     border-right: 1px solid $light-gray3;

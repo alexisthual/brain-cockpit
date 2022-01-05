@@ -305,33 +305,39 @@ const SurfaceExplorer = () => {
           showGridHelperCallback={() => setShowGridHelper(!showGridHelper)}
         />
         <div className="scene-panes">
-          {Object.keys(state.panes).map((paneId: string) => {
-            const pane = state.panes[paneId];
-            return (
-              <SurfacePane
-                key={`scene-pane-${paneId}`}
-                paneId={paneId}
-                paneState={pane}
-                paneCallbacks={{
-                  updatePaneState,
-                  updateAllPanesState,
-                  shiftAllPanes,
-                }}
-                closeCallback={() => {
-                  removePane(paneId);
-                }}
-                subjectLabels={subjectLabels}
-                contrastLabels={contrastLabels}
-                datasetDescriptions={datasetDescriptions}
-                filterSurface={filterSurface}
-                lowThresholdMin={filterSurface ? lowThresholdMin : undefined}
-                lowThresholdMax={filterSurface ? lowThresholdMax : undefined}
-                highThresholdMin={filterSurface ? highThresholdMin : undefined}
-                highThresholdMax={filterSurface ? highThresholdMax : undefined}
-                showGridHelper={showGridHelper}
-              />
-            );
-          })}
+          <div className="scene-row">
+            {Object.keys(state.panes).map((paneId: string) => {
+              const pane = state.panes[paneId];
+              return (
+                <SurfacePane
+                  key={`scene-pane-${paneId}`}
+                  paneId={paneId}
+                  paneState={pane}
+                  paneCallbacks={{
+                    updatePaneState,
+                    updateAllPanesState,
+                    shiftAllPanes,
+                  }}
+                  closeCallback={() => {
+                    removePane(paneId);
+                  }}
+                  subjectLabels={subjectLabels}
+                  contrastLabels={contrastLabels}
+                  datasetDescriptions={datasetDescriptions}
+                  filterSurface={filterSurface}
+                  lowThresholdMin={filterSurface ? lowThresholdMin : undefined}
+                  lowThresholdMax={filterSurface ? lowThresholdMax : undefined}
+                  highThresholdMin={
+                    filterSurface ? highThresholdMin : undefined
+                  }
+                  highThresholdMax={
+                    filterSurface ? highThresholdMax : undefined
+                  }
+                  showGridHelper={showGridHelper}
+                />
+              );
+            })}
+          </div>
         </div>
       </div>
       {selectedPaneId !== undefined ? (

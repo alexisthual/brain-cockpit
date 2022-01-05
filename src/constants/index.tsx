@@ -173,7 +173,10 @@ export enum SurfaceMode {
   GRADIENT = "GRADIENT",
 }
 
+//
 // FUNCTIONS
+//
+
 export const getMax = (arr: any[] | undefined | null) => {
   let max = undefined;
 
