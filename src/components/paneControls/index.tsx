@@ -1,20 +1,10 @@
-import {
-  Button,
-  ButtonGroup,
-  Colors,
-  Icon,
-  MenuItem,
-  Switch,
-} from "@blueprintjs/core";
+import { Button, ButtonGroup, Colors, Icon, Switch } from "@blueprintjs/core";
 import { IconName } from "@blueprintjs/icons";
 import { Select } from "@blueprintjs/select";
-import React, { useState } from "react";
+import React from "react";
 
-import {
-  ContrastLabel,
-  contrastLabelToId,
-  stringRenderer,
-} from "constants/index";
+import SelectContrastLabel from "components/select/selectContrastLabel";
+import { ContrastLabel, stringRenderer } from "constants/index";
 import "./style.scss";
 
 export enum InputType {
@@ -46,42 +36,7 @@ interface IProps {
   rows: PaneControlsRow[];
 }
 
-const contrastLabelToSpan = (label?: ContrastLabel) => {
-  return label !== undefined ? (
-    <span>
-      <span className={"menu-item-category"}>{label.task}</span>
-      <Icon icon="chevron-right" color={Colors.GRAY5} />
-      <span>{label.contrast}</span>
-    </span>
-  ) : null;
-};
-
-const contrastLabelRenderer = (
-  label: ContrastLabel,
-  { handleClick, modifiers, query }: any
-) => {
-  if (!modifiers.matchesPredicate) {
-    return null;
-  }
-
-  return (
-    <MenuItem
-      key={`menu-item-${contrastLabelToId(label)}`}
-      onClick={handleClick}
-      text={contrastLabelToSpan(label)}
-    />
-  );
-};
-
-const contrastLabelPredicate = (query: string, item: ContrastLabel) => {
-  return `${item.task}${item.contrast}`.indexOf(query) > -1;
-};
-
 const PaneControls = ({ rows }: IProps) => {
-  const [contrastQuery, setContrastQuery] = useState<string | undefined>(
-    undefined
-  );
-
   return (
     <div className="pane-controls">
       {rows.map((row: PaneControlsRow, rowIndex: number) => (
@@ -167,15 +122,11 @@ const PaneControls = ({ rows }: IProps) => {
                       break;
                     case InputType.SELECT_CONTRAST:
                       element = (
-                        <Select<ContrastLabel>
+                        <SelectContrastLabel
                           key={`input-${inputIndex}`}
-                          itemPredicate={contrastLabelPredicate}
-                          itemRenderer={contrastLabelRenderer}
-                          items={input.values ?? []}
-                          noResults={
-                            <MenuItem disabled={true} text="No results." />
-                          }
-                          onItemSelect={(
+                          values={input.values ?? []}
+                          value={input.value as ContrastLabel}
+                          onChangeCallback={(
                             newItem: ContrastLabel,
                             event?: React.SyntheticEvent<HTMLElement>
                           ) => {
@@ -183,18 +134,7 @@ const PaneControls = ({ rows }: IProps) => {
                               input.onChangeCallback(newItem, event);
                             }
                           }}
-                          onQueryChange={(query: string) => {
-                            setContrastQuery(query);
-                          }}
-                          query={contrastQuery}
-                        >
-                          <Button
-                            rightIcon="double-caret-vertical"
-                            text={contrastLabelToSpan(
-                              input.value as ContrastLabel
-                            )}
-                          />
-                        </Select>
+                        />
                       );
                       break;
                     case InputType.LABEL:
