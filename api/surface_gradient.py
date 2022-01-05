@@ -28,6 +28,7 @@ REACT_APP_CONDITIONS_VIEW = bool(
 AVAILABLE_GIFTI_FILES_DB = os.getenv("AVAILABLE_GIFTI_FILES_DB")
 EXPERIMENT_DATA_PATH = os.getenv("EXPERIMENT_DATA_PATH")
 GRADIENTS_DATA_PATH = os.getenv("GRADIENTS_DATA_PATH")
+REACT_APP_ENABLE_GRADIENTS = os.getenv("REACT_APP_ENABLE_GRADIENTS")
 
 
 # UTIL FUNCTIONS
@@ -74,17 +75,20 @@ def load_gradients():
     df = pd.DataFrame()
     meshes, subjects, tasks_contrasts, sides = [], [], [], []
 
-    if REACT_APP_CONDITIONS_VIEW and os.path.exists(AVAILABLE_GIFTI_FILES_DB):
+    if (
+        REACT_APP_CONDITIONS_VIEW
+        and os.path.exists(AVAILABLE_GIFTI_FILES_DB)
+        and REACT_APP_ENABLE_GRADIENTS
+    ):
         # Load all available contrasts
         df = pd.read_csv(AVAILABLE_GIFTI_FILES_DB)
         meshes, subjects, tasks_contrasts, sides = parse_metadata(df)
         data = load_data(meshes, subjects, tasks_contrasts, sides)
-        print(GRADIENTS_DATA_PATH)
 
     # ROUTES
     # Define a series of enpoints to expose contrasts, meshes, etc
 
-    @app.route("/contrast_gradient", methods=["GET"])
+    @app.route("/ibc/contrast_gradient", methods=["GET"])
     def get_contrast_gradient():
         """
         Return (n, 3) gradient map computed in each vertex of a given mesh.
@@ -112,7 +116,7 @@ def load_gradients():
             print(f"Unknown value for hemi: {hemi}")
             return jsonify([])
 
-    @app.route("/contrast_gradient_norm", methods=["GET"])
+    @app.route("/ibc/contrast_gradient_norm", methods=["GET"])
     def get_contrast_gradient_norm():
         """
         Returns norm of gradient.

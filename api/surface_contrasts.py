@@ -200,25 +200,25 @@ def load_contrasts():
     # ROUTES
     # Define a series of enpoints to expose contrasts, meshes, etc
 
-    @app.route("/subjects", methods=["GET"])
+    @app.route("/ibc/subjects", methods=["GET"])
     def get_subjects():
         return jsonify(subjects)
 
-    @app.route("/contrast_labels", methods=["GET"])
+    @app.route("/ibc/contrast_labels", methods=["GET"])
     def get_contrast_labels():
         return jsonify(tasks_contrasts)
 
-    @app.route("/ibc_descriptions", methods=["GET"])
-    def get_ibc_descriptions():
+    @app.route("/ibc/descriptions", methods=["GET"])
+    def get_descriptions():
         with open(DATA_DESCRIPTION_FILE_PATH, "r") as f:
             descriptions = json.load(f)
             return jsonify(descriptions)
 
-    @app.route("/mesh/<path:path>", methods=["GET"])
+    @app.route("/ibc/mesh/<path:path>", methods=["GET"])
     def get_mesh(path):
         return send_from_directory(MESH_PATH, path)
 
-    @app.route("/voxel_fingerprint", methods=["GET"])
+    @app.route("/ibc/voxel_fingerprint", methods=["GET"])
     def get_voxel_fingerprint():
         mesh = request.args.get("mesh", type=str, default="fsaverage5")
         subject_index = request.args.get("subject_index", type=int)
@@ -247,7 +247,7 @@ def load_contrasts():
 
         return jsonify(fingerprint)
 
-    @app.route("/voxel_fingerprint_mean", methods=["GET"])
+    @app.route("/ibc/voxel_fingerprint_mean", methods=["GET"])
     def get_voxel_fingerprint_mean():
         mesh = request.args.get("mesh", type=str, default="fsaverage5")
         voxel_index = request.args.get("voxel_index", type=int)
@@ -287,7 +287,7 @@ def load_contrasts():
 
             return jsonify(mean)
 
-    @app.route("/contrast", methods=["GET"])
+    @app.route("/ibc/contrast", methods=["GET"])
     def get_contrast():
         mesh = request.args.get("mesh", default="fsaverage5", type=str)
         subject_index = request.args.get("subject_index", type=int)
@@ -312,7 +312,7 @@ def load_contrasts():
             print(f"Unknown value for hemi: {hemi}")
             return jsonify([])
 
-    @app.route("/contrast_mean", methods=["GET"])
+    @app.route("/ibc/contrast_mean", methods=["GET"])
     def get_contrast_mean():
         mesh = request.args.get("mesh", default="fsaverage5", type=str)
         contrast_index = request.args.get("contrast_index", type=int)

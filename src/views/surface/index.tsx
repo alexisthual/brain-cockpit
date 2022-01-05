@@ -230,9 +230,9 @@ const SurfaceExplorer = () => {
   useEffect(() => {
     const fetchAllData = async () => {
       // Load static data
-      const subjectLabels = server.get<string[]>("subjects");
-      const contrastLabels = server.get<string[][]>("contrast_labels");
-      const datasetDescriptions = server.get<any>("ibc_descriptions");
+      const subjectLabels = server.get<string[]>("/ibc/subjects");
+      const contrastLabels = server.get<string[][]>("/ibc/contrast_labels");
+      const datasetDescriptions = server.get<any>("/ibc/descriptions");
 
       // Wait for all data to be loaded before setting app state
       Promise.all([subjectLabels, contrastLabels, datasetDescriptions]).then(
@@ -273,7 +273,7 @@ const SurfaceExplorer = () => {
       if (state.panes[selectedPaneId].selectedVoxel !== undefined) {
         const pane = state.panes[selectedPaneId];
         server
-          .get("/voxel_fingerprint", {
+          .get("/ibc/voxel_fingerprint", {
             params: {
               subject_index: pane.subject,
               voxel_index: pane.selectedVoxel,

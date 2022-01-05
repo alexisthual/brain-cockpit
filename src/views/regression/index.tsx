@@ -60,8 +60,8 @@ const RegressionExplorer = () => {
   useEffect(() => {
     const fetchAllData = async () => {
       // Load static data
-      const subjectLabels = server.get<string[]>("subjects");
-      const contrastLabels = server.get<string[][]>("contrast_labels");
+      const subjectLabels = server.get<string[]>("/ibc/subjects");
+      const contrastLabels = server.get<string[][]>("/ibc/contrast_labels");
       const models = server.get<string[]>("regression_models");
 
       // Wait for all data to be loaded before setting app state

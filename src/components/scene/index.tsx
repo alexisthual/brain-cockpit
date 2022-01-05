@@ -117,10 +117,10 @@ class Scene extends Component<IProps, IState> {
     let url: string;
     switch (meshSupport) {
       case MeshSupport.INDIVIDUAL:
-        url = `mesh/${meshSupport}/${subjectLabel}`;
+        url = `ibc/mesh/${meshSupport}/${subjectLabel}`;
         break;
       default:
-        url = `mesh/${meshSupport}`;
+        url = `ibc/mesh/${meshSupport}`;
         break;
     }
     switch (hemisphereSide) {
@@ -161,23 +161,23 @@ class Scene extends Component<IProps, IState> {
     switch (hemisphereSide) {
       case HemisphereSide.LEFT:
         return Scene.load(
-          `mesh/${meshSupport}/edges_${meshType}_left.gltf`
+          `ibc/mesh/${meshSupport}/edges_${meshType}_left.gltf`
         ).then((gltf: any) => {
           return gltf.scene.children[0] as any;
         });
       case HemisphereSide.RIGHT:
         return Scene.load(
-          `mesh/${meshSupport}/edges_${meshType}_right.gltf`
+          `ibc/mesh/${meshSupport}/edges_${meshType}_right.gltf`
         ).then((gltf: any) => {
           return gltf.scene.children[0] as any;
         });
       case HemisphereSide.BOTH:
         // Load both meshes
         const loadLeft = Scene.load(
-          `mesh/${meshSupport}/edges_${meshType}_left.gltf`
+          `ibc/mesh/${meshSupport}/edges_${meshType}_left.gltf`
         );
         const loadRight = Scene.load(
-          `mesh/${meshSupport}/edges_${meshType}_right.gltf`
+          `ibc/mesh/${meshSupport}/edges_${meshType}_right.gltf`
         );
 
         // Merge them in a common Mesh

@@ -296,8 +296,8 @@ const SurfacePane = ({
         server
           .get(
             surfaceMode === SurfaceMode.GRADIENT
-              ? "/contrast_gradient_norm_mean"
-              : "/contrast_mean",
+              ? "/ibc/contrast_gradient_norm_mean"
+              : "/ibc/contrast_mean",
             {
               params: {
                 contrast_index: state.contrast,
@@ -319,8 +319,8 @@ const SurfacePane = ({
         server
           .get(
             surfaceMode === SurfaceMode.GRADIENT
-              ? "/contrast_gradient_norm"
-              : "/contrast",
+              ? "/ibc/contrast_gradient_norm"
+              : "/ibc/contrast",
             {
               params: {
                 subject_index: state.subject,
@@ -349,7 +349,7 @@ const SurfacePane = ({
         case GradientMode.LOCAL:
           if (state.subject !== undefined) {
             server
-              .get("/contrast_gradient", {
+              .get("/ibc/contrast_gradient", {
                 params: {
                   subject_index: state.subject,
                   contrast_index: state.contrast,

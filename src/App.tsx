@@ -43,14 +43,14 @@ const App = () => {
         <div id="navbar">
           {process.env.REACT_APP_CONDITIONS_VIEW === "true" ? (
             <Tooltip content="IBC dataset explorer" position={Position.RIGHT}>
-              <NavLink className="view-button" exact to="/">
+              <NavLink className="view-button" exact to="/ibc">
                 <Icon icon="database" />
               </NavLink>
             </Tooltip>
           ) : null}
           {process.env.REACT_APP_ALIGNMENTS_VIEW === "true" ? (
             <Tooltip content="IBC subject alignments" position={Position.RIGHT}>
-              <NavLink className="view-button" exact to="/">
+              <NavLink className="view-button" exact to="/alignments">
                 <Icon icon="swap-horizontal" />
               </NavLink>
             </Tooltip>
