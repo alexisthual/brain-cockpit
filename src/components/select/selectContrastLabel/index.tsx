@@ -69,6 +69,8 @@ const SelectContrastLabel = ({ value, values, onChangeCallback }: Props) => {
       <Button
         rightIcon="double-caret-vertical"
         text={contrastLabelToSpan(value)}
+        minimal
+        outlined
       />
     </Select>
   );

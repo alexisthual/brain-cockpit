@@ -67,6 +67,8 @@ const PaneControls = ({ rows }: IProps) => {
                             }
                           }}
                           title={input.title}
+                          minimal
+                          outlined
                         />
                       );
                       break;
@@ -116,6 +118,8 @@ const PaneControls = ({ rows }: IProps) => {
                           <Button
                             rightIcon="double-caret-vertical"
                             text={input.value}
+                            minimal
+                            outlined
                           />
                         </Select>
                       );

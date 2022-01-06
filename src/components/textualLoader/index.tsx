@@ -1,4 +1,4 @@
-import { Spinner } from "@blueprintjs/core";
+import { Spinner, SpinnerSize } from "@blueprintjs/core";
 import React from "react";
 
 import "./style.scss";
@@ -11,7 +11,7 @@ const TextualLoader = ({ text }: Props) => {
   return (
     <div className="textual-loader-container">
       <div className="textual-loader">
-        <Spinner size={Spinner.SIZE_SMALL} tagName={"span"} />
+        <Spinner size={SpinnerSize.SMALL} tagName={"span"} />
         {text ?? "Loading..."}
       </div>
     </div>

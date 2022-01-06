@@ -10,7 +10,7 @@ interface Props {
 const CloseButton = ({ closeCallback = () => {} }: Props) => {
   return (
     <div className="close-button">
-      <Button icon="cross" onClick={closeCallback} outlined />
+      <Button icon="cross" onClick={closeCallback} minimal />
     </div>
   );
 };

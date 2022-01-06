@@ -1,10 +1,5 @@
-import {
-  Button,
-  Icon,
-  NonIdealState,
-  Position,
-  Tooltip,
-} from "@blueprintjs/core";
+import { Button, Icon, NonIdealState, Position } from "@blueprintjs/core";
+import { Tooltip2 } from "@blueprintjs/popover2";
 import axios from "axios";
 import React from "react";
 import {
@@ -42,52 +37,55 @@ const App = () => {
       <div id="app-container">
         <div id="navbar">
           {process.env.REACT_APP_CONDITIONS_VIEW === "true" ? (
-            <Tooltip content="IBC dataset explorer" position={Position.RIGHT}>
+            <Tooltip2 content="IBC dataset explorer" position={Position.RIGHT}>
               <NavLink className="view-button" exact to="/ibc">
                 <Icon icon="database" />
               </NavLink>
-            </Tooltip>
+            </Tooltip2>
           ) : null}
           {process.env.REACT_APP_ALIGNMENTS_VIEW === "true" ? (
-            <Tooltip content="IBC subject alignments" position={Position.RIGHT}>
+            <Tooltip2
+              content="IBC subject alignments"
+              position={Position.RIGHT}
+            >
               <NavLink className="view-button" exact to="/alignments">
                 <Icon icon="swap-horizontal" />
               </NavLink>
-            </Tooltip>
+            </Tooltip2>
           ) : null}
           {process.env.REACT_APP_SLICE_VIEW === "true" ? (
-            <Tooltip content="Cross-species slices" position={Position.RIGHT}>
+            <Tooltip2 content="Cross-species slices" position={Position.RIGHT}>
               <NavLink className="view-button" exact to="/cuts">
                 <Icon icon="symbol-circle" />
               </NavLink>
-            </Tooltip>
+            </Tooltip2>
           ) : null}
           {process.env.REACT_APP_EXPERIMENT_REGRESSION_VIEW === "true" ? (
-            <Tooltip
+            <Tooltip2
               content="Regressed MNI coordinates"
               position={Position.RIGHT}
             >
               <NavLink className="view-button" to="/regression">
                 <Icon icon="regression-chart" />
               </NavLink>
-            </Tooltip>
+            </Tooltip2>
           ) : null}
           {process.env.REACT_APP_EXPERIMENT_KNN_VIEW === "true" ? (
-            <Tooltip content="Functional KNN" position={Position.RIGHT}>
+            <Tooltip2 content="Functional KNN" position={Position.RIGHT}>
               <NavLink className="view-button" to="/knn">
                 <Icon icon="graph" />
               </NavLink>
-            </Tooltip>
+            </Tooltip2>
           ) : null}
           {process.env.REACT_APP_EXPERIMENT_CORRELATION_VIEW === "true" ? (
-            <Tooltip
+            <Tooltip2
               content="Functional distance maps"
               position={Position.RIGHT}
             >
               <NavLink className="view-button" to="/functional-distance">
                 <Icon icon="heatmap" />
               </NavLink>
-            </Tooltip>
+            </Tooltip2>
           ) : null}
         </div>
         <Switch>

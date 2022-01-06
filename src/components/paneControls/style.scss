@@ -4,7 +4,7 @@
   position: absolute;
   top: 10px;
   left: 10px;
-  z-index: 2;
+  z-index: 3;
 
   min-width: 300px;
 
@@ -41,12 +41,12 @@
     }
 
     // Remove radius when part of button group
-    .bp3-button-group:not(.bp3-minimal) > .custom-button:not(:first-child) {
+    .bp4-button-group:not(.bp4-minimal) > .custom-button:not(:first-child) {
       border-bottom-left-radius: 0;
       border-top-left-radius: 0;
     }
 
-    .bp3-button-group:not(.bp3-minimal) > .custom-button:not(:last-child) {
+    .bp4-button-group:not(.bp4-minimal) > .custom-button:not(:last-child) {
       border-bottom-right-radius: 0;
       border-top-right-radius: 0;
     }
@@ -63,7 +63,7 @@
         inset 0 -1px 0 rgb(16 22 26 / 10%);
       border-radius: 3px;
 
-      .bp3-icon {
+      .bp4-icon {
         color: $gray4;
 
         &:not(:last-child) {
@@ -71,11 +71,11 @@
         }
       }
 
-      .bp3-switch {
+      .bp4-switch {
         margin: 0px;
       }
 
-      .bp3-control.bp3-switch input:checked ~ .bp3-control-indicator {
+      .bp4-control.bp4-switch input:checked ~ .bp4-control-indicator {
         background: $light-gray1;
       }
     }

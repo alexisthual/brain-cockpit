@@ -77,7 +77,12 @@ const AlignmentControls = ({
           }
         }}
       >
-        <Button rightIcon="double-caret-vertical" text={viewLayout} />
+        <Button
+          rightIcon="double-caret-vertical"
+          text={viewLayout}
+          minimal
+          outlined
+        />
       </Select>
       <Select<string>
         filterable={false}
@@ -92,7 +97,12 @@ const AlignmentControls = ({
           }
         }}
       >
-        <Button rightIcon="double-caret-vertical" text={model} />
+        <Button
+          rightIcon="double-caret-vertical"
+          text={model}
+          minimal
+          outlined
+        />
       </Select>
     </div>
   );

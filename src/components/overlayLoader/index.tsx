@@ -1,4 +1,4 @@
-import { Spinner } from "@blueprintjs/core";
+import { Spinner, SpinnerSize } from "@blueprintjs/core";
 import React from "react";
 
 import "./style.scss";
@@ -10,7 +10,7 @@ interface Props {
 const OverlayLoader = ({ text }: Props) => {
   return (
     <div className="overlay-loader">
-      <Spinner size={Spinner.SIZE_SMALL} tagName={"span"} />
+      <Spinner size={SpinnerSize.SMALL} tagName={"span"} />
     </div>
   );
 };

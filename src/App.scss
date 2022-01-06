@@ -1,4 +1,5 @@
 @import "~@blueprintjs/core/lib/scss/variables";
+@import "~@blueprintjs/popover2/lib/css/blueprint-popover2.css";
 
 * {
   padding: 0;
@@ -22,11 +23,12 @@
   flex-direction: column;
   align-items: stretch;
 
-  .bp3-divider {
+  .bp4-divider {
     border-bottom: 1px solid $dark-gray5;
   }
 
-  .bp3-popover-target {
+  .bp4-popover-target,
+  .bp3-popover2-target {
     display: inline;
   }
 
@@ -68,7 +70,7 @@
       }
     }
 
-    .bp3-icon {
+    .bp4-icon {
       svg {
         fill: $light-gray5;
       }
@@ -181,7 +183,8 @@
   }
 }
 
-.bp3-select-popover .bp3-menu {
+.bp4-select-popover .bp4-menu,
+.bp3-select-popover2 .bp4-menu {
   max-height: 300px;
   overflow: auto;
 }
