@@ -2,21 +2,31 @@ import { Button, Colors, Icon, MenuItem } from "@blueprintjs/core";
 import { Select } from "@blueprintjs/select";
 import React, { useState } from "react";
 
-import { ContrastLabel, contrastLabelToId } from "constants/index";
+import {
+  ContrastLabel,
+  contrastLabelToId,
+  highlightText,
+} from "constants/index";
 
-const contrastLabelToSpan = (label?: ContrastLabel) => {
+const contrastLabelToSpan = (label?: ContrastLabel, query?: string) => {
   return label !== undefined ? (
     <span>
-      <span className={"menu-item-category"}>{label.task}</span>
+      <span className={"menu-item-category"}>
+        {query !== undefined ? highlightText(label.task, query) : label.task}
+      </span>
       <Icon icon="chevron-right" color={Colors.GRAY5} />
-      <span>{label.contrast}</span>
+      <span>
+        {query !== undefined
+          ? highlightText(label.contrast, query)
+          : label.contrast}
+      </span>
     </span>
   ) : null;
 };
 
 const contrastLabelRenderer = (
   label: ContrastLabel,
-  { handleClick, modifiers }: any
+  { handleClick, modifiers, query }: any
 ) => {
   if (!modifiers.matchesPredicate) {
     return null;
@@ -25,8 +35,9 @@ const contrastLabelRenderer = (
   return (
     <MenuItem
       key={`menu-item-${contrastLabelToId(label)}`}
+      active={modifiers.active}
       onClick={handleClick}
-      text={contrastLabelToSpan(label)}
+      text={contrastLabelToSpan(label, query)}
     />
   );
 };
