@@ -1,4 +1,5 @@
 import { Button } from "@blueprintjs/core";
+import { Tooltip2 } from "@blueprintjs/popover2";
 import React from "react";
 
 import { GradientMode, SurfaceMode } from "constants/index";
@@ -52,12 +53,14 @@ const SurfaceControls = ({
 
   return (
     <div className="surface-controls">
-      <Button
-        active={showGridHelper}
-        icon={"grid"}
-        onClick={showGridHelperCallback}
-        outlined
-      />
+      <Tooltip2 content="Toggle grid" placement={"top-end"}>
+        <Button
+          active={showGridHelper}
+          icon={"grid"}
+          onClick={showGridHelperCallback}
+          outlined
+        />
+      </Tooltip2>
       {process.env.REACT_APP_ENABLE_GRADIENTS === "true" ? (
         <>
           <Button
@@ -74,13 +77,17 @@ const SurfaceControls = ({
           />
         </>
       ) : null}
-      <Button
-        active={filterSurface}
-        icon={"filter"}
-        onClick={filterSurfaceCallback}
-        outlined
-      />
-      <Button icon="plus" onClick={addPaneCallback} outlined />
+      <Tooltip2 content="Normalise surface map" placement={"top-end"}>
+        <Button
+          active={filterSurface}
+          icon={"filter"}
+          onClick={filterSurfaceCallback}
+          outlined
+        />
+      </Tooltip2>
+      <Tooltip2 content="Add pane" placement={"top-end"}>
+        <Button icon="plus" onClick={addPaneCallback} outlined />
+      </Tooltip2>
     </div>
   );
 };

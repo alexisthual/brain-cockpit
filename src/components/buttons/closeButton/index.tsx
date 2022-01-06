@@ -1,4 +1,5 @@
 import { Button } from "@blueprintjs/core";
+import { Tooltip2 } from "@blueprintjs/popover2";
 import React from "react";
 
 import "./style.scss";
@@ -10,7 +11,9 @@ interface Props {
 const CloseButton = ({ closeCallback = () => {} }: Props) => {
   return (
     <div className="close-button">
-      <Button icon="cross" onClick={closeCallback} minimal />
+      <Tooltip2 content="Close pane">
+        <Button icon="cross" onClick={closeCallback} minimal />
+      </Tooltip2>
     </div>
   );
 };
