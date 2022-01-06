@@ -44,7 +44,6 @@ const PaneControls = ({ rows }: IProps) => {
           className="pane-controls-row"
           key={`pane-controls-row-${rowIndex}`}
         >
-          <div className="header-item-label">{row.label}</div>
           <div className="header-item-value">
             <ButtonGroup>
               {row.inputs.map(
