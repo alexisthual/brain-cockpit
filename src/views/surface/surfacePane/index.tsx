@@ -38,6 +38,7 @@ export interface SurfacePaneState {
   hemi: HemisphereSide;
   meanSurfaceMap?: boolean;
   showDescription?: boolean;
+  voxels?: number[];
 }
 
 export const defaultPaneState: SurfacePaneState = {
@@ -57,6 +58,7 @@ interface Props {
     updatePaneState: (id: string, state: SurfacePaneState) => void;
     updateAllPanesState: (key: string, value: any) => void;
     shiftAllPanes: (key: string, shift: number, n: number) => void;
+    setVoxel: (selectedPaneId: string, voxelId: number) => void;
   };
   closeCallback: () => void;
   colormapName?: string;
@@ -113,7 +115,7 @@ const SurfacePane = ({
     [paneCallbacks, paneId, state]
   );
 
-  const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
+  // const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
   const [surfaceMap, setSurfaceMap] = useState<number[] | undefined>();
   const [loadingSurfaceMap, setLoadingSurfaceMap] = useState(false);
   const [gradient, setGradient] = useState<number[][] | undefined>();
@@ -443,7 +445,6 @@ const SurfacePane = ({
         <PaneControls
           rows={[
             {
-              label: "Mesh",
               inputs: [
                 {
                   inputType: InputType.SELECT_STRING,
@@ -508,7 +509,6 @@ const SurfacePane = ({
               ],
             },
             {
-              label: "Subject",
               inputs: [
                 {
                   inputType: InputType.SELECT_STRING,
@@ -550,7 +550,6 @@ const SurfacePane = ({
               ],
             },
             {
-              label: "Contrast",
               inputs: [
                 {
                   inputType: InputType.SELECT_CONTRAST,
@@ -584,15 +583,6 @@ const SurfacePane = ({
                     }
                   },
                   iconActive: "manual",
-                },
-              ],
-            },
-            {
-              label: "Voxel",
-              inputs: [
-                {
-                  inputType: InputType.LABEL,
-                  value: voxelIndex ? voxelIndex.toString() : undefined,
                 },
               ],
             },
@@ -631,11 +621,26 @@ const SurfacePane = ({
         <ParentSize className="scene-container" debounceTime={10}>
           {({ width: sceneWidth, height: sceneHeight }) => (
             <Scene
-              clickedVoxelCallback={(voxelIndex: number) => {
-                setVoxelIndex(voxelIndex);
+              clickedVoxelCallback={(
+                voxelIndex: number,
+                event?: MouseEvent
+              ) => {
+                // setVoxelIndex(voxelIndex);
+                console.log(event);
+                if (event !== undefined && event.shiftKey) {
+                  changeState("voxels")([...(state.voxels ?? []), voxelIndex]);
+                } else {
+                  paneCallbacks?.setVoxel(paneId, voxelIndex);
+                }
               }}
               colormap={colormaps[colormapName]}
-              voxelIndex={voxelIndex}
+              hotspots={state.voxels?.map((voxel: number) => {
+                return {
+                  id: `voxel-${paneId}-${voxel}`,
+                  voxelIndex: voxel,
+                  header: voxel.toString(),
+                };
+              })}
               surfaceMap={surfaceMap}
               gradient={gradient}
               meshType={state.meshType}

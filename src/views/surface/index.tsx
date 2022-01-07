@@ -1,5 +1,6 @@
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import { AxiosResponse } from "axios";
+import deepEqual from "fast-deep-equal";
 import { nanoid } from "nanoid";
 import React, { useCallback, useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
@@ -9,7 +10,12 @@ import ContrastFingerprint from "components/contrastFingerprint";
 import PaneControls from "components/paneControls/buttons";
 import SurfaceControls from "./surfaceControls";
 import SurfacePane, { defaultPaneState, SurfacePaneState } from "./surfacePane";
-import { ContrastLabel, Orientation, modulo } from "constants/index";
+import {
+  ContrastLabel,
+  Orientation,
+  modulo,
+  usePrevious,
+} from "constants/index";
 import { server } from "App";
 
 interface SurfaceViewState {
@@ -85,6 +91,14 @@ const useSurfaceState = (): [
 const SurfaceExplorer = () => {
   // Load state from url
   const [state, setState] = useSurfaceState();
+  const selectedVoxels = Object.keys(state.panes).map((paneId: any) => [
+    paneId,
+    state.panes[paneId].voxels,
+  ]);
+  const previousSelectedVoxels = usePrevious(selectedVoxels);
+  const [fingerprints, setFingerprints] = useState<number[][]>([]);
+
+  console.log("selectedVoxels", selectedVoxels);
 
   //
   // Util functions to modify view state
@@ -104,11 +118,9 @@ const SurfaceExplorer = () => {
 
   const removePane = useCallback(
     (paneId: string) => {
-      console.log("removePane");
       if (paneId in state.panes) {
-        console.log(state);
         // Filter-out pane with matching id
-        const { [paneId]: newValue, ...selectedPanes } = state.panes;
+        const { [paneId]: paneState, ...selectedPanes } = state.panes;
         const newState = {
           ...state,
           panes: selectedPanes,
@@ -165,6 +177,20 @@ const SurfaceExplorer = () => {
     setState(newState);
   };
 
+  const removeAllPanesKey = (key: keyof SurfacePaneState) => {
+    const newState = {
+      ...state,
+      panes: Object.fromEntries(
+        Object.keys(state.panes).map((paneId: string) => {
+          const { [key]: value, ...paneState } = state.panes[paneId];
+          return [paneId, { ...paneState }];
+        })
+      ),
+    } as SurfaceViewState;
+
+    setState(newState);
+  };
+
   const shiftAllPanes = (key: string, shift: number, n: number) => {
     const newState = {
       ...state,
@@ -180,6 +206,22 @@ const SurfaceExplorer = () => {
         })
       ),
     };
+
+    setState(newState);
+  };
+
+  const setVoxel = (selectedPaneId: string, voxelId: number) => {
+    const newState = {
+      ...state,
+      panes: Object.fromEntries(
+        Object.keys(state.panes).map((paneId: string) => {
+          const { voxels: value, ...paneState } = state.panes[paneId];
+          return paneId === selectedPaneId
+            ? [paneId, { voxels: [voxelId], ...paneState }]
+            : [paneId, { ...paneState }];
+        })
+      ),
+    } as SurfaceViewState;
 
     setState(newState);
   };
@@ -219,10 +261,10 @@ const SurfaceExplorer = () => {
   const [highThresholdMax, setHighThresholdMax] = useState(10);
   const [filterSurface, setFilterSurface] = useState(true);
   // Fingerprint
-  const [selectedPaneId, setSelectedPaneId] = useState<string | undefined>(
-    undefined
-  );
-  const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
+  // const [selectedPaneId, setSelectedPaneId] = useState<string | undefined>(
+  //   undefined
+  // );
+  // const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
   const [loadingFingerprint, setLoadingFingerprint] = useState(false);
   // const [meanFingerprint, setMeanFingerprint] = useState(false);
 
@@ -256,44 +298,63 @@ const SurfaceExplorer = () => {
 
   // Update fingerprint when voxelIndex or subjectIndex change
   useEffect(() => {
-    if (selectedPaneId !== undefined) {
+    console.log("load fingerprints");
+    if (
+      selectedVoxels.length > 0 &&
+      !deepEqual(selectedVoxels, previousSelectedVoxels)
+    ) {
       setLoadingFingerprint(true);
-      // if (meanFingerprint) {
-      //   server
-      //     .get("/voxel_fingerprint_mean", {
-      //       params: {
-      //         voxel_index: voxelIndex,
-      //         mesh: meshSupport,
-      //       },
-      //     })
-      //     .then((response: AxiosResponse<number[]>) => {
-      //       setContrastFingerprint(response.data);
-      //       setLoadingFingerprint(false);
-      //     });
-      if (state.panes[selectedPaneId].selectedVoxel !== undefined) {
-        const pane = state.panes[selectedPaneId];
-        server
-          .get("/ibc/voxel_fingerprint", {
-            params: {
-              subject_index: pane.subject,
-              voxel_index: pane.selectedVoxel,
-              mesh: pane.meshSupport,
-            },
+      const promises = Array.prototype.concat(
+        ...selectedVoxels.map(([paneId, voxels]) => {
+          console.log(paneId, voxels);
+          if (voxels !== undefined) {
+            return voxels.map((voxel: number) => {
+              return state.panes[paneId].meanSurfaceMap
+                ? server.get("/ibc/voxel_fingerprint_mean", {
+                    params: {
+                      voxel_index: voxel,
+                      mesh: state.panes[paneId].meshSupport,
+                    },
+                  })
+                : server.get("/ibc/voxel_fingerprint", {
+                    params: {
+                      subject_index: state.panes[paneId].subject,
+                      voxel_index: voxel,
+                      mesh: state.panes[paneId].meshSupport,
+                    },
+                  });
+            });
+          } else {
+            return [];
+          }
+        })
+      );
+
+      console.log("promises");
+      console.log(promises);
+
+      if (promises.length > 0) {
+        Promise.all(promises)
+          .then((values) => {
+            setFingerprints(values.map((value) => value.data));
+            setLoadingFingerprint(false);
           })
-          .then((response: AxiosResponse<number[]>) => {
-            setContrastFingerprint(response.data);
+          .catch((error) => {
+            console.log(error);
             setLoadingFingerprint(false);
           });
       } else {
+        setFingerprints([]);
         setLoadingFingerprint(false);
       }
     }
-  }, [selectedPaneId, state.panes]);
+  }, [selectedVoxels]);
+  // }, [selectedPaneId, state.panes]);
 
   return (
     <div
       className={`main-container ${
-        selectedPaneId !== undefined ? `${orientation}-orientation` : ""
+        fingerprints.length > 0 ? `${orientation}-orientation` : ""
       }`}
     >
       <div className="scenes">
@@ -317,6 +378,7 @@ const SurfaceExplorer = () => {
                     updatePaneState,
                     updateAllPanesState,
                     shiftAllPanes,
+                    setVoxel,
                   }}
                   closeCallback={() => {
                     removePane(paneId);
@@ -340,7 +402,7 @@ const SurfaceExplorer = () => {
           </div>
         </div>
       </div>
-      {selectedPaneId !== undefined ? (
+      {fingerprints.length > 0 ? (
         <div className="fingerprint">
           <PaneControls
             orientation={
@@ -359,7 +421,8 @@ const SurfaceExplorer = () => {
               }
             }}
             clickCloseCallback={() => {
-              setSelectedPaneId(undefined);
+              // console.log("close");
+              removeAllPanesKey("voxels");
             }}
           />
           <ParentSize className="fingerprint-container" debounceTime={10}>
@@ -367,7 +430,7 @@ const SurfaceExplorer = () => {
               <ContrastFingerprint
                 loading={loadingFingerprint}
                 clickedLabelCallback={(contrastIndex: number) => {
-                  updatePaneKey(selectedPaneId, "contrast", contrastIndex);
+                  // updatePaneKey(selectedPaneId, "contrast", contrastIndex);
                 }}
                 orientation={
                   orientation === Orientation.VERTICAL
@@ -375,7 +438,7 @@ const SurfaceExplorer = () => {
                     : Orientation.VERTICAL
                 }
                 contrastLabels={contrastLabels}
-                fingerprint={contrastFingerprint}
+                fingerprint={fingerprints[0]}
                 width={fingerprintWidth}
                 height={fingerprintHeight}
                 lowThresholdMin={filterSurface ? lowThresholdMin : undefined}

@@ -1,5 +1,6 @@
 import chroma from "chroma-js";
 import { MenuItem } from "@blueprintjs/core";
+import { useRef, useEffect } from "react";
 
 export const colormaps = {
   // Generated using python package bokey
@@ -173,7 +174,7 @@ export const highlightText = (text: string, query: string) => {
 };
 
 const escapeRegExpChars = (text: string) => {
-  return text.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+  return text.replace(/([.*+?^=!:${}()|[\]/\\])/g, "\\$1");
 };
 
 export function stringRenderer(
@@ -251,3 +252,11 @@ export const getMin = (arr: any[] | undefined | null) => {
 
   return min;
 };
+
+export function usePrevious(value: any) {
+  const ref = useRef();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
+}

@@ -690,7 +690,7 @@ class Scene extends Component<IProps, IState> {
         }
 
         // Callback
-        this.props.clickedVoxelCallback(selectedVertexIndex);
+        this.props.clickedVoxelCallback(selectedVertexIndex, event);
       }
     }
   }
@@ -743,21 +743,26 @@ class Scene extends Component<IProps, IState> {
 
   projectCoordinates(voxelIndex: number) {
     const vertex = new THREE.Vector3();
-    vertex.fromBufferAttribute(
-      this.object.geometry.getAttribute("position"),
-      voxelIndex
-    );
-    this.object.localToWorld(vertex);
+    if (this.object !== undefined) {
+      vertex.fromBufferAttribute(
+        this.object.geometry.getAttribute("position"),
+        voxelIndex
+      );
+      this.object.localToWorld(vertex);
+    }
 
     const projectedVertex = new THREE.Vector3().copy(vertex);
-    const canvas = this.renderer.domElement;
-    projectedVertex.project(this.camera);
-    projectedVertex.x = Math.round(
-      (0.5 + projectedVertex.x / 2) * (canvas.width / window.devicePixelRatio)
-    );
-    projectedVertex.y = Math.round(
-      (0.5 - projectedVertex.y / 2) * (canvas.height / window.devicePixelRatio)
-    );
+    if (this.renderer !== undefined) {
+      const canvas = this.renderer.domElement;
+      projectedVertex.project(this.camera);
+      projectedVertex.x = Math.round(
+        (0.5 + projectedVertex.x / 2) * (canvas.width / window.devicePixelRatio)
+      );
+      projectedVertex.y = Math.round(
+        (0.5 - projectedVertex.y / 2) *
+          (canvas.height / window.devicePixelRatio)
+      );
+    }
 
     return [projectedVertex, vertex];
   }
