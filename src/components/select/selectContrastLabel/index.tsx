@@ -62,6 +62,7 @@ const SelectContrastLabel = ({ value, values, onChangeCallback }: Props) => {
 
   return (
     <Select<ContrastLabel>
+      activeItem={value}
       itemPredicate={contrastLabelPredicate}
       itemRenderer={contrastLabelRenderer}
       items={values ?? []}

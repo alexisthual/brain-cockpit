@@ -28,7 +28,7 @@ interface PaneControlsInput {
 }
 
 interface PaneControlsRow {
-  label: string;
+  label?: string;
   inputs: PaneControlsInput[];
 }
 
@@ -102,6 +102,7 @@ const PaneControls = ({ rows }: IProps) => {
                       element = (
                         <Select<string>
                           key={`input-${inputIndex}`}
+                          activeItem={input.value as string}
                           filterable={false}
                           items={input.values ?? []}
                           itemRenderer={stringRenderer}
