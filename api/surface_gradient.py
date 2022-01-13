@@ -29,7 +29,7 @@ GRADIENTS_DATA_PATH = os.getenv("GRADIENTS_DATA_PATH")
 REACT_APP_ENABLE_GRADIENTS = os.getenv("REACT_APP_ENABLE_GRADIENTS")
 
 TMPDIR = os.getenv("TMPDIR") if os.getenv("TMPDIR") else "/tmp"
-memory = Memory("/tmp", verbose=0)
+memory = Memory(TMPDIR, verbose=0)
 
 
 # UTIL FUNCTIONS
