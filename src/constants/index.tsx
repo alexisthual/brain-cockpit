@@ -1,6 +1,7 @@
 import chroma from "chroma-js";
 import { MenuItem } from "@blueprintjs/core";
 import { useRef, useEffect } from "react";
+import type { MutableRefObject } from "react";
 
 export const colormaps = {
   // Generated using python package bokey
@@ -253,10 +254,12 @@ export const getMin = (arr: any[] | undefined | null) => {
   return min;
 };
 
-export function usePrevious(value: any) {
-  const ref = useRef();
+export function usePrevious<T>(
+  value: T
+): MutableRefObject<T | undefined>["current"] {
+  const ref = useRef<T>();
   useEffect(() => {
     ref.current = value;
-  });
+  }, [value]);
   return ref.current;
 }

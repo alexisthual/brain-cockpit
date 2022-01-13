@@ -74,7 +74,9 @@ const useSurfaceState = (): [
   }
 
   // Instantiate new state
-  const [state, setState] = useState<any>(urlState);
+  const [state, setState] = useState<SurfaceViewState>(
+    (urlState as unknown) as SurfaceViewState
+  );
 
   // Update URL on state change
   const navigate = useNavigate();
@@ -91,6 +93,7 @@ const useSurfaceState = (): [
 const SurfaceExplorer = () => {
   // Load state from url
   const [state, setState] = useSurfaceState();
+  const previousState = usePrevious<SurfaceViewState>(state);
   const selectedVoxels = Object.keys(state.panes).map((paneId: any) => [
     paneId,
     state.panes[paneId].voxels,
@@ -294,11 +297,25 @@ const SurfaceExplorer = () => {
     fetchAllData();
   }, []);
 
-  // Update fingerprint when voxelIndex or subjectIndex change
+  // Update fingerprint when selected voxels
+  // or selected subjects change
+  const paneSubjects = Object.keys(state.panes).map(
+    (k) => state.panes[k].subject
+  );
+  const previousPaneSubjects = usePrevious<number[]>(paneSubjects);
+  const paneMeanSurfaceMaps = Object.keys(state.panes).map(
+    (k) => state.panes[k].meanSurfaceMap
+  );
+  const previousPaneMeanSurfaceMaps = usePrevious<(boolean | undefined)[]>(
+    paneMeanSurfaceMaps
+  );
+
   useEffect(() => {
     if (
       selectedVoxels.length > 0 &&
-      !deepEqual(selectedVoxels, previousSelectedVoxels)
+      (!deepEqual(selectedVoxels, previousSelectedVoxels) ||
+        !deepEqual(paneSubjects, previousPaneSubjects) ||
+        !deepEqual(paneMeanSurfaceMaps, previousPaneMeanSurfaceMaps))
     ) {
       setLoadingFingerprint(true);
       const promises = Array.prototype.concat(
@@ -341,8 +358,7 @@ const SurfaceExplorer = () => {
         setLoadingFingerprint(false);
       }
     }
-  }, [selectedVoxels]);
-  // }, [selectedPaneId, state.panes]);
+  }, [selectedVoxels, paneSubjects, paneMeanSurfaceMaps]);
 
   return (
     <div

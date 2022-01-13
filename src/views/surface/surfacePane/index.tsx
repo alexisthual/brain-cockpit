@@ -625,8 +625,6 @@ const SurfacePane = ({
                 voxelIndex: number,
                 event?: MouseEvent
               ) => {
-                // setVoxelIndex(voxelIndex);
-                console.log(event);
                 if (event !== undefined && event.shiftKey) {
                   changeState("voxels")([...(state.voxels ?? []), voxelIndex]);
                 } else {
