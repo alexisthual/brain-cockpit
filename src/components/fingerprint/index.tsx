@@ -12,12 +12,17 @@ import {
   contrastLabelToId,
   Orientation,
 } from "constants/index";
-import OverlayLoader from "components/overlayLoader";
 import "./style.scss";
 
+export enum FingerprintFilter {
+  ALL = "all",
+  CONTRASTS = "contrasts",
+  CONDITIONS = "conditions",
+}
+
 interface Props {
-  loading?: boolean;
   contrastLabels: ContrastLabel[];
+  filter?: FingerprintFilter;
   fingerprints: number[][];
   width: number;
   height: number;
@@ -35,8 +40,8 @@ interface Props {
 }
 
 const Fingerprint = ({
-  loading,
   contrastLabels,
+  filter = FingerprintFilter.CONDITIONS,
   fingerprints,
   width,
   height,
@@ -75,6 +80,34 @@ const Fingerprint = ({
   const xMax = width - 2 * padding - offsetLeft - offsetRight - labelMargin;
   const yMax = height - 2 * padding - offsetBottom - offsetTop;
 
+  let filteredContrastLabels = contrastLabels;
+  let filteredFingerprints = fingerprints;
+
+  switch (filter) {
+    case FingerprintFilter.CONTRASTS:
+      filteredContrastLabels = contrastLabels.filter(
+        (label) => label.contrast.split("-").length > 1
+      );
+      filteredFingerprints = fingerprints.map((fingerprint) => {
+        return fingerprint.filter(
+          (_, index) => contrastLabels[index].contrast.split("-").length > 1
+        );
+      });
+      break;
+    case FingerprintFilter.CONDITIONS:
+      filteredContrastLabels = contrastLabels.filter(
+        (label) => label.contrast.split("-").length === 1
+      );
+      filteredFingerprints = fingerprints.map((fingerprint) => {
+        return fingerprint.filter(
+          (_, index) => contrastLabels[index].contrast.split("-").length === 1
+        );
+      });
+      break;
+    default:
+      break;
+  }
+
   const valueScale = scaleLinear<number>({
     domain: orientation === Orientation.VERTICAL ? [-10, 10] : [10, -10],
     range: [0, orientation === Orientation.VERTICAL ? xMax : yMax],
@@ -84,7 +117,7 @@ const Fingerprint = ({
   // Util function to convert ContrastLabel to id
   // by concatenating its attributes into a single string
   const labelScale = scaleBand<string>({
-    domain: contrastLabels.map(contrastLabelToId),
+    domain: filteredContrastLabels.map(contrastLabelToId),
     range: [0, orientation === Orientation.VERTICAL ? yMax : xMax],
     round: true,
   });
@@ -93,10 +126,10 @@ const Fingerprint = ({
 
   // Compute task counts
   const taskCounts = _.map(
-    _.values(_.groupBy(contrastLabels, "task")),
+    _.values(_.groupBy(filteredContrastLabels, "task")),
     (contrasts: ContrastLabel[]) => contrasts.length
   );
-  const taskLabels = _.keys(_.groupBy(contrastLabels, "task"));
+  const taskLabels = _.keys(_.groupBy(filteredContrastLabels, "task"));
 
   // Compute culumated sum for tasks
   const taskCumulatedSum: number[] = [];
@@ -112,7 +145,6 @@ const Fingerprint = ({
 
   return (
     <div className={`fingerprint ${orientation}-orientation`}>
-      {loading ? <OverlayLoader /> : null}
       <MultiSlider
         className="fingerprint-slider"
         labelStepSize={2}
@@ -201,14 +233,16 @@ const Fingerprint = ({
                       className="task-line"
                       x1={valueScale(10) + labelMargin / 2}
                       y1={
-                        (labelScale(contrastLabelToId(contrastLabels[0])) ??
-                          0) +
+                        (labelScale(
+                          contrastLabelToId(filteredContrastLabels[0])
+                        ) ?? 0) +
                         labelScale.step() * (taskCumulatedSum[index] + 0.2)
                       }
                       x2={valueScale(10) + labelMargin / 2}
                       y2={
-                        (labelScale(contrastLabelToId(contrastLabels[0])) ??
-                          0) +
+                        (labelScale(
+                          contrastLabelToId(filteredContrastLabels[0])
+                        ) ?? 0) +
                         labelScale.step() *
                           (taskCumulatedSum[index] + count - 0.4)
                       }
@@ -220,8 +254,9 @@ const Fingerprint = ({
                       verticalAnchor="middle"
                       x={valueScale(10) + labelMargin}
                       y={
-                        (labelScale(contrastLabelToId(contrastLabels[0])) ??
-                          0) +
+                        (labelScale(
+                          contrastLabelToId(filteredContrastLabels[0])
+                        ) ?? 0) +
                         labelScale.step() *
                           (taskCumulatedSum[index] + count / 2)
                       }
@@ -241,14 +276,16 @@ const Fingerprint = ({
                       key={`task-line-${taskLabels[index]}`}
                       className="task-line"
                       x1={
-                        (labelScale(contrastLabelToId(contrastLabels[0])) ??
-                          0) +
+                        (labelScale(
+                          contrastLabelToId(filteredContrastLabels[0])
+                        ) ?? 0) +
                         labelScale.step() * (taskCumulatedSum[index] + 0.2)
                       }
                       y1={-6}
                       x2={
-                        (labelScale(contrastLabelToId(contrastLabels[0])) ??
-                          0) +
+                        (labelScale(
+                          contrastLabelToId(filteredContrastLabels[0])
+                        ) ?? 0) +
                         labelScale.step() *
                           (taskCumulatedSum[index] + count - 0.4)
                       }
@@ -261,8 +298,9 @@ const Fingerprint = ({
                       textAnchor="start"
                       verticalAnchor="middle"
                       x={
-                        (labelScale(contrastLabelToId(contrastLabels[0])) ??
-                          0) +
+                        (labelScale(
+                          contrastLabelToId(filteredContrastLabels[0])
+                        ) ?? 0) +
                         labelScale.step() *
                           (taskCumulatedSum[index] + count / 2)
                       }
@@ -275,137 +313,147 @@ const Fingerprint = ({
               })}
             </>
           )}
-          {contrastLabels.map((label: ContrastLabel, contrastIndex: number) => {
-            let backBarHeight: number | undefined,
-              backBarY: number | undefined,
-              backBarWidth: number | undefined,
-              backBarX: number | undefined;
+          {filteredContrastLabels.map(
+            (label: ContrastLabel, contrastIndex: number) => {
+              let backBarHeight: number | undefined,
+                backBarY: number | undefined,
+                backBarWidth: number | undefined,
+                backBarX: number | undefined;
 
-            switch (orientation) {
-              case Orientation.VERTICAL:
-                backBarX = valueScale(-10);
-                backBarWidth = valueScale(10);
-                backBarY =
-                  (labelScale(contrastLabelToId(label)) ?? 0) -
-                  (labelScale.step() * labelScale.padding()) / 2;
-                backBarHeight = labelScale.step();
-                break;
-              case Orientation.HORIZONTAL:
-                backBarX =
-                  (labelScale(contrastLabelToId(label)) ?? 0) -
-                  (labelScale.step() * labelScale.padding()) / 2;
-                backBarWidth = labelScale.step();
-                backBarY = valueScale(10);
-                backBarHeight = valueScale(-10);
-                break;
-            }
+              switch (orientation) {
+                case Orientation.VERTICAL:
+                  backBarX = valueScale(-10);
+                  backBarWidth = valueScale(10);
+                  backBarY =
+                    (labelScale(contrastLabelToId(label)) ?? 0) -
+                    (labelScale.step() * labelScale.padding()) / 2;
+                  backBarHeight = labelScale.step();
+                  break;
+                case Orientation.HORIZONTAL:
+                  backBarX =
+                    (labelScale(contrastLabelToId(label)) ?? 0) -
+                    (labelScale.step() * labelScale.padding()) / 2;
+                  backBarWidth = labelScale.step();
+                  backBarY = valueScale(10);
+                  backBarHeight = valueScale(-10);
+                  break;
+              }
 
-            return (
-              <Group
-                key={`fingerprint-bar-${label.contrast}-${contrastIndex}`}
-                className={`fingerprint-bar ${
-                  selectedContrast
-                    ? contrastIndex === selectedContrast.index
-                      ? "active"
+              return (
+                <Group
+                  key={`fingerprint-bar-${label.contrast}-${contrastIndex}`}
+                  className={`fingerprint-bar ${
+                    selectedContrast
+                      ? contrastIndex === selectedContrast.index
+                        ? "active"
+                        : ""
                       : ""
-                    : ""
-                }`}
-                onClick={() => {
-                  if (clickedLabelCallback) {
-                    clickedLabelCallback(contrastIndex);
-                  }
-                }}
-              >
-                <Bar
-                  className={`background-bar ${
-                    contrastIndex % 2 == 0 ? "dark" : "light"
                   }`}
-                  key={`background-bar-${label.contrast}-${contrastIndex}`}
-                  x={backBarX}
-                  width={
-                    !isNaN(backBarWidth) && backBarWidth >= 0 ? backBarWidth : 0
-                  }
-                  y={backBarY}
-                  height={
-                    !isNaN(backBarHeight) && backBarHeight >= 0
-                      ? backBarHeight
-                      : 0
-                  }
-                />
-                {fingerprints.map((fingerprint: number[], i: number) => {
-                  const value = fingerprint[contrastIndex];
-                  let barHeight: number | undefined,
-                    barY: number | undefined,
-                    barWidth: number | undefined,
-                    barX: number | undefined;
-
-                  const delta =
-                    orientation === Orientation.VERTICAL
-                      ? valueScale(value) - valueScale(0)
-                      : valueScale(0) - valueScale(value);
-                  switch (orientation) {
-                    case Orientation.VERTICAL:
-                      barHeight = labelScale.bandwidth() / fingerprints.length;
-                      barHeight -= fingerprints.length > 1 ? 1 : 0;
-                      barY =
-                        (labelScale(contrastLabelToId(label)) ?? 0) +
-                        (i * labelScale.bandwidth()) / fingerprints.length;
-                      barWidth = delta > 0 ? delta : -delta;
-                      barX = delta > 0 ? valueScale(0) : valueScale(value);
-
-                      break;
-                    case Orientation.HORIZONTAL:
-                      barWidth = labelScale.bandwidth() / fingerprints.length;
-                      barWidth -= fingerprints.length > 1 ? 1 : 0;
-                      barX =
-                        (labelScale(contrastLabelToId(label)) ?? 0) +
-                        (i * labelScale.bandwidth()) / fingerprints.length;
-                      barHeight = delta > 0 ? delta : -delta;
-                      barY = delta > 0 ? valueScale(value) : valueScale(0);
-
-                      break;
-                  }
-
-                  return (
-                    <Bar
-                      className="value-bar"
-                      key={`bar-${label.contrast}-${contrastIndex}-${i}`}
-                      fill={delta >= 0 ? Colors.RED5 : Colors.BLUE5}
-                      x={barX}
-                      width={!isNaN(barWidth) && barWidth >= 0 ? barWidth : 0}
-                      y={barY}
-                      height={
-                        !isNaN(barHeight) && barHeight >= 0 ? barHeight : 0
-                      }
-                    />
-                  );
-                })}
-                <Text
-                  angle={orientation === Orientation.VERTICAL ? 0 : -45}
-                  className={"label"}
-                  key={`label-${contrastIndex}`}
-                  textAnchor="end"
-                  verticalAnchor={
-                    orientation === Orientation.VERTICAL ? "end" : "middle"
-                  }
-                  x={
-                    orientation === Orientation.VERTICAL
-                      ? -labelMargin
-                      : (labelScale(contrastLabelToId(label)) ?? 0) +
-                        labelScale.step() / 2
-                  }
-                  y={
-                    orientation === Orientation.VERTICAL
-                      ? (labelScale(contrastLabelToId(label)) ?? 0) +
-                        labelScale.step() / 2
-                      : valueScale(-10) + labelMargin
-                  }
+                  onClick={() => {
+                    if (clickedLabelCallback) {
+                      clickedLabelCallback(contrastIndex);
+                    }
+                  }}
                 >
-                  {label.contrast}
-                </Text>
-              </Group>
-            );
-          })}
+                  <Bar
+                    className={`background-bar ${
+                      contrastIndex % 2 === 0 ? "dark" : "light"
+                    }`}
+                    key={`background-bar-${label.contrast}-${contrastIndex}`}
+                    x={backBarX}
+                    width={
+                      !isNaN(backBarWidth) && backBarWidth >= 0
+                        ? backBarWidth
+                        : 0
+                    }
+                    y={backBarY}
+                    height={
+                      !isNaN(backBarHeight) && backBarHeight >= 0
+                        ? backBarHeight
+                        : 0
+                    }
+                  />
+                  {filteredFingerprints.map(
+                    (fingerprint: number[], i: number) => {
+                      const value = fingerprint[contrastIndex];
+                      let barHeight: number | undefined,
+                        barY: number | undefined,
+                        barWidth: number | undefined,
+                        barX: number | undefined;
+
+                      const delta =
+                        orientation === Orientation.VERTICAL
+                          ? valueScale(value) - valueScale(0)
+                          : valueScale(0) - valueScale(value);
+                      switch (orientation) {
+                        case Orientation.VERTICAL:
+                          barHeight =
+                            labelScale.bandwidth() / fingerprints.length;
+                          barHeight -= fingerprints.length > 1 ? 1 : 0;
+                          barY =
+                            (labelScale(contrastLabelToId(label)) ?? 0) +
+                            (i * labelScale.bandwidth()) / fingerprints.length;
+                          barWidth = delta > 0 ? delta : -delta;
+                          barX = delta > 0 ? valueScale(0) : valueScale(value);
+
+                          break;
+                        case Orientation.HORIZONTAL:
+                          barWidth =
+                            labelScale.bandwidth() / fingerprints.length;
+                          barWidth -= fingerprints.length > 1 ? 1 : 0;
+                          barX =
+                            (labelScale(contrastLabelToId(label)) ?? 0) +
+                            (i * labelScale.bandwidth()) / fingerprints.length;
+                          barHeight = delta > 0 ? delta : -delta;
+                          barY = delta > 0 ? valueScale(value) : valueScale(0);
+
+                          break;
+                      }
+
+                      return (
+                        <Bar
+                          className="value-bar"
+                          key={`bar-${label.contrast}-${contrastIndex}-${i}`}
+                          fill={delta >= 0 ? Colors.RED5 : Colors.BLUE5}
+                          x={barX}
+                          width={
+                            !isNaN(barWidth) && barWidth >= 0 ? barWidth : 0
+                          }
+                          y={barY}
+                          height={
+                            !isNaN(barHeight) && barHeight >= 0 ? barHeight : 0
+                          }
+                        />
+                      );
+                    }
+                  )}
+                  <Text
+                    angle={orientation === Orientation.VERTICAL ? 0 : -45}
+                    className={"label"}
+                    key={`label-${contrastIndex}`}
+                    textAnchor="end"
+                    verticalAnchor={
+                      orientation === Orientation.VERTICAL ? "end" : "middle"
+                    }
+                    x={
+                      orientation === Orientation.VERTICAL
+                        ? -labelMargin
+                        : (labelScale(contrastLabelToId(label)) ?? 0) +
+                          labelScale.step() / 2
+                    }
+                    y={
+                      orientation === Orientation.VERTICAL
+                        ? (labelScale(contrastLabelToId(label)) ?? 0) +
+                          labelScale.step() / 2
+                        : valueScale(-10) + labelMargin
+                    }
+                  >
+                    {label.contrast}
+                  </Text>
+                </Group>
+              );
+            }
+          )}
         </Group>
       </svg>
     </div>
