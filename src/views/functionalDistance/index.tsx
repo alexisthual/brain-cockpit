@@ -5,7 +5,7 @@ import React, { useEffect, useReducer, useState } from "react";
 
 import { server } from "App";
 import Colorbar from "components/colorbar";
-import Fingerprint from "components/fingerprint";
+import FingerprintPane from "components/pane/fingerprint";
 import DistanceBars from "./distanceBars";
 import PaneControls, { InputType } from "components/paneControls";
 import PaneButtons from "components/paneControls/buttons";
@@ -426,46 +426,17 @@ const FunctionalDistanceExplorer = () => {
               setVoxelIndex(undefined);
             }}
           />
-          <div className="fingerprint">
-            <ParentSize className="fingerprint-container" debounceTime={10}>
-              {({ width: fingerprintWidth, height: fingerprintHeight }) => (
-                <Fingerprint
-                  loading={loadingFingerprint}
-                  orientation={
-                    orientation === Orientation.VERTICAL
-                      ? Orientation.HORIZONTAL
-                      : Orientation.VERTICAL
-                  }
-                  contrastLabels={contrastLabels}
-                  fingerprints={[contrastFingerprint]}
-                  width={fingerprintWidth}
-                  height={fingerprintHeight}
-                />
-              )}
-            </ParentSize>
-          </div>
-          <ParentSize
-            className="functional-distances-container"
-            debounceTime={10}
-          >
-            {({
-              width: functionalDistanceWidth,
-              height: functionalDistanceHeight,
-            }) => (
-              <DistanceBars
-                loading={loadingFunctionalDistances}
-                distances={functionalDistances}
-                m={m}
-                mChangeCallback={(newM: number) => {
-                  setM(newM);
-                }}
-                width={functionalDistanceWidth}
-                height={functionalDistanceHeight}
-                sliderEnabled={surfaceMapType === SurfaceMapType.M_DISTANCE}
-              />
-            )}
-          </ParentSize>
-          <div></div>
+
+          <FingerprintPane
+            fingerprints={[contrastFingerprint]}
+            loading={loadingFingerprint}
+            contrastLabels={contrastLabels}
+            closeCallback={() => {
+              setVoxelIndex(undefined);
+            }}
+            orientation={orientation}
+            setOrientation={setOrientation}
+          />
         </div>
       ) : null}
     </div>

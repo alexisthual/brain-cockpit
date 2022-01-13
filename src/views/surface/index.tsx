@@ -6,8 +6,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as qs from "qs";
 
-import Fingerprint from "components/fingerprint";
-import PaneControls from "components/paneControls/buttons";
+import FingerprintPane from "components/pane/fingerprint";
+import PaneControls, { InputType } from "components/paneControls";
 import SurfaceControls from "./surfaceControls";
 import SurfacePane, { defaultPaneState, SurfacePaneState } from "./surfacePane";
 import {
@@ -246,6 +246,8 @@ const SurfaceExplorer = () => {
   // N
   const keyAddPane = useCallback(
     (event: any) => {
+      if (event.target.matches("input")) return;
+
       if (event.isComposing || event.keyCode === 78) {
         addPane();
       }
@@ -424,63 +426,25 @@ const SurfaceExplorer = () => {
         </div>
       </div>
       {fingerprints.length > 0 ? (
-        <div className="fingerprint">
-          <PaneControls
-            orientation={
-              orientation === Orientation.VERTICAL
-                ? Orientation.HORIZONTAL
-                : Orientation.VERTICAL
-            }
-            orientationChangeCallback={() => {
-              switch (orientation) {
-                case Orientation.VERTICAL:
-                  setOrientation(Orientation.HORIZONTAL);
-                  break;
-                case Orientation.HORIZONTAL:
-                  setOrientation(Orientation.VERTICAL);
-                  break;
-              }
-            }}
-            clickCloseCallback={() => {
-              removeAllPanesKey("voxels");
-            }}
-          />
-          <ParentSize className="fingerprint-container" debounceTime={10}>
-            {({ width: fingerprintWidth, height: fingerprintHeight }) => (
-              <Fingerprint
-                loading={loadingFingerprint}
-                clickedLabelCallback={(contrastIndex: number) => {
-                  // updatePaneKey(selectedPaneId, "contrast", contrastIndex);
-                }}
-                orientation={
-                  orientation === Orientation.VERTICAL
-                    ? Orientation.HORIZONTAL
-                    : Orientation.VERTICAL
-                }
-                contrastLabels={contrastLabels}
-                fingerprints={fingerprints}
-                width={fingerprintWidth}
-                height={fingerprintHeight}
-                lowThresholdMin={filterSurface ? lowThresholdMin : undefined}
-                lowThresholdMax={filterSurface ? lowThresholdMax : undefined}
-                highThresholdMin={filterSurface ? highThresholdMin : undefined}
-                highThresholdMax={filterSurface ? highThresholdMax : undefined}
-                lowHandleMinRelease={(newValue: number) =>
-                  setLowThresholdMin(newValue)
-                }
-                lowHandleMaxRelease={(newValue: number) =>
-                  setLowThresholdMax(newValue)
-                }
-                highHandleMinRelease={(newValue: number) =>
-                  setHighThresholdMin(newValue)
-                }
-                highHandleMaxRelease={(newValue: number) =>
-                  setHighThresholdMax(newValue)
-                }
-              />
-            )}
-          </ParentSize>
-        </div>
+        <FingerprintPane
+          fingerprints={fingerprints}
+          loading={loadingFingerprint}
+          contrastLabels={contrastLabels}
+          filterSurface={filterSurface}
+          closeCallback={() => {
+            removeAllPanesKey("voxels");
+          }}
+          orientation={orientation}
+          setOrientation={setOrientation}
+          lowThresholdMin={lowThresholdMin}
+          setLowThresholdMin={setLowThresholdMin}
+          lowThresholdMax={lowThresholdMax}
+          setLowThresholdMax={setLowThresholdMax}
+          highThresholdMin={highThresholdMin}
+          setHighThresholdMin={setHighThresholdMin}
+          highThresholdMax={highThresholdMax}
+          setHighThresholdMax={setHighThresholdMax}
+        />
       ) : null}
     </div>
   );

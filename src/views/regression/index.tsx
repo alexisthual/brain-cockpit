@@ -4,9 +4,8 @@ import React, { useCallback, useEffect, useReducer, useState } from "react";
 
 import { server } from "App";
 import Colorbar from "components/colorbar";
-import Fingerprint from "components/fingerprint";
+import FingerprintPane from "components/pane/fingerprint";
 import PaneControls, { InputType } from "components/paneControls";
-import PaneButtons from "components/paneControls/buttons";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
 import {
@@ -289,44 +288,16 @@ const RegressionExplorer = () => {
         </ParentSize>
       </div>
       {voxelIndex !== undefined ? (
-        <div className="fingerprint">
-          <PaneButtons
-            orientation={
-              orientation === Orientation.VERTICAL
-                ? Orientation.HORIZONTAL
-                : Orientation.VERTICAL
-            }
-            orientationChangeCallback={() => {
-              switch (orientation) {
-                case Orientation.VERTICAL:
-                  setOrientation(Orientation.HORIZONTAL);
-                  break;
-                case Orientation.HORIZONTAL:
-                  setOrientation(Orientation.VERTICAL);
-                  break;
-              }
-            }}
-            clickCloseCallback={() => {
-              setVoxelIndex(undefined);
-            }}
-          />
-          <ParentSize className="fingerprint-container" debounceTime={10}>
-            {({ width: fingerprintWidth, height: fingerprintHeight }) => (
-              <Fingerprint
-                loading={loadingFingerprint}
-                orientation={
-                  orientation === Orientation.VERTICAL
-                    ? Orientation.HORIZONTAL
-                    : Orientation.VERTICAL
-                }
-                contrastLabels={contrastLabels}
-                fingerprints={[contrastFingerprint]}
-                width={fingerprintWidth}
-                height={fingerprintHeight}
-              />
-            )}
-          </ParentSize>
-        </div>
+        <FingerprintPane
+          fingerprints={[contrastFingerprint]}
+          loading={loadingFingerprint}
+          contrastLabels={contrastLabels}
+          closeCallback={() => {
+            setVoxelIndex(undefined);
+          }}
+          orientation={orientation}
+          setOrientation={setOrientation}
+        />
       ) : null}
     </div>
   );

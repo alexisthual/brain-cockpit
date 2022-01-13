@@ -5,8 +5,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as qs from "qs";
 
-import Fingerprint from "components/fingerprint";
-import PaneControls from "components/paneControls/buttons";
+import FingerprintPane from "components/pane/fingerprint";
 import AlignmentControls from "./alignmentControls";
 import AlignmentPane from "./alignmentPane";
 import {
@@ -353,44 +352,16 @@ const AlignmentsExplorer = () => {
         <div className="scene-panes">{panes}</div>
       </div>
       {selectedPaneId !== undefined ? (
-        <div className="fingerprint">
-          <PaneControls
-            orientation={
-              orientation === Orientation.VERTICAL
-                ? Orientation.HORIZONTAL
-                : Orientation.VERTICAL
-            }
-            orientationChangeCallback={() => {
-              switch (orientation) {
-                case Orientation.VERTICAL:
-                  setOrientation(Orientation.HORIZONTAL);
-                  break;
-                case Orientation.HORIZONTAL:
-                  setOrientation(Orientation.VERTICAL);
-                  break;
-              }
-            }}
-            clickCloseCallback={() => {
-              setSelectedPaneId(undefined);
-            }}
-          />
-          <ParentSize className="fingerprint-container" debounceTime={10}>
-            {({ width: fingerprintWidth, height: fingerprintHeight }) => (
-              <Fingerprint
-                loading={loadingFingerprint}
-                orientation={
-                  orientation === Orientation.VERTICAL
-                    ? Orientation.HORIZONTAL
-                    : Orientation.VERTICAL
-                }
-                contrastLabels={contrastLabels}
-                fingerprints={[contrastFingerprint]}
-                width={fingerprintWidth}
-                height={fingerprintHeight}
-              />
-            )}
-          </ParentSize>
-        </div>
+        <FingerprintPane
+          fingerprints={[contrastFingerprint]}
+          loading={loadingFingerprint}
+          contrastLabels={contrastLabels}
+          closeCallback={() => {
+            // do nothing
+          }}
+          orientation={orientation}
+          setOrientation={setOrientation}
+        />
       ) : null}
     </div>
   );
