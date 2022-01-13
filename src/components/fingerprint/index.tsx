@@ -385,7 +385,9 @@ const Fingerprint = ({
                   className={"label"}
                   key={`label-${contrastIndex}`}
                   textAnchor="end"
-                  verticalAnchor="middle"
+                  verticalAnchor={
+                    orientation === Orientation.VERTICAL ? "end" : "middle"
+                  }
                   x={
                     orientation === Orientation.VERTICAL
                       ? -labelMargin
