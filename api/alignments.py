@@ -48,68 +48,68 @@ def load_alignments():
         meshes, subjects, tasks_contrasts, sides = parse_metadata(df)
         data = load_data(df)
 
-    # ROUTES
-    # Define a series of enpoints to expose contrasts, meshes, etc
+        # ROUTES
+        # Define a series of enpoints to expose contrasts, meshes, etc
 
-    # Import classes of models which can be loaded
-    sys.path.append("/home/alexis/singbrain/repo/alexis_thual")
-    from _052_fugw_class import FUGW
+        # Import classes of models which can be loaded
+        sys.path.append("/home/alexis/singbrain/repo/alexis_thual")
+        from _052_fugw_class import FUGW
 
-    # TODO: FUGW needs to be instantiated at least once
-    # before loading a FUGW pickle file
-    test_model = FUGW()  # noqa
+        # TODO: FUGW needs to be instantiated at least once
+        # before loading a FUGW pickle file
+        test_model = FUGW()  # noqa
 
-    models = ["FUGW", "MSM"]
+        models = ["FUGW", "MSM"]
 
-    @app.route("/alignments/models", methods=["GET"])
-    def get_models():
-        return jsonify(models)
+        @app.route("/alignments/models", methods=["GET"])
+        def get_models():
+            return jsonify(models)
 
-    @app.route("/alignments/single_voxel", methods=["GET"])
-    def align_single_voxel():
-        # source = request.args.get("source", type=int)
-        # target = request.args.get("target", type=int)
-        hemi = request.args.get("hemi", type=str, default="left")
-        mesh = request.args.get("mesh", type=str, default="fsaverage5")
-        voxel = request.args.get("voxel", type=int)
-        # role = request.args.get("role", type=str, default="source")
+        @app.route("/alignments/single_voxel", methods=["GET"])
+        def align_single_voxel():
+            # source = request.args.get("source", type=int)
+            # target = request.args.get("target", type=int)
+            hemi = request.args.get("hemi", type=str, default="left")
+            mesh = request.args.get("mesh", type=str, default="fsaverage5")
+            voxel = request.args.get("voxel", type=int)
+            # role = request.args.get("role", type=str, default="source")
 
-        with open(
-            "/home/alexis/singbrain/outputs/_058_test_fugw_class/sub-07_sub-09_fugw.pkl",
-            "rb",
-        ) as f:
-            model = pickle.load(f)
+            with open(
+                "/home/alexis/singbrain/outputs/_058_test_fugw_class/sub-07_sub-09_fugw.pkl",
+                "rb",
+            ) as f:
+                model = pickle.load(f)
 
-        input_map = np.zeros(mesh_shape[mesh][hemi])
-        input_map[voxel] = 1
-        m = model.predict(input_map)
-
-        return jsonify(m)
-
-    @app.route("/alignments/contrast", methods=["GET"])
-    def align_contrast():
-        source = request.args.get("source", type=int)
-        # target = request.args.get("target", type=int)
-        hemi = request.args.get("hemi", type=str, default="left")
-        mesh = request.args.get("mesh", type=str, default="fsaverage5")
-        contrast_index = request.args.get("contrast", type=int)
-        role = request.args.get("role", type=str, default="source")
-
-        with open(
-            "/home/alexis/singbrain/outputs/_058_test_fugw_class/sub-07_sub-09_fugw.pkl",
-            "rb",
-        ) as f:
-            model = pickle.load(f)
-
-        if role == "source":
-            # TODO
-            # task, contrast = tasks_contrasts[contrast_index]
-            # input_map = data[mesh][subjects[target]][task][contrast][hemi]
-            # m = model.inverse_transform(input_map)
-            m = None
-        elif role == "target":
-            task, contrast = tasks_contrasts[contrast_index]
-            input_map = data[mesh][subjects[source]][task][contrast][hemi]
+            input_map = np.zeros(mesh_shape[mesh][hemi])
+            input_map[voxel] = 1
             m = model.predict(input_map)
 
-        return jsonify(m)
+            return jsonify(m)
+
+        @app.route("/alignments/contrast", methods=["GET"])
+        def align_contrast():
+            source = request.args.get("source", type=int)
+            # target = request.args.get("target", type=int)
+            hemi = request.args.get("hemi", type=str, default="left")
+            mesh = request.args.get("mesh", type=str, default="fsaverage5")
+            contrast_index = request.args.get("contrast", type=int)
+            role = request.args.get("role", type=str, default="source")
+
+            with open(
+                "/home/alexis/singbrain/outputs/_058_test_fugw_class/sub-07_sub-09_fugw.pkl",
+                "rb",
+            ) as f:
+                model = pickle.load(f)
+
+            if role == "source":
+                # TODO
+                # task, contrast = tasks_contrasts[contrast_index]
+                # input_map = data[mesh][subjects[target]][task][contrast][hemi]
+                # m = model.inverse_transform(input_map)
+                m = None
+            elif role == "target":
+                task, contrast = tasks_contrasts[contrast_index]
+                input_map = data[mesh][subjects[source]][task][contrast][hemi]
+                m = model.predict(input_map)
+
+            return jsonify(m)
