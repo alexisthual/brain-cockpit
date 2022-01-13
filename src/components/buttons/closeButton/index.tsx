@@ -6,12 +6,16 @@ import "./style.scss";
 
 interface Props {
   closeCallback: () => void;
+  tooltipText?: string;
 }
 
-const CloseButton = ({ closeCallback = () => {} }: Props) => {
+const CloseButton = ({
+  closeCallback = () => {},
+  tooltipText = "Close",
+}: Props) => {
   return (
     <div className="close-button">
-      <Tooltip2 content="Close pane">
+      <Tooltip2 content={tooltipText}>
         <Button icon="cross" onClick={closeCallback} minimal />
       </Tooltip2>
     </div>
