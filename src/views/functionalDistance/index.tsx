@@ -5,7 +5,7 @@ import React, { useEffect, useReducer, useState } from "react";
 
 import { server } from "App";
 import Colorbar from "components/colorbar";
-import ContrastFingerprint from "components/contrastFingerprint";
+import Fingerprint from "components/fingerprint";
 import DistanceBars from "./distanceBars";
 import PaneControls, { InputType } from "components/paneControls";
 import PaneButtons from "components/paneControls/buttons";
@@ -429,7 +429,7 @@ const FunctionalDistanceExplorer = () => {
           <div className="fingerprint">
             <ParentSize className="fingerprint-container" debounceTime={10}>
               {({ width: fingerprintWidth, height: fingerprintHeight }) => (
-                <ContrastFingerprint
+                <Fingerprint
                   loading={loadingFingerprint}
                   orientation={
                     orientation === Orientation.VERTICAL
@@ -437,7 +437,7 @@ const FunctionalDistanceExplorer = () => {
                       : Orientation.VERTICAL
                   }
                   contrastLabels={contrastLabels}
-                  fingerprint={contrastFingerprint}
+                  fingerprints={[contrastFingerprint]}
                   width={fingerprintWidth}
                   height={fingerprintHeight}
                 />

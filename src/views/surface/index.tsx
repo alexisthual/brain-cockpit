@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as qs from "qs";
 
-import ContrastFingerprint from "components/contrastFingerprint";
+import Fingerprint from "components/fingerprint";
 import PaneControls from "components/paneControls/buttons";
 import SurfaceControls from "./surfaceControls";
 import SurfacePane, { defaultPaneState, SurfacePaneState } from "./surfacePane";
@@ -97,8 +97,6 @@ const SurfaceExplorer = () => {
   ]);
   const previousSelectedVoxels = usePrevious(selectedVoxels);
   const [fingerprints, setFingerprints] = useState<number[][]>([]);
-
-  console.log("selectedVoxels", selectedVoxels);
 
   //
   // Util functions to modify view state
@@ -298,7 +296,6 @@ const SurfaceExplorer = () => {
 
   // Update fingerprint when voxelIndex or subjectIndex change
   useEffect(() => {
-    console.log("load fingerprints");
     if (
       selectedVoxels.length > 0 &&
       !deepEqual(selectedVoxels, previousSelectedVoxels)
@@ -306,7 +303,6 @@ const SurfaceExplorer = () => {
       setLoadingFingerprint(true);
       const promises = Array.prototype.concat(
         ...selectedVoxels.map(([paneId, voxels]) => {
-          console.log(paneId, voxels);
           if (voxels !== undefined) {
             return voxels.map((voxel: number) => {
               return state.panes[paneId].meanSurfaceMap
@@ -329,9 +325,6 @@ const SurfaceExplorer = () => {
           }
         })
       );
-
-      console.log("promises");
-      console.log(promises);
 
       if (promises.length > 0) {
         Promise.all(promises)
@@ -421,13 +414,12 @@ const SurfaceExplorer = () => {
               }
             }}
             clickCloseCallback={() => {
-              // console.log("close");
               removeAllPanesKey("voxels");
             }}
           />
           <ParentSize className="fingerprint-container" debounceTime={10}>
             {({ width: fingerprintWidth, height: fingerprintHeight }) => (
-              <ContrastFingerprint
+              <Fingerprint
                 loading={loadingFingerprint}
                 clickedLabelCallback={(contrastIndex: number) => {
                   // updatePaneKey(selectedPaneId, "contrast", contrastIndex);
@@ -438,7 +430,7 @@ const SurfaceExplorer = () => {
                     : Orientation.VERTICAL
                 }
                 contrastLabels={contrastLabels}
-                fingerprint={fingerprints[0]}
+                fingerprints={fingerprints}
                 width={fingerprintWidth}
                 height={fingerprintHeight}
                 lowThresholdMin={filterSurface ? lowThresholdMin : undefined}

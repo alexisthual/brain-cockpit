@@ -6,17 +6,17 @@ $offsetTop: 30px;
 $offsetLeft: 120px;
 $offsetRight: 70px;
 
-.contrast-fingerprint {
+.fingerprint {
   box-sizing: border-box;
 
-  .contrast-fingerprint-slider {
+  .fingerprint-slider {
     position: absolute;
   }
 
   &.horizontal-orientation {
     border-top: 1px solid $light-gray3;
 
-    .contrast-fingerprint-slider {
+    .fingerprint-slider {
       top: calc(#{$padding} + #{$offsetTop});
       left: $padding;
       height: calc(100% - 2 * #{$padding} - #{$offsetBottom} - #{$offsetTop});
@@ -26,7 +26,7 @@ $offsetRight: 70px;
   &.vertical-orientation {
     border-left: 1px solid $light-gray3;
 
-    .contrast-fingerprint-slider {
+    .fingerprint-slider {
       top: $padding;
       left: calc(#{$padding} + #{$offsetLeft});
       width: calc(100% - 2 * #{$padding} - #{$offsetLeft} - #{$offsetRight});
@@ -44,7 +44,7 @@ $offsetRight: 70px;
     font-weight: 400;
   }
 
-  .contrast-bar {
+  .fingerprint-bar {
     .background-bar {
       &.light {
         fill: transparent;

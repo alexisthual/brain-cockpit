@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useReducer, useState } from "react";
 
 import { server } from "App";
 import Colorbar from "components/colorbar";
-import ContrastFingerprint from "components/contrastFingerprint";
+import Fingerprint from "components/fingerprint";
 import PaneControls, { InputType } from "components/paneControls";
 import PaneButtons from "components/paneControls/buttons";
 import Scene from "components/scene";
@@ -312,7 +312,7 @@ const RegressionExplorer = () => {
           />
           <ParentSize className="fingerprint-container" debounceTime={10}>
             {({ width: fingerprintWidth, height: fingerprintHeight }) => (
-              <ContrastFingerprint
+              <Fingerprint
                 loading={loadingFingerprint}
                 orientation={
                   orientation === Orientation.VERTICAL
@@ -320,7 +320,7 @@ const RegressionExplorer = () => {
                     : Orientation.VERTICAL
                 }
                 contrastLabels={contrastLabels}
-                fingerprint={contrastFingerprint}
+                fingerprints={[contrastFingerprint]}
                 width={fingerprintWidth}
                 height={fingerprintHeight}
               />

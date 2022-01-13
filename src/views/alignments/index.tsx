@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as qs from "qs";
 
-import ContrastFingerprint from "components/contrastFingerprint";
+import Fingerprint from "components/fingerprint";
 import PaneControls from "components/paneControls/buttons";
 import AlignmentControls from "./alignmentControls";
 import AlignmentPane from "./alignmentPane";
@@ -376,7 +376,7 @@ const AlignmentsExplorer = () => {
           />
           <ParentSize className="fingerprint-container" debounceTime={10}>
             {({ width: fingerprintWidth, height: fingerprintHeight }) => (
-              <ContrastFingerprint
+              <Fingerprint
                 loading={loadingFingerprint}
                 orientation={
                   orientation === Orientation.VERTICAL
@@ -384,7 +384,7 @@ const AlignmentsExplorer = () => {
                     : Orientation.VERTICAL
                 }
                 contrastLabels={contrastLabels}
-                fingerprint={contrastFingerprint}
+                fingerprints={[contrastFingerprint]}
                 width={fingerprintWidth}
                 height={fingerprintHeight}
               />
