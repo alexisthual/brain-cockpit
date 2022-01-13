@@ -14,8 +14,6 @@ from api import app
 from api.surface_contrasts import parse_metadata
 import custom_utils.setup as setup
 
-memory = Memory("/tmp", verbose=0)
-
 # Load environment variables
 env = setup.load_env()
 
@@ -29,6 +27,9 @@ AVAILABLE_GIFTI_FILES_DB = os.getenv("AVAILABLE_GIFTI_FILES_DB")
 EXPERIMENT_DATA_PATH = os.getenv("EXPERIMENT_DATA_PATH")
 GRADIENTS_DATA_PATH = os.getenv("GRADIENTS_DATA_PATH")
 REACT_APP_ENABLE_GRADIENTS = os.getenv("REACT_APP_ENABLE_GRADIENTS")
+
+TMPDIR = os.getenv("TMPDIR") if os.getenv("TMPDIR") else "/tmp"
+memory = Memory("/tmp", verbose=0)
 
 
 # UTIL FUNCTIONS

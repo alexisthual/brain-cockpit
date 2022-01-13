@@ -13,8 +13,6 @@ from tqdm import tqdm
 from api import app
 import custom_utils.setup as setup
 
-memory = Memory("/tmp", verbose=0)
-
 # Load environment variables
 setup.load_env()
 
@@ -25,6 +23,9 @@ REACT_APP_CONDITIONS_VIEW = bool(
 AVAILABLE_GIFTI_FILES_DB = os.getenv("AVAILABLE_GIFTI_FILES_DB")
 DATA_DESCRIPTION_FILE_PATH = os.getenv("DATA_DESCRIPTION_FILE_PATH")
 MESH_PATH = os.getenv("MESH_PATH")
+
+TMPDIR = os.getenv("TMPDIR") if os.getenv("TMPDIR") else "/tmp"
+memory = Memory("/tmp", verbose=0)
 
 mesh_shape = {
     "fsaverage5": {"left": 10242, "right": 10242},
