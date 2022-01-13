@@ -22,11 +22,7 @@ interface SurfaceViewState {
   panes: { [paneId: string]: SurfacePaneState };
 }
 
-// Custom hook to load state from URL
-const useSurfaceState = (): [
-  SurfaceViewState,
-  React.Dispatch<React.SetStateAction<SurfaceViewState>>
-] => {
+const stateFromUrl = (): SurfaceViewState => {
   // Load state from URL and convert it to SurfaceViewState
   // (decode booleans and numbers with custom decoder)
   let urlState = qs.parse(window.location.search, {
@@ -35,7 +31,7 @@ const useSurfaceState = (): [
       const strWithoutPlus = str.replace(/\+/g, " ");
       if (charset === "iso-8859-1") {
         // unescape never throws, no try...catch needed:
-        return strWithoutPlus.replace(/%[0-9a-f]{2}/gi, unescape);
+        return strWithoutPlus.replace(/%[0-9a-f]{2}/gi, _);
       }
 
       if (/^(\d+|\d*\.\d+)$/.test(str)) {
@@ -61,7 +57,6 @@ const useSurfaceState = (): [
       }
     },
   });
-  // as unknown) as SurfaceViewState;
 
   // If no panes are present, create one with default state
   if (urlState.panes === undefined) {
@@ -73,19 +68,37 @@ const useSurfaceState = (): [
     };
   }
 
+  return (urlState as unknown) as SurfaceViewState;
+};
+
+// Custom hook to load state from URL
+const useSurfaceState = (): [
+  SurfaceViewState,
+  React.Dispatch<React.SetStateAction<SurfaceViewState>>
+] => {
+  const urlState = stateFromUrl();
+
   // Instantiate new state
-  const [state, setState] = useState<SurfaceViewState>(
-    (urlState as unknown) as SurfaceViewState
-  );
+  const [state, setState] = useState<SurfaceViewState>(urlState);
 
   // Update URL on state change
   const navigate = useNavigate();
-
   useEffect(() => {
-    navigate({
-      search: qs.stringify(state),
-    });
+    const newSearch = qs.stringify(state);
+    if (`?${newSearch}` !== window.location.search) {
+      navigate({
+        search: qs.stringify(state),
+      });
+    }
   }, [state, navigate]);
+
+  // Update state on URL change
+  useEffect(() => {
+    const newUrlState = stateFromUrl();
+    if (!deepEqual(newUrlState, state)) {
+      setState(newUrlState);
+    }
+  }, [window.location.href]);
 
   return [state, setState];
 };
@@ -93,7 +106,6 @@ const useSurfaceState = (): [
 const SurfaceExplorer = () => {
   // Load state from url
   const [state, setState] = useSurfaceState();
-  const previousState = usePrevious<SurfaceViewState>(state);
   const selectedVoxels = Object.keys(state.panes).map((paneId: any) => [
     paneId,
     state.panes[paneId].voxels,
