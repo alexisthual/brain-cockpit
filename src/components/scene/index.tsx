@@ -214,6 +214,7 @@ class Scene extends Component<IProps, IState> {
         new THREE.BufferAttribute(new Float32Array(count * 3), 3)
       );
     }
+
     if (
       surfaceMap !== undefined &&
       surfaceMap !== null &&
@@ -382,7 +383,16 @@ class Scene extends Component<IProps, IState> {
 
       // Remove the old mesh (this.object) and add a fresh one.
       this.scene.remove(this.object);
-      this.object = Scene.initialiseMesh(newObject, this.props.wireframe);
+      this.object = Scene.initialiseMesh(
+        newObject,
+        this.props.wireframe,
+        this.props.surfaceMap,
+        this.props.colormap,
+        this.props.lowThresholdMin,
+        this.props.lowThresholdMax,
+        this.props.highThresholdMin,
+        this.props.highThresholdMax
+      );
       this.scene.add(this.object);
 
       // Update camera and controls focus
