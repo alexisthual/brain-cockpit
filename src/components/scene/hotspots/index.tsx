@@ -1,3 +1,4 @@
+import { Icon } from "@blueprintjs/core";
 import { Drag } from "@vx/drag";
 import React, { useRef } from "react";
 
@@ -11,17 +12,12 @@ export interface IHotspot {
   header?: string;
   description?: string;
   side?: "left" | "right";
+  closeCallback?: () => void;
 }
 
 interface HotspotProps extends IHotspot {
   xLabel?: number;
   yLabel?: number;
-  width: number;
-  height: number;
-}
-
-interface Props {
-  hotspots: IHotspot[];
   width: number;
   height: number;
 }
@@ -41,6 +37,7 @@ const Hotspot = ({
   description,
   width,
   height,
+  closeCallback,
 }: HotspotProps) => {
   const lineRef = useRef<SVGLineElement>(null);
 
@@ -88,7 +85,34 @@ const Hotspot = ({
                   onTouchStart={dragStart}
                   onTouchMove={dragMove}
                   onTouchEnd={dragEnd}
-                />
+                ></rect>
+                {closeCallback !== undefined ? (
+                  <g
+                    className={"hotspot-cross"}
+                    transform={`translate(${
+                      xLabel + labelWidth - 16 - 1 + dx
+                    }, ${yLabel + 1 + dy})`}
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      onClick={closeCallback}
+                    >
+                      <rect
+                        x={0}
+                        y={0}
+                        width={16}
+                        height={16}
+                        fill={"transparent"}
+                      />
+                      <path
+                        d="M9.41 8l2.29-2.29c.19-.18.3-.43.3-.71a1.003 1.003 0 00-1.71-.71L8 6.59l-2.29-2.3a1.003 1.003 0 00-1.42 1.42L6.59 8 4.3 10.29c-.19.18-.3.43-.3.71a1.003 1.003 0 001.71.71L8 9.41l2.29 2.29c.18.19.43.3.71.3a1.003 1.003 0 00.71-1.71L9.41 8z"
+                        fillRule="evenodd"
+                      ></path>
+                    </svg>
+                  </g>
+                ) : null}
                 <text
                   className="hotspot-header"
                   x={xLabel + padding}
@@ -116,6 +140,12 @@ const Hotspot = ({
   );
 };
 
+interface Props {
+  hotspots: IHotspot[];
+  width: number;
+  height: number;
+}
+
 export const Hotspots = ({ hotspots, width, height }: Props) => {
   return (
     <svg className="hotspots">
@@ -133,6 +163,7 @@ export const Hotspots = ({ hotspots, width, height }: Props) => {
           description={hotspot.description}
           height={height}
           width={width}
+          closeCallback={hotspot.closeCallback}
         />
       ))}
     </svg>

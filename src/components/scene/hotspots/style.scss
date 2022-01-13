@@ -10,6 +10,15 @@
   user-select: none;
   touch-action: none;
 
+  .hotspot-cross {
+    fill: $gray1;
+
+    &:hover {
+      cursor: pointer;
+      fill: $dark-gray5;
+    }
+  }
+
   circle.hotspot-pointer {
     stroke-width: 2px;
     stroke: $light-gray5;
@@ -26,6 +35,10 @@
 
     rect.hotspot-back {
       fill: $light-gray2;
+
+      &:hover {
+        fill: $light-gray1;
+      }
     }
 
     text {
@@ -41,5 +54,9 @@
         font-size: 11px;
       }
     }
+  }
+
+  &:hover {
+    cursor: move;
   }
 }

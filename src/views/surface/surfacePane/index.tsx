@@ -115,6 +115,23 @@ const SurfacePane = ({
     [paneCallbacks, paneId, state]
   );
 
+  const closeHotspot = useCallback(
+    (voxel: number) => () => {
+      if (state !== undefined && state.voxels !== undefined) {
+        const index = state.voxels.indexOf(voxel);
+        const newPaneState = {
+          ...state,
+          voxels: [
+            ...state.voxels?.slice(0, index),
+            ...state.voxels?.slice(index + 1),
+          ],
+        };
+        paneCallbacks?.updatePaneState(paneId, newPaneState);
+      }
+    },
+    [state, paneCallbacks, paneId]
+  );
+
   // const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
   const [surfaceMap, setSurfaceMap] = useState<number[] | undefined>();
   const [loadingSurfaceMap, setLoadingSurfaceMap] = useState(false);
@@ -637,6 +654,7 @@ const SurfacePane = ({
                   id: `voxel-${paneId}-${voxel}`,
                   voxelIndex: voxel,
                   header: voxel.toString(),
+                  closeCallback: closeHotspot(voxel),
                 };
               })}
               surfaceMap={surfaceMap}
