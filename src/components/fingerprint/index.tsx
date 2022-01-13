@@ -59,8 +59,6 @@ const Fingerprint = ({
   let offsetRight = 0;
   let offsetBottom = 0;
 
-  console.log(fingerprints);
-
   switch (orientation) {
     case Orientation.VERTICAL:
       offsetLeft = 120;
