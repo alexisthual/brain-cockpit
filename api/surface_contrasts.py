@@ -198,6 +198,32 @@ def load_contrasts():
         meshes, subjects, tasks_contrasts, sides = parse_metadata(df)
         data = load_data(df)
 
+        ## Load individual meshes' dimensions
+        for subject in subjects:
+            mesh_shape["individual"][subject] = {"left": None, "right": None}
+
+            with open(
+                os.path.join(
+                    MESH_PATH, "individual", subject, "pial_left.gltf"
+                ),
+                "r",
+            ) as f:
+                individual_mesh_meta = json.load(f)
+                mesh_shape["individual"][subject][
+                    "left"
+                ] = individual_mesh_meta["accessors"][0]["count"]
+
+            with open(
+                os.path.join(
+                    MESH_PATH, "individual", subject, "pial_right.gltf"
+                ),
+                "r",
+            ) as f:
+                individual_mesh_meta = json.load(f)
+                mesh_shape["individual"][subject][
+                    "right"
+                ] = individual_mesh_meta["accessors"][0]["count"]
+
     # ROUTES
     # Define a series of enpoints to expose contrasts, meshes, etc
 
