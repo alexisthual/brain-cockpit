@@ -42,7 +42,7 @@ const FingerprintPane = ({
   highThresholdMax,
   setHighThresholdMax = () => {},
 }: Props) => {
-  const [filter, setFilter] = useState(FingerprintFilter.ALL);
+  const [filter, setFilter] = useState(FingerprintFilter.CONTRASTS);
 
   return (
     <div className="fingerprint">
