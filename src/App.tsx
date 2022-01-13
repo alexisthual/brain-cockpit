@@ -1,12 +1,10 @@
 import { Button, Icon, NonIdealState, Position } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import axios from "axios";
-import React from "react";
 import {
   BrowserRouter as Router,
   Link,
   NavLink,
-  Navigate,
   Outlet,
   Route,
   Routes,

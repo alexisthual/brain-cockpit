@@ -1,9 +1,4 @@
-import ParentSize from "@visx/responsive/lib/components/ParentSize";
-import { AxiosResponse } from "axios";
-import { nanoid } from "nanoid";
-import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import * as qs from "qs";
+import { useEffect, useState } from "react";
 
 import FingerprintPane from "components/pane/fingerprint";
 import AlignmentControls from "./alignmentControls";

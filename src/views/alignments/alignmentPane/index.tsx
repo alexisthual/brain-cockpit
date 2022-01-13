@@ -1,19 +1,13 @@
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import { AxiosError, AxiosResponse } from "axios";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { server } from "App";
 import Colorbar from "components/colorbar";
 import PaneControls, { InputType } from "components/paneControls";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
-import { colormaps, getMin, getMax, MeshType, modulo } from "constants/index";
+import { colormaps, getMin, getMax, MeshType } from "constants/index";
 
 import { AlignmentViewState, AlignmentIntent, AlignmentRole } from "../index";
 

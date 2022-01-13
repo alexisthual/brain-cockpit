@@ -1,5 +1,4 @@
 import { Spinner, SpinnerSize } from "@blueprintjs/core";
-import React from "react";
 
 import "./style.scss";
 

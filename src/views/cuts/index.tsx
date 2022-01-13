@@ -2,7 +2,7 @@ import { Button, Colors, Slider } from "@blueprintjs/core";
 import { Select } from "@blueprintjs/select";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import { AxiosResponse } from "axios";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { server } from "App";
 import CanvasSlice from "components/canvasSlice";

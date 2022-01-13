@@ -1,5 +1,5 @@
 import { Colors, Slider } from "@blueprintjs/core";
-import React, { useState } from "react";
+import { useState } from "react";
 import { AxisBottom } from "@visx/axis";
 import { Group } from "@visx/group";
 import { scaleBand, scaleLinear } from "@visx/scale";

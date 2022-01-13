@@ -1,12 +1,10 @@
-import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import { AxiosResponse } from "axios";
 import { nanoid } from "nanoid";
-import React, { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 
 import { server } from "App";
 import Colorbar from "components/colorbar";
 import FingerprintPane from "components/pane/fingerprint";
-import DistanceBars from "./distanceBars";
 import PaneControls, { InputType } from "components/paneControls";
 import PaneButtons from "components/paneControls/buttons";
 import PanesButtons from "./panesButtons";

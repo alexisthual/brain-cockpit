@@ -1,6 +1,5 @@
 import { Button } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
-import React from "react";
 
 import { GradientMode, SurfaceMode } from "constants/index";
 import "./style.scss";

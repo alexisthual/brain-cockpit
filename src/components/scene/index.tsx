@@ -1,7 +1,7 @@
 import { Colors } from "@blueprintjs/core";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import chroma from "chroma-js";
-import React, { Component } from "react";
+import { Component } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";

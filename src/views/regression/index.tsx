@@ -1,6 +1,6 @@
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import { AxiosResponse } from "axios";
-import React, { useCallback, useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 
 import { server } from "App";
 import Colorbar from "components/colorbar";

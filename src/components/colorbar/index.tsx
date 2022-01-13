@@ -5,7 +5,7 @@ import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import { scaleLinear } from "@visx/scale";
 import { Text } from "@visx/text";
 import chroma from "chroma-js";
-import React, { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import "./style.scss";
 import { colormaps } from "constants/index";

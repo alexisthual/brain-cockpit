@@ -1,11 +1,5 @@
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
-import React, {
-  useCallback,
-  useEffect,
-  useReducer,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
 import PaneControls, { InputType } from "components/paneControls";
 import Scene from "components/scene";

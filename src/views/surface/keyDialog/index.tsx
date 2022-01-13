@@ -1,5 +1,4 @@
 import { Classes, Dialog, Icon } from "@blueprintjs/core";
-import react from "react";
 
 interface Props {
   isOpen: boolean;

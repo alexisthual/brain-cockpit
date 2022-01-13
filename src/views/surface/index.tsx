@@ -156,21 +156,6 @@ const SurfaceExplorer = () => {
     setState(newState);
   };
 
-  const updatePaneKey = (paneId: string, key: string, value: any) => {
-    const newState = {
-      ...state,
-      panes: {
-        ...state.panes,
-        [paneId]: {
-          ...state.panes[paneId],
-          [key]: value,
-        },
-      },
-    };
-
-    setState(newState);
-  };
-
   const updateAllPanesState = (key: string, value: any) => {
     const newState = {
       ...state,

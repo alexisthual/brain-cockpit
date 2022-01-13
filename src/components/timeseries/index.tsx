@@ -105,7 +105,7 @@ const Timeseries = ({
             curve={curveLinear}
             data={timeseries}
             stroke={Colors.DARK_GRAY3}
-            x={(d: number, index: number) =>
+            x={(_: number, index: number) =>
               (xScale(index) || 0) + xScale.step() / 2
             }
             y={(d: number) => yScale(d)}

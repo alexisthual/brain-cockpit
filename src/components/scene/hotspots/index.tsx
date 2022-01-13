@@ -1,6 +1,5 @@
-import { Icon } from "@blueprintjs/core";
 import { Drag } from "@vx/drag";
-import React, { useRef } from "react";
+import { useRef } from "react";
 
 import "./style.scss";
 
