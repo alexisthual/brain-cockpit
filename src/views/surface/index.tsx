@@ -1,5 +1,3 @@
-import ParentSize from "@visx/responsive/lib/components/ParentSize";
-import { AxiosResponse } from "axios";
 import deepEqual from "fast-deep-equal";
 import { nanoid } from "nanoid";
 import React, { useCallback, useEffect, useState } from "react";
@@ -7,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import * as qs from "qs";
 
 import FingerprintPane from "components/pane/fingerprint";
-import PaneControls, { InputType } from "components/paneControls";
+import KeyDialog from "./keyDialog";
 import SurfaceControls from "./surfaceControls";
 import SurfacePane, { defaultPaneState, SurfacePaneState } from "./surfacePane";
 import {
@@ -112,6 +110,8 @@ const SurfaceExplorer = () => {
   ]);
   const previousSelectedVoxels = usePrevious(selectedVoxels);
   const [fingerprints, setFingerprints] = useState<number[][]>([]);
+
+  const [showKeyDialog, setShowKeyDialog] = useState(false);
 
   //
   // Util functions to modify view state
@@ -255,10 +255,24 @@ const SurfaceExplorer = () => {
     [addPane]
   );
 
+  // ? key
+  const toggleKeyDialog = useCallback(
+    (event: any) => {
+      if (event.target.matches("input")) return;
+
+      if (event.isComposing || event.keyCode === 191) {
+        setShowKeyDialog((currentShowKeyDialog) => !currentShowKeyDialog);
+      }
+    },
+    [setShowKeyDialog]
+  );
+
   useEffect(() => {
     window.addEventListener("keydown", keyAddPane);
+    window.addEventListener("keydown", toggleKeyDialog);
     return () => {
       window.removeEventListener("keydown", keyAddPane);
+      window.removeEventListener("keydown", toggleKeyDialog);
     };
   }, [keyAddPane]);
 
@@ -380,6 +394,10 @@ const SurfaceExplorer = () => {
         fingerprints.length > 0 ? `${orientation}-orientation` : ""
       }`}
     >
+      <KeyDialog
+        isOpen={showKeyDialog}
+        onClose={() => setShowKeyDialog(false)}
+      />
       <div className="scenes">
         <SurfaceControls
           addPaneCallback={addPane}
@@ -387,6 +405,8 @@ const SurfaceExplorer = () => {
           filterSurfaceCallback={() => setFilterSurface(!filterSurface)}
           showGridHelper={showGridHelper}
           showGridHelperCallback={() => setShowGridHelper(!showGridHelper)}
+          showKeyDialog={showKeyDialog}
+          showKeyDialogCallback={() => setShowKeyDialog(true)}
         />
         <div className="scene-panes">
           <div className="scene-row">

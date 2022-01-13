@@ -15,6 +15,8 @@ interface Props {
   showGridHelperCallback?: () => void;
   surfaceMode?: SurfaceMode;
   showSurfaceCallback?: () => void;
+  showKeyDialog?: boolean;
+  showKeyDialogCallback?: () => void;
 }
 
 const SurfaceControls = ({
@@ -27,6 +29,8 @@ const SurfaceControls = ({
   showGridHelperCallback = () => {},
   surfaceMode,
   showSurfaceCallback = () => {},
+  showKeyDialog,
+  showKeyDialogCallback = () => {},
 }: Props) => {
   let gradientButtonText;
   switch (gradientMode) {
@@ -85,6 +89,14 @@ const SurfaceControls = ({
           active={filterSurface}
           icon={"filter"}
           onClick={filterSurfaceCallback}
+          outlined
+        />
+      </Tooltip2>
+      <Tooltip2 content="Show shortcuts" placement={"top-start"}>
+        <Button
+          active={showKeyDialog}
+          icon={"key-command"}
+          onClick={showKeyDialogCallback}
           outlined
         />
       </Tooltip2>
