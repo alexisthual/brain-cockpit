@@ -2,7 +2,7 @@
   position: absolute;
   z-index: 5;
   bottom: 10px;
-  right: 10px;
+  left: 10px;
 
   & > *:not(:last-child) {
     margin-right: 5px;

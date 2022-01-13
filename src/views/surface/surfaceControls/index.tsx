@@ -53,7 +53,10 @@ const SurfaceControls = ({
 
   return (
     <div className="surface-controls">
-      <Tooltip2 content="Toggle grid" placement={"top-end"}>
+      <Tooltip2 content="Add pane" placement={"top-start"}>
+        <Button icon="plus" onClick={addPaneCallback} outlined />
+      </Tooltip2>
+      <Tooltip2 content="Toggle grid" placement={"top-start"}>
         <Button
           active={showGridHelper}
           icon={"grid"}
@@ -77,16 +80,13 @@ const SurfaceControls = ({
           />
         </>
       ) : null}
-      <Tooltip2 content="Normalise surface map" placement={"top-end"}>
+      <Tooltip2 content="Normalise surface map" placement={"top-start"}>
         <Button
           active={filterSurface}
           icon={"filter"}
           onClick={filterSurfaceCallback}
           outlined
         />
-      </Tooltip2>
-      <Tooltip2 content="Add pane" placement={"top-end"}>
-        <Button icon="plus" onClick={addPaneCallback} outlined />
       </Tooltip2>
     </div>
   );
