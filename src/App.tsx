@@ -32,6 +32,13 @@ const App = () => {
       description={
         "Select a section from the navigation bar to start using the app."
       }
+      action={
+        <Link to="/ibc">
+          <Button intent={"primary"} outlined>
+            Explore IBC dataset
+          </Button>
+        </Link>
+      }
     />
   );
 
@@ -42,7 +49,9 @@ const App = () => {
       description={"This page is either under development or does not exist"}
       action={
         <Link to="/">
-          <Button outlined>Go to main view</Button>
+          <Button intent={"primary"} outlined>
+            Go to main view
+          </Button>
         </Link>
       }
     />
