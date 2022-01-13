@@ -191,6 +191,7 @@ const AlignmentPane = ({
         break;
     }
   }, [
+    alignmentState,
     alignmentState.source.subject,
     alignmentState.target.subject,
     alignmentState[oppositeRole].selectedVoxel,

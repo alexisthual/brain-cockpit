@@ -36,11 +36,9 @@ const FunctionalDistanceExplorer = () => {
     SurfaceMapType.SEED_BASED
   );
   const [metric, setMetric] = useState(Metric.COSINE);
-  const [m, setM] = useState(0.3);
-  const [functionalDistances, setFunctionalDistances] = useState<number[]>([]);
-  const [loadingFunctionalDistances, setLoadingFunctionalDistances] = useState(
-    false
-  );
+  const [m] = useState(0.3);
+  const [, setFunctionalDistances] = useState<number[]>([]);
+  const [, setLoadingFunctionalDistances] = useState(false);
   const [meanFunctionalDistance, setMeanFunctionalDistance] = useState(false);
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [wireframe, setWireframe] = useState(false);

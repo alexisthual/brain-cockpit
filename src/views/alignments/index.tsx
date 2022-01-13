@@ -167,11 +167,9 @@ const AlignmentsExplorer = () => {
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [showGridHelper, setShowGridHelper] = useState(true);
   // Fingerprint
-  const [selectedPaneId, setSelectedPaneId] = useState<string | undefined>(
-    undefined
-  );
-  const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
-  const [loadingFingerprint, setLoadingFingerprint] = useState(false);
+  const [selectedPaneId] = useState<string | undefined>(undefined);
+  const [contrastFingerprint] = useState<number[]>([]);
+  const [loadingFingerprint] = useState(false);
   // const [meanFingerprint, setMeanFingerprint] = useState(false);
 
   // Initialise all pane state variables

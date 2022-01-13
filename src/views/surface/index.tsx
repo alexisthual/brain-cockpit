@@ -96,7 +96,12 @@ const useSurfaceState = (): [
     if (!deepEqual(newUrlState, state)) {
       setState(newUrlState);
     }
-  }, [window.location.href]);
+  }, [
+    // contrary to what warning is saying, window.location.href dependency
+    // is needed here
+    window.location.href,
+    state,
+  ]);
 
   return [state, setState];
 };
@@ -259,7 +264,7 @@ const SurfaceExplorer = () => {
       window.removeEventListener("keydown", keyAddPane);
       window.removeEventListener("keydown", toggleKeyDialog);
     };
-  }, [keyAddPane]);
+  }, [keyAddPane, toggleKeyDialog]);
 
   // Label information
   const [subjectLabels, setSubjectLabels] = useState<string[]>([]);
@@ -371,7 +376,15 @@ const SurfaceExplorer = () => {
         setLoadingFingerprint(false);
       }
     }
-  }, [selectedVoxels, paneSubjects, paneMeanSurfaceMaps]);
+  }, [
+    state.panes,
+    selectedVoxels,
+    previousSelectedVoxels,
+    paneSubjects,
+    previousPaneSubjects,
+    paneMeanSurfaceMaps,
+    previousPaneMeanSurfaceMaps,
+  ]);
 
   return (
     <div
