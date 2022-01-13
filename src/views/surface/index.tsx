@@ -3,7 +3,7 @@ import { AxiosResponse } from "axios";
 import deepEqual from "fast-deep-equal";
 import { nanoid } from "nanoid";
 import React, { useCallback, useEffect, useState } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import * as qs from "qs";
 
 import ContrastFingerprint from "components/contrastFingerprint";
@@ -77,13 +77,13 @@ const useSurfaceState = (): [
   const [state, setState] = useState<any>(urlState);
 
   // Update URL on state change
-  const history = useHistory();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    history.push({
+    navigate({
       search: qs.stringify(state),
     });
-  }, [state, history]);
+  }, [state, navigate]);
 
   return [state, setState];
 };

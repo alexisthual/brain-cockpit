@@ -2,7 +2,7 @@ import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import { AxiosResponse } from "axios";
 import { nanoid } from "nanoid";
 import React, { useCallback, useEffect, useState } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import * as qs from "qs";
 
 import ContrastFingerprint from "components/contrastFingerprint";
@@ -109,7 +109,7 @@ export interface AlignmentViewState {
 //   const [state, setState] = useState<any>(urlState);
 //
 //   // Update URL on state change
-//   const history = useHistory();
+//   const history = useNavigate();
 //
 //   useEffect(() => {
 //     history.push({
