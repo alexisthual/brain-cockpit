@@ -465,8 +465,8 @@ const SurfacePane = ({
               inputs: [
                 {
                   inputType: InputType.SELECT_STRING,
-                  value: state.meshSupport,
-                  values: Object.keys(MeshSupport),
+                  selectedItem: state.meshSupport,
+                  items: Object.keys(MeshSupport),
                   onChangeCallback: (
                     newValue: string,
                     event: React.SyntheticEvent<HTMLElement>
@@ -485,8 +485,8 @@ const SurfacePane = ({
                 },
                 {
                   inputType: InputType.SELECT_STRING,
-                  value: state.meshType,
-                  values: Object.keys(MeshType),
+                  selectedItem: state.meshType,
+                  items: Object.keys(MeshType),
                   onChangeCallback: (
                     newValue: string,
                     event: React.SyntheticEvent<HTMLElement>
@@ -505,8 +505,8 @@ const SurfacePane = ({
                 },
                 {
                   inputType: InputType.SELECT_STRING,
-                  value: state.hemi,
-                  values: Object.keys(HemisphereSide),
+                  selectedItem: state.hemi,
+                  items: Object.keys(HemisphereSide),
                   onChangeCallback: (
                     newValue: string,
                     event: React.SyntheticEvent<HTMLElement>
@@ -529,8 +529,8 @@ const SurfacePane = ({
               inputs: [
                 {
                   inputType: InputType.SELECT_STRING,
-                  value: subjectLabels[state.subject],
-                  values: subjectLabels,
+                  selectedItem: subjectLabels[state.subject],
+                  items: subjectLabels,
                   onChangeCallback: (
                     newValue: string,
                     event: React.SyntheticEvent<HTMLElement>
@@ -570,8 +570,8 @@ const SurfacePane = ({
               inputs: [
                 {
                   inputType: InputType.SELECT_CONTRAST,
-                  value: contrastLabels[state.contrast],
-                  values: contrastLabels,
+                  selectedItem: contrastLabels[state.contrast],
+                  items: contrastLabels,
                   onChangeCallback: (
                     newValue: ContrastLabel,
                     event: React.SyntheticEvent<HTMLElement>

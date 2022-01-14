@@ -17,8 +17,10 @@ export enum InputType {
 
 interface PaneControlsInput {
   inputType: InputType;
-  value?: string | ContrastLabel | boolean;
-  values?: any[];
+  value?: string | boolean;
+  selectedItem?: string | ContrastLabel | boolean;
+  selectedItems?: string[];
+  items?: any[];
   onChangeCallback?: any;
   iconActive?: IconName;
   iconInactive?: IconName;
@@ -93,7 +95,9 @@ const PaneControls = ({ rows }: IProps) => {
                           />
                           <Icon
                             icon={input.iconRight}
-                            color={input.value ? Colors.GRAY2 : Colors.GRAY5}
+                            color={
+                              input.selectedItem ? Colors.GRAY2 : Colors.GRAY5
+                            }
                           />
                         </div>
                       );
@@ -102,9 +106,9 @@ const PaneControls = ({ rows }: IProps) => {
                       element = (
                         <Select<string>
                           key={`input-${inputIndex}`}
-                          activeItem={input.value as string}
+                          activeItem={input.selectedItem as string}
                           filterable={false}
-                          items={input.values ?? []}
+                          items={input.items ?? []}
                           itemRenderer={stringRenderer}
                           onItemSelect={(
                             newItem: string,
@@ -117,7 +121,7 @@ const PaneControls = ({ rows }: IProps) => {
                         >
                           <Button
                             rightIcon="double-caret-vertical"
-                            text={input.value}
+                            text={input.selectedItem}
                             minimal
                             outlined
                           />
@@ -128,8 +132,8 @@ const PaneControls = ({ rows }: IProps) => {
                       element = (
                         <SelectContrastLabel
                           key={`input-${inputIndex}`}
-                          values={input.values ?? []}
-                          value={input.value as ContrastLabel}
+                          selectedItem={input.selectedItem as ContrastLabel}
+                          items={input.items ?? []}
                           onChangeCallback={(
                             newItem: ContrastLabel,
                             event?: React.SyntheticEvent<HTMLElement>

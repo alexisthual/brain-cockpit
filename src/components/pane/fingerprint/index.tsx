@@ -54,8 +54,8 @@ const FingerprintPane = ({
             inputs: [
               {
                 inputType: InputType.SELECT_STRING,
-                value: filter,
-                values: Object.keys(FingerprintFilter),
+                selectedItem: filter,
+                items: Object.keys(FingerprintFilter),
                 onChangeCallback: (newValue: string) => {
                   setFilter(
                     FingerprintFilter[

@@ -51,8 +51,8 @@ const AlignmentControls = ({
       />
       {viewLayout === ViewLayout.CONTRAST ? (
         <SelectContrastLabel
-          value={contrast as ContrastLabel}
-          values={contrastLabels}
+          selectedItem={contrast as ContrastLabel}
+          items={contrastLabels}
           onChangeCallback={(
             newItem: ContrastLabel,
             event?: React.SyntheticEvent<HTMLElement>

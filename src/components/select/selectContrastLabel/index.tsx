@@ -47,25 +47,29 @@ const contrastLabelPredicate = (query: string, item: ContrastLabel) => {
 };
 
 interface Props {
-  value: ContrastLabel;
-  values: ContrastLabel[];
+  selectedItem: ContrastLabel;
+  items: ContrastLabel[];
   onChangeCallback: (
     newContrastLabel: ContrastLabel,
     event?: React.SyntheticEvent<HTMLElement>
   ) => void;
 }
 
-const SelectContrastLabel = ({ value, values, onChangeCallback }: Props) => {
+const SelectContrastLabel = ({
+  selectedItem,
+  items,
+  onChangeCallback,
+}: Props) => {
   const [contrastQuery, setContrastQuery] = useState<string | undefined>(
     undefined
   );
 
   return (
     <Select<ContrastLabel>
-      activeItem={value}
+      activeItem={selectedItem}
       itemPredicate={contrastLabelPredicate}
       itemRenderer={contrastLabelRenderer}
-      items={values ?? []}
+      items={items ?? []}
       noResults={<MenuItem disabled={true} text="No results." />}
       onItemSelect={(
         newItem: ContrastLabel,
@@ -80,7 +84,7 @@ const SelectContrastLabel = ({ value, values, onChangeCallback }: Props) => {
     >
       <Button
         rightIcon="double-caret-vertical"
-        text={contrastLabelToSpan(value)}
+        text={contrastLabelToSpan(selectedItem)}
         minimal
         outlined
       />

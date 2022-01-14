@@ -227,8 +227,8 @@ const KnnExplorer = () => {
             inputs: [
               {
                 inputType: InputType.SELECT_STRING,
-                value: subject.label,
-                values: subjectLabels,
+                selectedItem: subject.label,
+                items: subjectLabels,
                 onChangeCallback: (newValue: string) =>
                   setSubject({ payload: subjectLabels.indexOf(newValue) }),
               },

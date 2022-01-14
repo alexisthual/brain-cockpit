@@ -319,8 +319,8 @@ const FunctionalDistanceExplorer = () => {
                 inputs: [
                   {
                     inputType: InputType.SELECT_STRING,
-                    value: metric,
-                    values: Object.keys(Metric),
+                    selectedItem: metric,
+                    items: Object.keys(Metric),
                     onChangeCallback: (newValue: string) =>
                       setMetric(Metric[newValue as keyof typeof Metric]),
                   },
@@ -331,8 +331,8 @@ const FunctionalDistanceExplorer = () => {
                 inputs: [
                   {
                     inputType: InputType.SELECT_STRING,
-                    value: surfaceMapType,
-                    values: Object.keys(SurfaceMapType),
+                    selectedItem: surfaceMapType,
+                    items: Object.keys(SurfaceMapType),
                     onChangeCallback: (newValue: string) =>
                       setSurfaceMapType(
                         SurfaceMapType[newValue as keyof typeof SurfaceMapType]
@@ -345,8 +345,8 @@ const FunctionalDistanceExplorer = () => {
                 inputs: [
                   {
                     inputType: InputType.SELECT_STRING,
-                    value: subject.label,
-                    values: subjectLabels,
+                    selectedItem: subject.label,
+                    items: subjectLabels,
                     onChangeCallback: (newValue: string) =>
                       setSubject({ payload: subjectLabels.indexOf(newValue) }),
                   },

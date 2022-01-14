@@ -227,8 +227,8 @@ const RegressionExplorer = () => {
             inputs: [
               {
                 inputType: InputType.SELECT_STRING,
-                value: model,
-                values: models,
+                selectedItem: model,
+                items: models,
                 onChangeCallback: (newValue: string) => setModel(newValue),
               },
             ],
@@ -238,8 +238,8 @@ const RegressionExplorer = () => {
             inputs: [
               {
                 inputType: InputType.SELECT_STRING,
-                value: subject.label,
-                values: subjectLabels,
+                selectedItem: subject.label,
+                items: subjectLabels,
                 onChangeCallback: (newValue: string) =>
                   setSubject({ payload: subjectLabels.indexOf(newValue) }),
               },

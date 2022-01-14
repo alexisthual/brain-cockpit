@@ -165,8 +165,8 @@ const ScenePane = ({
               inputs: [
                 {
                   inputType: InputType.SELECT_STRING,
-                  value: sharedState ? sharedMetric : metric,
-                  values: Object.keys(Metric),
+                  selectedItem: sharedState ? sharedMetric : metric,
+                  items: Object.keys(Metric),
                   onChangeCallback: (newValue: string) =>
                     setMetric(Metric[newValue as keyof typeof Metric]),
                 },
@@ -177,8 +177,8 @@ const ScenePane = ({
               inputs: [
                 {
                   inputType: InputType.SELECT_STRING,
-                  value: surfaceMapType,
-                  values: Object.keys(SurfaceMapType),
+                  selectedItem: surfaceMapType,
+                  items: Object.keys(SurfaceMapType),
                   onChangeCallback: (newValue: string) =>
                     setSurfaceMapType(
                       SurfaceMapType[newValue as keyof typeof SurfaceMapType]
@@ -191,8 +191,8 @@ const ScenePane = ({
               inputs: [
                 {
                   inputType: InputType.SELECT_STRING,
-                  value: subject.label,
-                  values: subjectLabels,
+                  selectedItem: subject.label,
+                  items: subjectLabels,
                   onChangeCallback: (newValue: string) =>
                     setSubject({ payload: subjectLabels.indexOf(newValue) }),
                 },

@@ -215,8 +215,9 @@ const AlignmentPane = ({
                 inputs: [
                   {
                     inputType: InputType.SELECT_STRING,
-                    value: subjectLabels[alignmentState[paneRole].subject],
-                    values: subjectLabels,
+                    selectedItem:
+                      subjectLabels[alignmentState[paneRole].subject],
+                    items: subjectLabels,
                     onChangeCallback: (newValue: string) => {
                       const newState = {
                         ...alignmentState,
