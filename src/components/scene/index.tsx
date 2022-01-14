@@ -44,10 +44,17 @@ interface IProps {
   showGridHelper?: boolean;
 }
 
+interface HotspotCoordinates {
+  voxelX?: number;
+  voxelY?: number;
+  voxelPosition?: THREE.Vector3;
+}
+
 interface IState {
   voxelX?: number;
   voxelY?: number;
   voxelPosition?: THREE.Vector3;
+  hotspots?: { [i: number]: HotspotCoordinates };
 }
 
 class Scene extends Component<IProps, IState> {
@@ -88,7 +95,7 @@ class Scene extends Component<IProps, IState> {
     this.handleWindowResize = this.handleWindowResize.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
-    this.updateHotspot = this.updateHotspot.bind(this);
+    this.updateHotspots = this.updateHotspots.bind(this);
     this.switchView = this.switchView.bind(this);
     this.removeAndDisposeMarkers = this.removeAndDisposeMarkers.bind(this);
     this.projectCoordinates = this.projectCoordinates.bind(this);
@@ -401,7 +408,7 @@ class Scene extends Component<IProps, IState> {
 
     // Update hotspot if voxelIndex changed
     if (prevProps.voxelIndex !== this.props.voxelIndex) {
-      this.updateHotspot();
+      this.updateHotspots();
     }
 
     // Update object color to display surface map
@@ -747,7 +754,7 @@ class Scene extends Component<IProps, IState> {
   }
 
   renderScene() {
-    this.updateHotspot();
+    this.updateHotspots();
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -777,7 +784,7 @@ class Scene extends Component<IProps, IState> {
     return [projectedVertex, vertex];
   }
 
-  updateHotspot() {
+  updateHotspots() {
     if (this.props.voxelIndex) {
       // Compute selected voxel's position
       const [projectedVertex, vertex] = this.projectCoordinates(
@@ -798,6 +805,34 @@ class Scene extends Component<IProps, IState> {
         });
       }
     }
+
+    // Update each hotspot
+    this.props.hotspots?.forEach((hotspot, index) => {
+      if (hotspot.voxelIndex !== undefined) {
+        const [projectedVertex, vertex] = this.projectCoordinates(
+          hotspot.voxelIndex
+        );
+
+        if (
+          projectedVertex.x !== this.state.voxelX ||
+          projectedVertex.y !== this.state.voxelY
+        ) {
+          this.setState((state, props) => {
+            return {
+              ...state,
+              hotspots: {
+                ...state.hotspots,
+                [index]: {
+                  voxelX: projectedVertex.x,
+                  voxelY: projectedVertex.y,
+                  voxelPosition: new THREE.Vector3().copy(vertex),
+                },
+              },
+            };
+          });
+        }
+      }
+    });
   }
 
   animate() {
