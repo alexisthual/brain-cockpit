@@ -340,20 +340,25 @@ const SurfaceExplorer = () => {
         ...selectedVoxels.map(([paneId, voxels]) => {
           if (voxels !== undefined) {
             return voxels.map((voxel: number) => {
-              return state.panes[paneId].meanSurfaceMap
-                ? server.get("/ibc/voxel_fingerprint_mean", {
-                    params: {
-                      voxel_index: voxel,
-                      mesh: state.panes[paneId].meshSupport,
-                    },
-                  })
-                : server.get("/ibc/voxel_fingerprint", {
-                    params: {
-                      subject_index: state.panes[paneId].subject,
-                      voxel_index: voxel,
-                      mesh: state.panes[paneId].meshSupport,
-                    },
-                  });
+              const { subject, meshSupport } = state.panes[paneId];
+              if (subject !== undefined && meshSupport !== undefined) {
+                return state.panes[paneId].meanSurfaceMap
+                  ? server.get("/ibc/voxel_fingerprint_mean", {
+                      params: {
+                        voxel_index: voxel,
+                        mesh: meshSupport,
+                      },
+                    })
+                  : server.get("/ibc/voxel_fingerprint", {
+                      params: {
+                        subject_index: subject,
+                        voxel_index: voxel,
+                        mesh: meshSupport,
+                      },
+                    });
+              } else {
+                return Promise.resolve();
+              }
             });
           } else {
             return [];

@@ -62,7 +62,9 @@ class Scene extends Component<IProps, IState> {
   renderer?: any;
   scene?: any;
   camera?: any;
-  object?: any;
+  mesh?: THREE.Mesh;
+  meshGeometry?: THREE.BufferGeometry;
+  meshMaterial?: THREE.MeshStandardMaterial;
   spotLight?: any;
   controls?: any;
   frameId?: any;
@@ -98,11 +100,11 @@ class Scene extends Component<IProps, IState> {
     this.updateHotspots = this.updateHotspots.bind(this);
     this.switchView = this.switchView.bind(this);
     this.removeAndDisposeMarkers = this.removeAndDisposeMarkers.bind(this);
-    this.projectCoordinates = this.projectCoordinates.bind(this);
+    this.projectCoordinatesOnMesh = this.projectCoordinatesOnMesh.bind(this);
   }
 
   // Turn THREE.js loader into Promise
-  static load(url: string) {
+  static load(url: string): Promise<any> {
     const loader = new GLTFLoader();
 
     return new Promise((resolve, reject) => {
@@ -115,12 +117,17 @@ class Scene extends Component<IProps, IState> {
     });
   }
 
-  static async loadMesh(
+  // Load BufferGeometry object from backend
+  static async loadGeometry(
     meshSupport: MeshSupport = MeshSupport.FSAVERAGE5,
     meshType: MeshType = MeshType.PIAL,
     hemisphereSide: HemisphereSide = HemisphereSide.LEFT,
     subjectLabel: string | undefined = undefined
-  ) {
+  ): Promise<THREE.BufferGeometry | undefined> {
+    if (subjectLabel === undefined) {
+      return undefined;
+    }
+
     let url: string;
     switch (meshSupport) {
       case MeshSupport.INDIVIDUAL:
@@ -133,11 +140,11 @@ class Scene extends Component<IProps, IState> {
     switch (hemisphereSide) {
       case HemisphereSide.LEFT:
         return Scene.load(`${url}/${meshType}_left.gltf`).then((gltf: any) => {
-          return gltf.scene.children[0] as any;
+          return gltf.scene.children[0].geometry as THREE.BufferGeometry;
         });
       case HemisphereSide.RIGHT:
         return Scene.load(`${url}/${meshType}_right.gltf`).then((gltf: any) => {
-          return gltf.scene.children[0] as any;
+          return gltf.scene.children[0].geometry as THREE.BufferGeometry;
         });
       case HemisphereSide.BOTH:
         // Load both meshes
@@ -153,9 +160,7 @@ class Scene extends Component<IProps, IState> {
             ]
           );
 
-          const mesh = new THREE.Mesh(mergedBufferGeometries);
-
-          return mesh;
+          return mergedBufferGeometries;
         });
     }
   }
@@ -203,8 +208,11 @@ class Scene extends Component<IProps, IState> {
     }
   }
 
+  // Static method to build mesh from geometry and surface map.
+  // In case surface map is given, simply apply it to mesh.
+  // Otherwise, generate and apply random material.
   static initialiseMesh(
-    object: any,
+    geometry: THREE.BufferGeometry,
     wireframe: boolean = false,
     surfaceMap: number[] | undefined = undefined,
     colormap: chroma.Scale | undefined = undefined,
@@ -212,11 +220,14 @@ class Scene extends Component<IProps, IState> {
     lowThresholdMax: number | undefined = undefined,
     highThresholdMin: number | undefined = undefined,
     highThresholdMax: number | undefined = undefined
-  ) {
-    // Set a random color to each vertex
-    if (object.geometry.attributes.color === undefined) {
-      const count = object.geometry.attributes.position.count;
-      object.geometry.setAttribute(
+  ): {
+    geometry: THREE.BufferGeometry;
+    material: THREE.MeshStandardMaterial;
+  } {
+    // Initialise new geometry attribute to store color
+    if (geometry.attributes.color === undefined) {
+      const count = geometry.attributes.position.count;
+      geometry.setAttribute(
         "color",
         new THREE.BufferAttribute(new Float32Array(count * 3), 3)
       );
@@ -227,8 +238,8 @@ class Scene extends Component<IProps, IState> {
       surfaceMap !== null &&
       colormap !== undefined
     ) {
-      object = Scene.coloriseFromSurfaceMap(
-        object,
+      geometry = Scene.coloriseFromSurfaceMap(
+        geometry,
         surfaceMap,
         colormap,
         lowThresholdMin,
@@ -237,9 +248,10 @@ class Scene extends Component<IProps, IState> {
         highThresholdMax
       );
     } else {
-      object = Scene.coloriseFromRandomMap(object);
+      geometry = Scene.coloriseFromRandomMap(geometry);
     }
 
+    // Initialise material
     const material = new THREE.MeshStandardMaterial({
       // color: "rgb(207, 207, 207)",
       flatShading: true,
@@ -249,22 +261,22 @@ class Scene extends Component<IProps, IState> {
       wireframe: wireframe,
     });
 
-    // Create mesh
-    const mesh = new THREE.Mesh(object.geometry, material);
-
-    // Rotate mesh (in gaming, the y-axis typically goes from
+    // Rotate geometry (in gaming, the y-axis typically goes from
     // bottom to top, whereas engineers usually use the z-axis
     // to describe this dimension).
-    mesh.rotateX(-Math.PI / 2);
-    mesh.rotateZ(Math.PI / 2);
+    geometry.rotateX(-Math.PI / 2);
+    geometry.rotateY(Math.PI / 2);
 
-    return mesh;
+    return { geometry, material };
   }
 
-  static coloriseFromRandomMap(object: any) {
+  // Generates random values for each vertex of a geometry object.
+  static coloriseFromRandomMap(
+    geometry: THREE.BufferGeometry
+  ): THREE.BufferGeometry {
     const color = new THREE.Color();
-    const count = object.geometry.attributes.position.count;
-    const colors = object.geometry.attributes.color;
+    const count = geometry.attributes.position.count;
+    const colors = geometry.attributes.color;
 
     for (let i = 0; i < count; i++) {
       color.setRGB(
@@ -275,21 +287,22 @@ class Scene extends Component<IProps, IState> {
       colors.setXYZ(i, color.r, color.g, color.b);
     }
 
-    return object;
+    return geometry;
   }
 
+  // Applies given surface map onto a geometry object.
   static coloriseFromSurfaceMap(
-    object: any,
+    geometry: THREE.BufferGeometry,
     surfaceMap: number[],
     colormap: chroma.Scale,
     lowThresholdMin: number | undefined,
     lowThresholdMax: number | undefined,
     highThresholdMin: number | undefined,
     highThresholdMax: number | undefined
-  ) {
+  ): THREE.BufferGeometry {
     const color = new THREE.Color();
-    const count = object.geometry.attributes.position.count;
-    const colors = object.geometry.attributes.color;
+    const count = geometry.attributes.position.count;
+    const colors = geometry.attributes.color;
     const min = getMin(surfaceMap);
     const max = getMax(surfaceMap);
 
@@ -335,34 +348,42 @@ class Scene extends Component<IProps, IState> {
       }
       colors.setXYZ(i, color.r, color.g, color.b);
     }
-    object.geometry.attributes.color.needsUpdate = true;
+    (colors as THREE.BufferAttribute).needsUpdate = true;
 
-    return object;
+    return geometry;
   }
 
   async componentDidMount() {
     // Listen to events
     window.addEventListener("resize", this.handleWindowResize);
 
-    // Load exteral meshes
-    let object = await Scene.loadMesh(
+    // Load exteral geometry
+    const geometry = await Scene.loadGeometry(
       this.props.meshSupport,
       this.props.meshType,
       this.props.hemi,
       this.props.subjectLabel
     );
-    object = Scene.initialiseMesh(
-      object,
-      this.props.wireframe,
-      this.props.surfaceMap,
-      this.props.colormap,
-      this.props.lowThresholdMin,
-      this.props.lowThresholdMax,
-      this.props.highThresholdMin,
-      this.props.highThresholdMax
-    );
 
-    await this.setupScene(object as THREE.Object3D);
+    if (geometry !== undefined) {
+      const { geometry: colorizedGeometry, material } = Scene.initialiseMesh(
+        geometry,
+        this.props.wireframe,
+        this.props.surfaceMap,
+        this.props.colormap,
+        this.props.lowThresholdMin,
+        this.props.lowThresholdMax,
+        this.props.highThresholdMin,
+        this.props.highThresholdMax
+      );
+
+      this.meshGeometry = colorizedGeometry;
+      this.meshMaterial = material;
+    }
+
+    this.mesh = new THREE.Mesh(this.meshGeometry, this.meshMaterial);
+
+    await this.setupScene();
   }
 
   async componentDidUpdate(prevProps: IProps) {
@@ -376,22 +397,21 @@ class Scene extends Component<IProps, IState> {
 
     // Update displayed mesh when meshType or hemi change
     if (
-      prevProps.meshSupport !== this.props.meshSupport ||
-      prevProps.meshType !== this.props.meshType ||
-      prevProps.subjectLabel !== this.props.subjectLabel ||
-      prevProps.hemi !== this.props.hemi
+      this.scene !== undefined &&
+      (prevProps.meshSupport !== this.props.meshSupport ||
+        prevProps.meshType !== this.props.meshType ||
+        prevProps.subjectLabel !== this.props.subjectLabel ||
+        prevProps.hemi !== this.props.hemi)
     ) {
-      let newObject = (await Scene.loadMesh(
+      let newGeometry = (await Scene.loadGeometry(
         this.props.meshSupport,
         this.props.meshType,
         this.props.hemi,
         this.props.subjectLabel
       )) as any;
 
-      // Remove the old mesh (this.object) and add a fresh one.
-      this.scene.remove(this.object);
-      this.object = Scene.initialiseMesh(
-        newObject,
+      const { geometry, material } = Scene.initialiseMesh(
+        newGeometry,
         this.props.wireframe,
         this.props.surfaceMap,
         this.props.colormap,
@@ -400,7 +420,13 @@ class Scene extends Component<IProps, IState> {
         this.props.highThresholdMin,
         this.props.highThresholdMax
       );
-      this.scene.add(this.object);
+      this.meshGeometry = geometry;
+      this.meshMaterial = material;
+
+      // Remove the old mesh (this.object) and add a fresh one.
+      this.scene.remove(this.mesh);
+      this.mesh = new THREE.Mesh(this.meshGeometry, this.meshMaterial);
+      this.scene.add(this.mesh);
 
       // Update camera and controls focus
       this.focusOnMainObject();
@@ -423,12 +449,13 @@ class Scene extends Component<IProps, IState> {
         this.props.highThresholdMax !== prevProps.highThresholdMax)
     ) {
       if (
-        this.object !== undefined &&
+        this.mesh !== undefined &&
         this.props.surfaceMap.length ===
-          this.object.geometry.attributes.position.count
+          // this.mesh.geometry.attributes.position.count
+          this.meshGeometry?.attributes.position.count
       ) {
-        this.object = Scene.coloriseFromSurfaceMap(
-          this.object,
+        this.meshGeometry = Scene.coloriseFromSurfaceMap(
+          this.meshGeometry,
           this.props.surfaceMap,
           this.props.colormap,
           this.props.lowThresholdMin,
@@ -438,26 +465,27 @@ class Scene extends Component<IProps, IState> {
         );
       } else if (this.props.surfaceMap.length > 0) {
         console.warn(
-          `surfacemap and current mesh have different lengths: ${
-            this.props.surfaceMap.length
-          } !== ${
-            this.object !== undefined
-              ? this.object.geometry.attributes.position.count
-              : null
-          }`
+          `surfacemap and current mesh have different lengths: ${this.props.surfaceMap.length} !== ${this.meshGeometry?.attributes.position.count}`
         );
       }
     }
 
     // Update object wireframe
-    if (this.props.wireframe !== prevProps.wireframe) {
-      this.object.material.wireframe = this.props.wireframe;
+    if (
+      this.mesh !== undefined &&
+      this.meshMaterial !== undefined &&
+      this.props.wireframe !== prevProps.wireframe
+    ) {
+      // this.mesh.material.wireframe = this.props.wireframe;
+      this.meshMaterial.wireframe = this.props.wireframe || false;
     }
 
     // Update markers when coordinates or indices change
     if (
-      this.props.markerCoordinates !== prevProps.markerCoordinates ||
-      this.props.markerIndices !== prevProps.markerIndices
+      this.scene !== undefined &&
+      this.meshGeometry !== undefined &&
+      (this.props.markerCoordinates !== prevProps.markerCoordinates ||
+        this.props.markerIndices !== prevProps.markerIndices)
     ) {
       // Dispose and overwrite current markers
       this.removeAndDisposeMarkers();
@@ -470,10 +498,11 @@ class Scene extends Component<IProps, IState> {
         for (let i = 0; i < this.props.markerIndices.length; i++) {
           const vertex = new THREE.Vector3();
           vertex.fromBufferAttribute(
-            this.object.geometry.getAttribute("position"),
+            // this.mesh?.geometry.getAttribute("position"),
+            this.meshGeometry.getAttribute("position") as THREE.BufferAttribute,
             this.props.markerIndices[i]
           );
-          this.object.localToWorld(vertex);
+          this.mesh?.localToWorld(vertex);
           coordinates_list.push([vertex.x, vertex.y, vertex.z]);
         }
       }
@@ -484,7 +513,7 @@ class Scene extends Component<IProps, IState> {
       ) {
         for (let i = 0; i < this.props.markerCoordinates.length; i++) {
           const vertex = new THREE.Vector3(...this.props.markerCoordinates[i]);
-          this.object.localToWorld(vertex);
+          this.mesh?.localToWorld(vertex);
           coordinates_list.push([vertex.x, vertex.y, vertex.z]);
         }
       }
@@ -507,7 +536,7 @@ class Scene extends Component<IProps, IState> {
           const marker = new THREE.Mesh(geometry, material);
           marker.position.copy(vertex);
           this.scene.add(marker);
-          this.object.localToWorld(vertex);
+          this.mesh?.localToWorld(vertex);
 
           this.markerSpheres.push(marker);
         }
@@ -520,9 +549,12 @@ class Scene extends Component<IProps, IState> {
     }
 
     // Update gradient
-    if (this.props.gradient !== prevProps.gradient) {
+    if (
+      this.scene !== undefined &&
+      this.props.gradient !== prevProps.gradient
+    ) {
       if (this.props.gradient !== undefined) {
-        const gradient = new CustomGradient(this.object, this.props.gradient);
+        const gradient = new CustomGradient(this.mesh, this.props.gradient);
         this.scene.add(gradient);
         this.gradient = gradient;
       } else if (this.gradient !== undefined) {
@@ -531,7 +563,9 @@ class Scene extends Component<IProps, IState> {
     }
   }
 
-  async setupScene(object: THREE.Object3D) {
+  // Initialises scene, controls, camera, etc.
+  // If it exists, adds mesh to scene.
+  async setupScene() {
     // Initialise renderer
     const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -559,11 +593,14 @@ class Scene extends Component<IProps, IState> {
     ambLight.position.set(5, 3, 5);
     scene.add(ambLight);
 
-    // Add main object to scene
-    scene.add(object);
+    // Add main mesh to scene
+    if (this.mesh !== undefined) {
+      scene.add(this.mesh);
+    }
 
+    // Add gradients to scene
     if (this.props.gradient !== undefined) {
-      const gradient = new CustomGradient(this.object, this.props.gradient);
+      const gradient = new CustomGradient(this.mesh, this.props.gradient);
       scene.add(gradient);
       this.gradient = gradient;
     }
@@ -598,7 +635,6 @@ class Scene extends Component<IProps, IState> {
     this.renderer = renderer;
     this.scene = scene;
     this.camera = camera;
-    this.object = object;
     this.gridHelper = gridHelper;
     this.controls = controls;
 
@@ -607,54 +643,77 @@ class Scene extends Component<IProps, IState> {
     this.start();
   }
 
+  start() {
+    this.container.addEventListener("pointerdown", this.onMouseDown, false);
+    this.container.addEventListener("pointerup", this.onMouseUp, false);
+    window.addEventListener("keydown", this.switchView, false);
+
+    if (!this.frameId) {
+      this.frameId = requestAnimationFrame(this.animate);
+    }
+  }
+
+  animate() {
+    this.frameId = requestAnimationFrame(this.animate);
+    this.controls.update();
+    this.renderScene();
+  }
+
+  renderScene() {
+    this.updateHotspots();
+    this.renderer.render(this.scene, this.camera);
+  }
+
   // This functions focuses controls and camera
   // on the main object
   focusOnMainObject(view: View = View.LATERAL) {
-    // Compute BoundingBox
-    const boundingBox = new THREE.Box3().setFromObject(this.object);
-    const center = boundingBox.getCenter(new THREE.Vector3());
-    const size = boundingBox.getSize(new THREE.Vector3());
+    if (this.mesh !== undefined) {
+      // Compute BoundingBox
+      const boundingBox = new THREE.Box3().setFromObject(this.mesh);
+      const center = boundingBox.getCenter(new THREE.Vector3());
+      const size = boundingBox.getSize(new THREE.Vector3());
 
-    // Camera setup
-    let offset = 1.5;
-    const maxDim = Math.max(size.x, size.y, size.z);
-    const fov = this.camera.fov * (Math.PI / 180);
-    const cameraOffset = (maxDim / 2 / Math.tan(fov / 2)) * offset;
-    switch (view) {
-      case View.LATERAL:
-        this.camera.position.x = center.x;
-        this.camera.position.y = center.y;
-        this.camera.position.z = center.z + cameraOffset;
-        break;
-      case View.MEDIAL:
-        this.camera.position.x = center.x;
-        this.camera.position.y = center.y;
-        this.camera.position.z = center.z - cameraOffset;
-        break;
-      case View.FRONTAL:
-        this.camera.position.x = center.x - cameraOffset;
-        this.camera.position.y = center.y;
-        this.camera.position.z = center.z;
-        break;
-      case View.DORSAL:
-        this.camera.position.x = center.x + cameraOffset;
-        this.camera.position.y = center.y;
-        this.camera.position.z = center.z;
-        break;
-      default:
-        this.camera.position.x = center.x;
-        this.camera.position.y = center.y;
-        this.camera.position.z = center.z + cameraOffset;
-        break;
+      // Camera setup
+      let offset = 1.5;
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const fov = this.camera.fov * (Math.PI / 180);
+      const cameraOffset = (maxDim / 2 / Math.tan(fov / 2)) * offset;
+      switch (view) {
+        case View.LATERAL:
+          this.camera.position.x = center.x;
+          this.camera.position.y = center.y;
+          this.camera.position.z = center.z + cameraOffset;
+          break;
+        case View.MEDIAL:
+          this.camera.position.x = center.x;
+          this.camera.position.y = center.y;
+          this.camera.position.z = center.z - cameraOffset;
+          break;
+        case View.FRONTAL:
+          this.camera.position.x = center.x - cameraOffset;
+          this.camera.position.y = center.y;
+          this.camera.position.z = center.z;
+          break;
+        case View.DORSAL:
+          this.camera.position.x = center.x + cameraOffset;
+          this.camera.position.y = center.y;
+          this.camera.position.z = center.z;
+          break;
+        default:
+          this.camera.position.x = center.x;
+          this.camera.position.y = center.y;
+          this.camera.position.z = center.z + cameraOffset;
+          break;
+      }
+      const min = boundingBox.min.z;
+      const cameraToFarEdge = cameraOffset - min;
+      this.camera.far = cameraToFarEdge * 3;
+      this.camera.lookAt(center);
+      this.camera.updateProjectionMatrix();
+
+      // Set controls target
+      this.controls.target.set(center.x, center.y, center.z);
     }
-    const min = boundingBox.min.z;
-    const cameraToFarEdge = cameraOffset - min;
-    this.camera.far = cameraToFarEdge * 3;
-    this.camera.lookAt(center);
-    this.camera.updateProjectionMatrix();
-
-    // Set controls target
-    this.controls.target.set(center.x, center.y, center.z);
   }
 
   // This function allows to distinct click from drag events.
@@ -667,6 +726,8 @@ class Scene extends Component<IProps, IState> {
 
   onMouseUp(event: MouseEvent) {
     if (
+      this.mesh !== undefined &&
+      this.meshGeometry !== undefined &&
       event.clientX === this.mouseDownX &&
       event.clientY === this.mouseDownY
     ) {
@@ -682,7 +743,7 @@ class Scene extends Component<IProps, IState> {
 
       // Intersect raycast with object
       // and select closest voxel in intersected face
-      const intersects = raycaster.intersectObject(this.object);
+      const intersects = raycaster.intersectObject(this.mesh);
       let selectedVertexIndex = undefined;
       if (intersects.length > 0) {
         // Select face's vertex closest to click
@@ -693,10 +754,11 @@ class Scene extends Component<IProps, IState> {
         for (let i = 0; i < vertices.length; i++) {
           const vertex = new THREE.Vector3();
           vertex.fromBufferAttribute(
-            this.object.geometry.getAttribute("position"),
+            // this.mesh.geometry.getAttribute("position"),
+            this.meshGeometry.getAttribute("position") as THREE.BufferAttribute,
             vertices[i]
           );
-          this.object.localToWorld(vertex);
+          this.mesh?.localToWorld(vertex);
 
           let distance = vertex.distanceTo(intersects[0].point);
 
@@ -743,29 +805,14 @@ class Scene extends Component<IProps, IState> {
     }
   }
 
-  start() {
-    this.container.addEventListener("pointerdown", this.onMouseDown, false);
-    this.container.addEventListener("pointerup", this.onMouseUp, false);
-    window.addEventListener("keydown", this.switchView, false);
-
-    if (!this.frameId) {
-      this.frameId = requestAnimationFrame(this.animate);
-    }
-  }
-
-  renderScene() {
-    this.updateHotspots();
-    this.renderer.render(this.scene, this.camera);
-  }
-
-  projectCoordinates(voxelIndex: number) {
+  projectCoordinatesOnMesh(voxelIndex: number) {
     const vertex = new THREE.Vector3();
-    if (this.object !== undefined) {
+    if (this.mesh !== undefined && this.meshGeometry !== undefined) {
       vertex.fromBufferAttribute(
-        this.object.geometry.getAttribute("position"),
+        this.meshGeometry.getAttribute("position") as THREE.BufferAttribute,
         voxelIndex
       );
-      this.object.localToWorld(vertex);
+      this.mesh.localToWorld(vertex);
     }
 
     const projectedVertex = new THREE.Vector3().copy(vertex);
@@ -787,7 +834,7 @@ class Scene extends Component<IProps, IState> {
   updateHotspots() {
     if (this.props.voxelIndex) {
       // Compute selected voxel's position
-      const [projectedVertex, vertex] = this.projectCoordinates(
+      const [projectedVertex, vertex] = this.projectCoordinatesOnMesh(
         this.props.voxelIndex
       );
 
@@ -795,7 +842,7 @@ class Scene extends Component<IProps, IState> {
         projectedVertex.x !== this.state.voxelX ||
         projectedVertex.y !== this.state.voxelY
       ) {
-        this.setState((state, props) => {
+        this.setState((state) => {
           return {
             ...state,
             voxelX: projectedVertex.x,
@@ -809,7 +856,7 @@ class Scene extends Component<IProps, IState> {
     // Update each hotspot
     this.props.hotspots?.forEach((hotspot, index) => {
       if (hotspot.voxelIndex !== undefined) {
-        const [projectedVertex, vertex] = this.projectCoordinates(
+        const [projectedVertex, vertex] = this.projectCoordinatesOnMesh(
           hotspot.voxelIndex
         );
 
@@ -817,7 +864,7 @@ class Scene extends Component<IProps, IState> {
           projectedVertex.x !== this.state.voxelX ||
           projectedVertex.y !== this.state.voxelY
         ) {
-          this.setState((state, props) => {
+          this.setState((state) => {
             return {
               ...state,
               hotspots: {
@@ -835,12 +882,6 @@ class Scene extends Component<IProps, IState> {
     });
   }
 
-  animate() {
-    this.frameId = requestAnimationFrame(this.animate);
-    this.controls.update();
-    this.renderScene();
-  }
-
   handleWindowResize() {
     if (this.camera && this.renderer) {
       this.camera.aspect = this.props.width / this.props.height;
@@ -852,7 +893,11 @@ class Scene extends Component<IProps, IState> {
   }
 
   removeAndDisposeMarkers() {
-    if (this.markerSpheres !== undefined && this.markerSpheres.length > 0) {
+    if (
+      this.scene !== undefined &&
+      this.markerSpheres !== undefined &&
+      this.markerSpheres.length > 0
+    ) {
       for (let i = 0; i < this.markerSpheres.length; i++) {
         const marker = this.markerSpheres[i];
         // Remove marker
@@ -872,6 +917,8 @@ class Scene extends Component<IProps, IState> {
 
   componentWillUnmount() {
     // Remove events
+    window.removeEventListener("pointerdown", this.onMouseDown);
+    window.removeEventListener("pointerup", this.onMouseUp);
     window.removeEventListener("resize", this.handleWindowResize);
     window.removeEventListener("keydown", this.switchView);
 
@@ -888,8 +935,10 @@ class Scene extends Component<IProps, IState> {
         });
       }
     }
-    this.object.geometry.dispose();
-    this.object.material.dispose();
+
+    this.meshGeometry?.dispose();
+    this.meshMaterial?.dispose();
+
     this.removeAndDisposeMarkers();
     this.controls.dispose();
     this.renderer.dispose();
@@ -947,7 +996,7 @@ class Scene extends Component<IProps, IState> {
                         const [
                           projectedVertex,
                           vertex,
-                        ] = this.projectCoordinates(hotspot.voxelIndex);
+                        ] = this.projectCoordinatesOnMesh(hotspot.voxelIndex);
                         return {
                           ...hotspot,
                           xPointer: projectedVertex.x,
