@@ -21,7 +21,7 @@ const KeyDialog = ({ isOpen, onClose }: Props) => {
             <span className="bp4-key-combo">
               <kbd className="bp4-key bp4-modifier-key">
                 <Icon icon="key-option" />
-                alt
+                ALT
               </kbd>
               <kbd className="bp4-key">key or click</kbd>
             </span>
@@ -32,7 +32,7 @@ const KeyDialog = ({ isOpen, onClose }: Props) => {
             <span className="bp4-key-combo">
               <kbd className="bp4-key bp4-modifier-key">
                 <Icon icon="key-shift" />
-                shift
+                SHIFT
               </kbd>
               <kbd className="bp4-key">click</kbd>
             </span>
@@ -97,9 +97,30 @@ const KeyDialog = ({ isOpen, onClose }: Props) => {
           </div>
 
           <div className="bp4-hotkey">
-            <div className="bp4-hotkey-label">Close pane</div>
+            <div className="bp4-hotkey-label">Lateral view</div>
             <span className="bp4-key-combo">
-              <kbd className="bp4-key">X</kbd>
+              <kbd className="bp4-key">S</kbd>
+            </span>
+          </div>
+
+          <div className="bp4-hotkey">
+            <div className="bp4-hotkey-label">Medial view</div>
+            <span className="bp4-key-combo">
+              <kbd className="bp4-key">F</kbd>
+            </span>
+          </div>
+
+          <div className="bp4-hotkey">
+            <div className="bp4-hotkey-label">Anterior view</div>
+            <span className="bp4-key-combo">
+              <kbd className="bp4-key">E</kbd>
+            </span>
+          </div>
+
+          <div className="bp4-hotkey">
+            <div className="bp4-hotkey-label">Posterior view</div>
+            <span className="bp4-key-combo">
+              <kbd className="bp4-key">D</kbd>
             </span>
           </div>
         </div>
