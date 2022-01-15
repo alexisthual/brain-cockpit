@@ -19,6 +19,10 @@
       padding: 0px 0px 5px 0px;
     }
 
+    & .bp4-button {
+      height: 30px;
+    }
+
     .header-item-label {
       padding-right: 8px;
       font-size: 12px;
@@ -78,6 +82,41 @@
 
       .bp4-control.bp4-switch input:checked ~ .bp4-control-indicator {
         background: $light-gray1;
+      }
+    }
+  }
+
+  .bp4-multi-select {
+    padding: 3px;
+    box-shadow: none;
+    border-radius: 3px 0px 0px 3px;
+    border: 1px solid $light-gray1;
+    // border-width: 1px 0px 1px 1px;
+    background-color: $light-gray5;
+    margin-right: -1px;
+    overflow: hidden;
+
+    &:not(.bp4-active) {
+      max-height: 26px;
+    }
+
+    &.bp4-active {
+      .bp4-tag-input-values {
+        gap: 5px 5px;
+      }
+    }
+
+    .bp4-tag-input-values {
+      margin: 0;
+      align-content: flex-end;
+      gap: 2px 5px;
+
+      .bp4-tag {
+        margin: 0;
+      }
+
+      .bp4-input-ghost {
+        margin-bottom: 0;
       }
     }
   }

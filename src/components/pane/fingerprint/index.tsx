@@ -6,6 +6,7 @@ import Fingerprint, { FingerprintFilter } from "components/fingerprint";
 import OverlayLoader from "components/overlayLoader";
 import PaneControls, { InputType } from "components/paneControls";
 import { ContrastLabel, Orientation } from "constants/index";
+import "./style.scss";
 
 interface Props {
   fingerprints: number[][];
@@ -43,6 +44,16 @@ const FingerprintPane = ({
   setHighThresholdMax = () => {},
 }: Props) => {
   const [filter, setFilter] = useState(FingerprintFilter.CONTRASTS);
+  const [selectedTasks, setSelectedTasks] = useState(
+    [...new Set(contrastLabels.map((label) => label.task))].sort()
+  );
+
+  // Useful for development purposes
+  // const randomItems = [...Array(200)].map(() =>
+  //   [...Array(~~(Math.random() * 10 + 3))]
+  //     .map(() => String.fromCharCode(Math.random() * (123 - 97) + 97))
+  //     .join("")
+  // );
 
   return (
     <div className="fingerprint">
@@ -52,6 +63,31 @@ const FingerprintPane = ({
         rows={[
           {
             inputs: [
+              {
+                inputType: InputType.MULTISELECT_STRING,
+                selectedItems: selectedTasks,
+                items: [
+                  ...new Set(contrastLabels.map((label) => label.task)),
+                ].sort(),
+                // items: randomItems,
+                onChangeCallback: (value: string) => {
+                  const index = selectedTasks.indexOf(value);
+                  if (index === -1) {
+                    setSelectedTasks([...selectedTasks, value]);
+                  } else {
+                    setSelectedTasks(
+                      selectedTasks.filter((_t, i) => i !== index)
+                    );
+                  }
+                },
+                onRemoveCallback: (_value: string, index: number) => {
+                  if (index !== -1) {
+                    setSelectedTasks(
+                      selectedTasks.filter((_t, i) => i !== index)
+                    );
+                  }
+                },
+              },
               {
                 inputType: InputType.SELECT_STRING,
                 selectedItem: filter,
@@ -89,6 +125,7 @@ const FingerprintPane = ({
         {({ width: fingerprintWidth, height: fingerprintHeight }) => (
           <Fingerprint
             filter={filter}
+            selectedTasks={selectedTasks}
             clickedLabelCallback={(contrastIndex: number) => {
               // updatePaneKey(selectedPaneId, "contrast", contrastIndex);
             }}

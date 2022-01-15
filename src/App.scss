@@ -184,7 +184,9 @@
 }
 
 .bp4-select-popover .bp4-menu,
-.bp3-select-popover2 .bp4-menu {
+.bp3-select-popover2 .bp4-menu,
+.bp4-multi-select-popover .bp4-menu,
+.bp3-multi-select-popover2 .bp4-menu {
   max-height: 300px;
   overflow: auto;
 }

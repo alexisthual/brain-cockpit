@@ -23,6 +23,7 @@ export enum FingerprintFilter {
 interface Props {
   contrastLabels: ContrastLabel[];
   filter?: FingerprintFilter;
+  selectedTasks?: string[];
   fingerprints: number[][];
   width: number;
   height: number;
@@ -42,6 +43,7 @@ interface Props {
 const Fingerprint = ({
   contrastLabels,
   filter = FingerprintFilter.CONDITIONS,
+  selectedTasks,
   fingerprints,
   width,
   height,
@@ -80,29 +82,48 @@ const Fingerprint = ({
   const xMax = width - 2 * padding - offsetLeft - offsetRight - labelMargin;
   const yMax = height - 2 * padding - offsetBottom - offsetTop;
 
+  //
+  // Filter out parts of the fingerprint
+  //
+
   let filteredContrastLabels = contrastLabels;
   let filteredFingerprints = fingerprints;
 
+  // Keep only conditions/contrasts whose task is selected
+  if (selectedTasks !== undefined) {
+    filteredContrastLabels = filteredContrastLabels.filter(
+      (label) => selectedTasks.indexOf(label.task) !== -1
+    );
+    filteredFingerprints = filteredFingerprints.map((fingerprint) => {
+      return fingerprint.filter(
+        (_, index) => selectedTasks.indexOf(contrastLabels[index].task) !== -1
+      );
+    });
+  }
+
+  // Keep only contrasts, conditions, or both
   switch (filter) {
     case FingerprintFilter.CONTRASTS:
-      filteredContrastLabels = contrastLabels.filter(
+      filteredFingerprints = filteredFingerprints.map((fingerprint) => {
+        return fingerprint.filter(
+          (_, index) =>
+            filteredContrastLabels[index].contrast.split("-").length > 1
+        );
+      });
+      filteredContrastLabels = filteredContrastLabels.filter(
         (label) => label.contrast.split("-").length > 1
       );
-      filteredFingerprints = fingerprints.map((fingerprint) => {
-        return fingerprint.filter(
-          (_, index) => contrastLabels[index].contrast.split("-").length > 1
-        );
-      });
       break;
     case FingerprintFilter.CONDITIONS:
-      filteredContrastLabels = contrastLabels.filter(
-        (label) => label.contrast.split("-").length === 1
-      );
-      filteredFingerprints = fingerprints.map((fingerprint) => {
+      filteredFingerprints = filteredFingerprints.map((fingerprint) => {
         return fingerprint.filter(
-          (_, index) => contrastLabels[index].contrast.split("-").length === 1
+          (_, index) =>
+            filteredContrastLabels[index].contrast.split("-").length === 1
         );
       });
+      filteredContrastLabels = filteredContrastLabels.filter(
+        (label) => label.contrast.split("-").length === 1
+      );
       break;
     default:
       break;
@@ -341,7 +362,7 @@ const Fingerprint = ({
 
               return (
                 <Group
-                  key={`fingerprint-bar-${label.contrast}-${contrastIndex}`}
+                  key={`fingerprint-bar-${label.task}-${label.contrast}-${contrastIndex}`}
                   className={`fingerprint-bar ${
                     selectedContrast
                       ? contrastIndex === selectedContrast.index
@@ -359,7 +380,7 @@ const Fingerprint = ({
                     className={`background-bar ${
                       contrastIndex % 2 === 0 ? "dark" : "light"
                     }`}
-                    key={`background-bar-${label.contrast}-${contrastIndex}`}
+                    key={`background-bar-${label.task}-${label.contrast}-${contrastIndex}`}
                     x={backBarX}
                     width={
                       !isNaN(backBarWidth) && backBarWidth >= 0
@@ -413,7 +434,7 @@ const Fingerprint = ({
                       return (
                         <Bar
                           className="value-bar"
-                          key={`bar-${label.contrast}-${contrastIndex}-${i}`}
+                          key={`bar-${label.task}-${label.contrast}-${contrastIndex}-${i}`}
                           fill={delta >= 0 ? Colors.RED5 : Colors.BLUE5}
                           x={barX}
                           width={
@@ -430,7 +451,7 @@ const Fingerprint = ({
                   <Text
                     angle={orientation === Orientation.VERTICAL ? 0 : -45}
                     className={"label"}
-                    key={`label-${contrastIndex}`}
+                    key={`label-${label.task}-${label.contrast}-${contrastIndex}`}
                     textAnchor="end"
                     verticalAnchor={
                       orientation === Orientation.VERTICAL ? "end" : "middle"

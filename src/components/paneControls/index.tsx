@@ -3,6 +3,7 @@ import { IconName } from "@blueprintjs/icons";
 import { Select } from "@blueprintjs/select";
 import React from "react";
 
+import MultiSelectString from "components/select/multiselectString";
 import SelectContrastLabel from "components/select/selectContrastLabel";
 import { ContrastLabel, stringRenderer } from "constants/index";
 import "./style.scss";
@@ -12,6 +13,7 @@ export enum InputType {
   LABEL = "label",
   SELECT_STRING = "select_string",
   SELECT_CONTRAST = "select_contrast",
+  MULTISELECT_STRING = "multiselect_string",
   TWO_STATE_TOGGLE = "two_state_toggle",
 }
 
@@ -22,6 +24,7 @@ interface PaneControlsInput {
   selectedItems?: string[];
   items?: any[];
   onChangeCallback?: any;
+  onRemoveCallback?: any;
   iconActive?: IconName;
   iconInactive?: IconName;
   title?: string;
@@ -140,6 +143,32 @@ const PaneControls = ({ rows }: IProps) => {
                           ) => {
                             if (input.onChangeCallback) {
                               input.onChangeCallback(newItem, event);
+                            }
+                          }}
+                        />
+                      );
+                      break;
+                    case InputType.MULTISELECT_STRING:
+                      element = (
+                        <MultiSelectString
+                          key={`input-${inputIndex}`}
+                          selectedItems={input.selectedItems}
+                          items={input.items ?? []}
+                          onItemSelect={(
+                            newItem: string,
+                            event?: React.SyntheticEvent<HTMLElement>
+                          ) => {
+                            if (input.onChangeCallback) {
+                              input.onChangeCallback(newItem, event);
+                            }
+                          }}
+                          onRemove={(
+                            newItem: string,
+                            index: number,
+                            event?: React.SyntheticEvent<HTMLElement>
+                          ) => {
+                            if (input.onChangeCallback) {
+                              input.onRemoveCallback(newItem, index, event);
                             }
                           }}
                         />

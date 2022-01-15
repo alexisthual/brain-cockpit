@@ -1,0 +1,7 @@
+.fingerprint {
+  .pane-controls {
+    // In order to not overlap close button,
+    // substract left and right padding + button size + padding
+    max-width: calc(100% - 10px - 10px - 30px - 10px);
+  }
+}
