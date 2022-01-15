@@ -45,12 +45,17 @@ const Hotspot = ({
       <line
         className="hotspot-line"
         ref={lineRef}
-        x1={xPointer}
-        y1={yPointer}
+        x1={xPointer || 0}
+        y1={yPointer || 0}
         x2={xLabel + labelWidth / 2}
         y2={yLabel + labelHeight / 2}
       />
-      <circle className="hotspot-pointer" cx={xPointer} cy={yPointer} r={4} />
+      <circle
+        className="hotspot-pointer"
+        cx={xPointer || 0}
+        cy={yPointer || 0}
+        r={4}
+      />
       <g className="hotspot-label">
         <Drag
           height={height}
