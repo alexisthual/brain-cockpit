@@ -12,6 +12,8 @@ interface Props {
   fingerprints: number[][];
   loading?: boolean;
   contrastLabels: ContrastLabel[];
+  selectedTasks?: string[];
+  setSelectedTasks?: (newSelectedTasks: string[]) => void;
   filterSurface?: boolean;
   closeCallback: () => void;
   orientation?: Orientation;
@@ -30,6 +32,8 @@ const FingerprintPane = ({
   fingerprints,
   loading,
   contrastLabels,
+  selectedTasks,
+  setSelectedTasks = () => {},
   filterSurface,
   closeCallback,
   orientation,
@@ -44,16 +48,9 @@ const FingerprintPane = ({
   setHighThresholdMax = () => {},
 }: Props) => {
   const [filter, setFilter] = useState(FingerprintFilter.CONTRASTS);
-  const [selectedTasks, setSelectedTasks] = useState(
-    [...new Set(contrastLabels.map((label) => label.task))].sort()
-  );
-
-  // Useful for development purposes
-  // const randomItems = [...Array(200)].map(() =>
-  //   [...Array(~~(Math.random() * 10 + 3))]
-  //     .map(() => String.fromCharCode(Math.random() * (123 - 97) + 97))
-  //     .join("")
-  // );
+  const allTasks = [
+    ...new Set(contrastLabels.map((label) => label.task)),
+  ].sort();
 
   return (
     <div className="fingerprint">
@@ -65,25 +62,25 @@ const FingerprintPane = ({
             inputs: [
               {
                 inputType: InputType.MULTISELECT_STRING,
-                selectedItems: selectedTasks,
-                items: [
-                  ...new Set(contrastLabels.map((label) => label.task)),
-                ].sort(),
-                // items: randomItems,
+                selectedItems:
+                  selectedTasks === undefined ? allTasks : selectedTasks,
+                items: allTasks,
                 onChangeCallback: (value: string) => {
-                  const index = selectedTasks.indexOf(value);
+                  const index = (selectedTasks ?? allTasks).indexOf(value);
+                  // Add item if it's not already in list
+                  // otherwise filter it out
                   if (index === -1) {
-                    setSelectedTasks([...selectedTasks, value]);
+                    setSelectedTasks([...(selectedTasks ?? []), value]);
                   } else {
                     setSelectedTasks(
-                      selectedTasks.filter((_t, i) => i !== index)
+                      (selectedTasks ?? allTasks).filter((_t, i) => i !== index)
                     );
                   }
                 },
                 onRemoveCallback: (_value: string, index: number) => {
                   if (index !== -1) {
                     setSelectedTasks(
-                      selectedTasks.filter((_t, i) => i !== index)
+                      (selectedTasks ?? allTasks).filter((_t, i) => i !== index)
                     );
                   }
                 },

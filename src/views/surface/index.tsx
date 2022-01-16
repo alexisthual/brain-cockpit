@@ -17,6 +17,7 @@ import {
 import { server } from "App";
 
 interface SurfaceViewState {
+  selectedTasks?: string[];
   panes: { [paneId: string]: SurfacePaneState };
 }
 
@@ -225,6 +226,23 @@ const SurfaceExplorer = () => {
         })
       ),
     } as SurfaceViewState;
+
+    setState(newState);
+  };
+
+  const setSelectedTasks = (newSelectedTasks: string[]) => {
+    // If new selectedTasks equal all tasks,
+    // set selectedTasks value to undefined
+    // (qs will omit key in url)
+    const newState = {
+      ...state,
+      selectedTasks: deepEqual(
+        newSelectedTasks.sort(),
+        [...new Set(contrastLabels.map((label) => label.task))].sort()
+      )
+        ? undefined
+        : newSelectedTasks,
+    };
 
     setState(newState);
   };
@@ -453,6 +471,8 @@ const SurfaceExplorer = () => {
           fingerprints={fingerprints}
           loading={loadingFingerprint}
           contrastLabels={contrastLabels}
+          selectedTasks={state.selectedTasks}
+          setSelectedTasks={setSelectedTasks}
           filterSurface={filterSurface}
           closeCallback={() => {
             removeAllPanesKey("voxels");
