@@ -26,6 +26,9 @@ const stateFromUrl = (): SurfaceViewState => {
   // (decode booleans and numbers with custom decoder)
   let urlState = qs.parse(window.location.search, {
     ignoreQueryPrefix: true,
+    // qs turns arrays which are too long into dictionaries
+    // for performance purposes ; we disable this feature here
+    arrayLimit: 1000,
     decoder(str, _, charset) {
       const strWithoutPlus = str.replace(/\+/g, " ");
       if (charset === "iso-8859-1") {
@@ -86,7 +89,7 @@ const useSurfaceState = (): [
     const newSearch = qs.stringify(state);
     if (`?${newSearch}` !== window.location.search) {
       navigate({
-        search: qs.stringify(state),
+        search: newSearch,
       });
     }
   }, [state, navigate]);
