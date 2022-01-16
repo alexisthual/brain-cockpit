@@ -72,7 +72,7 @@ const FunctionalDistanceExplorer = () => {
 
     switch (action.type) {
       case "add":
-        newState.push(nanoid());
+        newState.push(nanoid(4));
         break;
       case "remove":
         if (action.payload !== undefined) {
@@ -88,7 +88,7 @@ const FunctionalDistanceExplorer = () => {
 
     return newState;
   };
-  const [panes, setPanes] = useReducer(panesReducer, [nanoid()]);
+  const [panes, setPanes] = useReducer(panesReducer, [nanoid(4)]);
 
   // Initialise all app state variables
   useEffect(() => {

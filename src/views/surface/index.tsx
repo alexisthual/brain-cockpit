@@ -61,7 +61,7 @@ const stateFromUrl = (): SurfaceViewState => {
     urlState = {
       ...urlState,
       panes: {
-        [nanoid()]: defaultPaneState,
+        [nanoid(4)]: defaultPaneState,
       },
     };
   }
@@ -127,7 +127,7 @@ const SurfaceExplorer = () => {
       ...state,
       panes: {
         ...state.panes,
-        [nanoid()]: defaultPaneState,
+        [nanoid(4)]: defaultPaneState,
       },
     };
 
