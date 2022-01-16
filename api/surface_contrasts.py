@@ -293,7 +293,7 @@ def load_contrasts():
                 hemi = "right"
 
             mean = np.nanmean(
-                np.concatenate(
+                np.vstack(
                     [
                         np.array(
                             [
@@ -302,7 +302,7 @@ def load_contrasts():
                                 ]
                                 if data[mesh][subject][task][contrast][hemi]
                                 is not None
-                                else None
+                                else np.nan
                                 for task, contrast in tasks_contrasts
                             ]
                         )
@@ -350,10 +350,17 @@ def load_contrasts():
             return jsonify(
                 np.nanmean(
                     np.vstack(
-                        [
-                            data[mesh][subject][task][contrast][hemi]
-                            for subject in subjects
-                        ]
+                        # Filter out subjects for whom this contrast map
+                        # does not exist
+                        list(
+                            filter(
+                                lambda x: x is not None,
+                                [
+                                    data[mesh][subject][task][contrast][hemi]
+                                    for subject in subjects
+                                ],
+                            )
+                        )
                     ),
                     axis=0,
                 )
@@ -362,19 +369,27 @@ def load_contrasts():
             return jsonify(
                 np.nanmean(
                     np.vstack(
-                        [
-                            np.concatenate(
+                        # Filter out subjects for whom this contrast map
+                        # does not exist. Assume that left and right hemispheres
+                        # will be missing at the same time
+                        list(
+                            filter(
+                                lambda x: x is not [None, None],
                                 [
-                                    data[mesh][subject][task][contrast][
-                                        "left"
-                                    ],
-                                    data[mesh][subject][task][contrast][
-                                        "right"
-                                    ],
-                                ]
+                                    np.concatenate(
+                                        [
+                                            data[mesh][subject][task][
+                                                contrast
+                                            ]["left"],
+                                            data[mesh][subject][task][
+                                                contrast
+                                            ]["right"],
+                                        ]
+                                    )
+                                    for subject in subjects
+                                ],
                             )
-                            for subject in subjects
-                        ]
+                        )
                     ),
                     axis=0,
                 )
