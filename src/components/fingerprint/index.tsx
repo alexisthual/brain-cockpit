@@ -96,7 +96,7 @@ const Fingerprint = ({
     );
     filteredFingerprints = filteredFingerprints.map((fingerprint) => {
       return fingerprint.filter(
-        (_, index) => selectedTasks.indexOf(contrastLabels[index].task) !== -1
+        (_, index) => selectedTasks.indexOf(contrastLabels[index]?.task) !== -1
       );
     });
   }
@@ -107,7 +107,7 @@ const Fingerprint = ({
       filteredFingerprints = filteredFingerprints.map((fingerprint) => {
         return fingerprint.filter(
           (_, index) =>
-            filteredContrastLabels[index].contrast.split("-").length > 1
+            filteredContrastLabels[index]?.contrast.split("-").length > 1
         );
       });
       filteredContrastLabels = filteredContrastLabels.filter(
@@ -118,7 +118,7 @@ const Fingerprint = ({
       filteredFingerprints = filteredFingerprints.map((fingerprint) => {
         return fingerprint.filter(
           (_, index) =>
-            filteredContrastLabels[index].contrast.split("-").length === 1
+            filteredContrastLabels[index]?.contrast.split("-").length === 1
         );
       });
       filteredContrastLabels = filteredContrastLabels.filter(
