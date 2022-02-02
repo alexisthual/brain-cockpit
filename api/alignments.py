@@ -14,7 +14,8 @@ from api import app
 from api.surface_contrasts import load_data, parse_metadata
 import custom_utils.setup as setup
 
-import importlib.util
+from fugw.fugw import FUGW
+from msm.model import MSM
 
 # Load environment variables
 setup.load_env()
@@ -30,6 +31,18 @@ mesh_shape = {
     "fsaverage5": {"left": 10242, "right": 10242},
     "fsaverage7": {"left": 163_842, "right": 163_842},
     "individual": {},
+}
+
+MODEL_CLASSES = ["FUGW", "MSM"]
+AVAILABLE_MODELS = {
+    "fugw test": {
+        "model": "FUGW",
+        "path": "/home/alexis/singbrain/outputs/_058_test_alignment_classes/sub-07_sub-09_fugw.pkl",
+    },
+    "msm test": {
+        "model": "MSM",
+        "path": "/home/alexis/singbrain/outputs/_058_test_alignment_classes/sub-07_sub-09_msm.pkl",
+    },
 }
 
 
@@ -51,19 +64,9 @@ def load_alignments():
         # ROUTES
         # Define a series of enpoints to expose contrasts, meshes, etc
 
-        # Import classes of models which can be loaded
-        sys.path.append("/home/alexis/singbrain/repo/alexis_thual")
-        from _052_fugw_class import FUGW
-
-        # TODO: FUGW needs to be instantiated at least once
-        # before loading a FUGW pickle file
-        test_model = FUGW()  # noqa
-
-        models = ["FUGW", "MSM"]
-
         @app.route("/alignments/models", methods=["GET"])
         def get_models():
-            return jsonify(models)
+            return jsonify(list(AVAILABLE_MODELS.keys()))
 
         @app.route("/alignments/single_voxel", methods=["GET"])
         def align_single_voxel():
@@ -73,16 +76,15 @@ def load_alignments():
             mesh = request.args.get("mesh", type=str, default="fsaverage5")
             voxel = request.args.get("voxel", type=int)
             # role = request.args.get("role", type=str, default="source")
+            model_name = request.args.get("model")
 
-            with open(
-                "/home/alexis/singbrain/outputs/_058_test_fugw_class/sub-07_sub-09_fugw.pkl",
-                "rb",
-            ) as f:
-                model = pickle.load(f)
+            if model_name in AVAILABLE_MODELS:
+                with open(AVAILABLE_MODELS[model_name]["path"], "rb") as f:
+                    model = pickle.load(f)
 
             input_map = np.zeros(mesh_shape[mesh][hemi])
             input_map[voxel] = 1
-            m = model.predict(input_map)
+            m = model.transform(input_map)
 
             return jsonify(m)
 
@@ -94,12 +96,11 @@ def load_alignments():
             mesh = request.args.get("mesh", type=str, default="fsaverage5")
             contrast_index = request.args.get("contrast", type=int)
             role = request.args.get("role", type=str, default="source")
+            model_name = request.args.get("model")
 
-            with open(
-                "/home/alexis/singbrain/outputs/_058_test_fugw_class/sub-07_sub-09_fugw.pkl",
-                "rb",
-            ) as f:
-                model = pickle.load(f)
+            if model_name in AVAILABLE_MODELS:
+                with open(AVAILABLE_MODELS[model_name]["path"], "rb") as f:
+                    model = pickle.load(f)
 
             if role == "source":
                 # TODO
@@ -110,6 +111,6 @@ def load_alignments():
             elif role == "target":
                 task, contrast = tasks_contrasts[contrast_index]
                 input_map = data[mesh][subjects[source]][task][contrast][hemi]
-                m = model.predict(input_map)
+                m = model.transform(input_map)
 
             return jsonify(m)

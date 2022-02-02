@@ -121,6 +121,7 @@ const AlignmentPane = ({
                 mesh: alignmentState.meshSupport,
                 voxel: voxel,
                 role: paneRole,
+                model: alignmentState.model,
               },
             })
             .then((response: AxiosResponse<number[]>) => {
@@ -171,6 +172,7 @@ const AlignmentPane = ({
                 mesh: alignmentState.meshSupport,
                 contrast: alignmentState.contrast,
                 role: paneRole,
+                model: alignmentState.model,
               },
             })
             .then((response: AxiosResponse<number[]>) => {
