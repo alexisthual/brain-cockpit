@@ -8,6 +8,7 @@ import {
   HemisphereSide,
   Orientation,
   MeshSupport,
+  Model,
 } from "constants/index";
 import { server } from "App";
 
@@ -29,7 +30,7 @@ export enum AlignmentIntent {
 }
 
 export interface AlignmentViewState {
-  model?: string;
+  model?: Model;
   meshSupport: MeshSupport;
   hemi: HemisphereSide;
   viewLayout: ViewLayout;
@@ -162,7 +163,7 @@ const AlignmentsExplorer = () => {
   // Label information
   const [subjectLabels, setSubjectLabels] = useState<string[]>([]);
   const [contrastLabels, setContrastLabels] = useState<ContrastLabel[]>([]);
-  const [modelLabels, setModelLabels] = useState<string[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
   // Page layout
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [showGridHelper, setShowGridHelper] = useState(true);
@@ -178,7 +179,7 @@ const AlignmentsExplorer = () => {
       // Load static data
       const subjectLabels = server.get<string[]>("/ibc/subjects");
       const contrastLabels = server.get<string[][]>("/ibc/contrast_labels");
-      const modelLabels = server.get<string[]>("/alignments/models");
+      const modelLabels = server.get<any>("/alignments/models");
 
       // Wait for all data to be loaded before setting app state
       Promise.all([subjectLabels, contrastLabels, modelLabels]).then(
@@ -201,12 +202,21 @@ const AlignmentsExplorer = () => {
             });
           }
 
-          setModelLabels(values[2].data);
-          if (values[2].data.length > 0) {
+          let models: Model[] = [];
+          // console.log(values[2].data);
+          for (const key in values[2].data) {
+            models.push({
+              ...values[2].data[key],
+              name: key,
+            });
+          }
+          // console.log(models);
+          setModels(models);
+          if (models.length > 0) {
             setState((state: AlignmentViewState) => {
               return {
                 ...state,
-                model: values[2].data[0],
+                model: models[0],
               };
             });
           }
@@ -314,8 +324,8 @@ const AlignmentsExplorer = () => {
           showGridHelper={showGridHelper}
           showGridHelperCallback={() => setShowGridHelper(!showGridHelper)}
           model={state.model}
-          modelLabels={modelLabels}
-          changeModelCallback={(newModel: string) => {
+          models={models}
+          changeModelCallback={(newModel: Model) => {
             setState({
               ...state,
               model: newModel,

@@ -118,6 +118,11 @@ export enum MeshSupport {
   INDIVIDUAL = "individual",
 }
 
+export interface Model {
+  name: string;
+  mesh_support: MeshSupport;
+}
+
 export enum MeshType {
   PIAL = "pial",
   WHITE = "white",

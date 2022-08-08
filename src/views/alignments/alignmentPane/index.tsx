@@ -115,13 +115,13 @@ const AlignmentPane = ({
           server
             .get("/alignments/single_voxel", {
               params: {
-                source: alignmentState.source.subject,
-                target: alignmentState.target.subject,
+                // source: alignmentState.source.subject,
+                // target: alignmentState.target.subject,
                 hemi: alignmentState.hemi,
                 mesh: alignmentState.meshSupport,
                 voxel: voxel,
-                role: paneRole,
-                model: alignmentState.model,
+                // role: paneRole,
+                model: alignmentState.model?.name,
               },
             })
             .then((response: AxiosResponse<number[]>) => {
@@ -172,7 +172,7 @@ const AlignmentPane = ({
                 mesh: alignmentState.meshSupport,
                 contrast: alignmentState.contrast,
                 role: paneRole,
-                model: alignmentState.model,
+                model: alignmentState.model?.name,
               },
             })
             .then((response: AxiosResponse<number[]>) => {
@@ -273,7 +273,7 @@ const AlignmentPane = ({
               voxelIndex={alignmentState[paneRole].selectedVoxel}
               surfaceMap={surfaceMap}
               meshType={MeshType.PIAL}
-              meshSupport={alignmentState.meshSupport}
+              meshSupport={alignmentState.model?.mesh_support}
               subjectLabel={subjectLabels[alignmentState[paneRole].subject]}
               hemi={alignmentState.hemi}
               wireframe={wireframe}

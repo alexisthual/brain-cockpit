@@ -1,19 +1,42 @@
-import { Button } from "@blueprintjs/core";
+import { Button, MenuItem } from "@blueprintjs/core";
 import { Select } from "@blueprintjs/select";
 import React from "react";
 
 import { ViewLayout } from "../index";
 import SelectContrastLabel from "components/select/selectContrastLabel";
-import { ContrastLabel, stringRenderer } from "constants/index";
+import {
+  ContrastLabel,
+  highlightText,
+  Model,
+  stringRenderer,
+} from "constants/index";
 import "./style.scss";
+
+const modelRenderer = (
+  model: Model,
+  { handleClick, modifiers, query }: any
+) => {
+  if (!modifiers.matchesPredicate) {
+    return null;
+  }
+
+  return (
+    <MenuItem
+      key={`menu-item-${model.name}`}
+      active={modifiers.active}
+      onClick={handleClick}
+      text={highlightText(model.name, query)}
+    />
+  );
+};
 
 interface Props {
   showGridHelper?: boolean;
   showGridHelperCallback?: () => void;
-  model?: string;
-  modelLabels?: string[];
+  model?: Model;
+  models?: Model[];
   changeModelCallback: (
-    newModel: string,
+    newModel: Model,
     event?: React.SyntheticEvent<HTMLElement>
   ) => void;
   viewLayout?: ViewLayout;
@@ -33,7 +56,7 @@ const AlignmentControls = ({
   showGridHelper,
   showGridHelperCallback,
   model,
-  modelLabels,
+  models,
   changeModelCallback = () => {},
   viewLayout,
   changeViewLayout = () => {},
@@ -84,12 +107,12 @@ const AlignmentControls = ({
           outlined
         />
       </Select>
-      <Select<string>
+      <Select<any>
         filterable={false}
-        items={modelLabels ?? []}
-        itemRenderer={stringRenderer}
+        items={models ?? []}
+        itemRenderer={modelRenderer}
         onItemSelect={(
-          newItem: string,
+          newItem: Model,
           event?: React.SyntheticEvent<HTMLElement>
         ) => {
           if (changeModelCallback) {
@@ -99,7 +122,7 @@ const AlignmentControls = ({
       >
         <Button
           rightIcon="double-caret-vertical"
-          text={model}
+          text={model?.name}
           minimal
           outlined
         />
@@ -109,3 +132,16 @@ const AlignmentControls = ({
 };
 
 export default AlignmentControls;
+// <Select<string>
+//   filterable={false}
+//   items={modelLabels ?? []}
+//   itemRenderer={stringRenderer}
+//   onItemSelect={(
+//     newItem: string,
+//     event?: React.SyntheticEvent<HTMLElement>
+//   ) => {
+//     if (changeModelCallback) {
+//       changeModelCallback(newItem, event);
+//     }
+//   }}
+// >
