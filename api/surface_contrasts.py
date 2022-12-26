@@ -115,7 +115,7 @@ def load_data(df):
         mesh_shape["individual"][subject] = {}
         for hemi in ["left", "right"]:
             with open(
-                f"./api/public/meshes/individual/{subject}/pial_{hemi}.gltf",
+                f"./public/meshes/individual/{subject}/pial_{hemi}.gltf",
                 "r",
             ) as f:
                 individual_mesh_meta = json.load(f)
