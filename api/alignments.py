@@ -14,7 +14,7 @@ from api import app
 from api.surface_contrasts import load_data, parse_metadata
 import custom_utils.setup as setup
 
-from fugw.fugw import FUGW
+from fugw import FUGW
 from msm.model import MSM
 
 # Load environment variables
