@@ -20,18 +20,17 @@ from gltflib import (
     AccessorType,
     BufferTarget,
     ComponentType,
-    GLBResource,
     FileResource,
 )
 from nilearn import datasets
-from nilearn import image
-from nilearn import surface
-from scipy.linalg import norm
-from scipy.sparse import coo_matrix, csr_matrix, triu
+from scipy.sparse import coo_matrix, triu
 from sklearn.preprocessing import normalize
 from tqdm import tqdm
 
 OUTPUT_PATH = "/home/alexis/singbrain/repo/brain-cockpit/public/meshes"
+
+if not os.path.exists(OUTPUT_PATH):
+    os.mkdir(OUTPUT_PATH)
 
 
 # %%
@@ -320,68 +319,62 @@ def compute_gltf_from_gifti(
     )
 
 
-# %% Export all fsaverage resolutions
-for mesh in tqdm(["fsaverage5", "fsaverage6", "fsaverage7"]):
-    fsaverage = datasets.fetch_surf_fsaverage(mesh=mesh)
-    for mesh_type in ["infl", "pial", "white"]:
-        for side in ["left", "right"]:
-            compute_gltf_from_gifti(
-                fsaverage[f"{mesh_type}_{side}"], mesh, mesh_type, side
-            )
-
-# %% Export all individual meshes from IBC
-# Originally in the freesurfer format
-subjects = [
-    "sub-01",
-    "sub-02",
-    "sub-04",
-    "sub-05",
-    "sub-06",
-    "sub-07",
-    "sub-08",
-    "sub-09",
-    "sub-11",
-    "sub-12",
-    "sub-13",
-    "sub-14",
-    "sub-15",
-]
-
-mesh_folder = "/home/alexis/singbrain/data/ibc_meshes"
-
-for subject in tqdm(subjects):
-    for mesh_type in ["inflated", "pial", "white"]:
-        for side in ["lh", "rh"]:
-            side_corrected = "left" if side == "lh" else "right"
-            mesh_type_corrected = (
-                "infl" if mesh_type == "inflated" else mesh_type
-            )
-
-            # Load gifti file if available, else load freesurfer file.
-            # This is useful since pial surfaces have been modified
-            # (new pial surfaces are average between freesurfer's pial and white)
-            fs_path = os.path.join(mesh_folder, subject, f"{side}.{mesh_type}")
-            gii_path = os.path.join(
-                mesh_folder, subject, f"{mesh_type}_{side_corrected}.gii"
-            )
-            mesh_path = gii_path if os.path.exists(gii_path) else fs_path
-
-            compute_gltf_from_gifti(
-                mesh_path,
-                subject,
-                mesh_type_corrected,
-                side_corrected,
-                individual=True,
-            )
-
 # %%
-p = "/home/alexis/singbrain/data/ibc_meshes/sub-01/pial_left.gii"
-img = nib.load(p)
-img.meta
-img.get_arrays_from_intent("NIFTI_INTENT_POINTSET")[0].print_summary()
-img.get_arrays_from_intent("NIFTI_INTENT_POINTSET")[0].data
+if __name__ == "__main__":
+    # %% Export all fsaverage resolutions
+    for mesh in tqdm(["fsaverage5", "fsaverage6", "fsaverage7"]):
+        fsaverage = datasets.fetch_surf_fsaverage(mesh=mesh)
+        for mesh_type in ["infl", "pial", "white"]:
+            for side in ["left", "right"]:
+                compute_gltf_from_gifti(
+                    fsaverage[f"{mesh_type}_{side}"], mesh, mesh_type, side
+                )
 
-fs5 = datasets.fetch_surf_fsaverage(mesh="fsaverage5")
-img_fs5 = nib.load(fs5.pial_left)
-img_fs5.meta
-img_fs5.get_arrays_from_intent("NIFTI_INTENT_POINTSET")[0].print_summary()
+    # %% Export all individual meshes from IBC
+    # Originally in the freesurfer format
+    subjects = [
+        "sub-01",
+        "sub-02",
+        "sub-04",
+        "sub-05",
+        "sub-06",
+        "sub-07",
+        "sub-08",
+        "sub-09",
+        "sub-11",
+        "sub-12",
+        "sub-13",
+        "sub-14",
+        "sub-15",
+    ]
+
+    mesh_folder = "/home/alexis/singbrain/data/ibc_meshes"
+
+    for subject in tqdm(subjects):
+        for mesh_type in ["inflated", "pial", "white"]:
+            for side in ["lh", "rh"]:
+                side_corrected = "left" if side == "lh" else "right"
+                mesh_type_corrected = (
+                    "infl" if mesh_type == "inflated" else mesh_type
+                )
+
+                # Load gifti file if available, else load freesurfer file.
+                # This is useful since pial surfaces have been modified
+                # (new pial surfaces are average between freesurfer's pial and white)
+                fs_path = os.path.join(
+                    mesh_folder, subject, f"{side}.{mesh_type}"
+                )
+                gii_path = os.path.join(
+                    mesh_folder,
+                    subject,
+                    f"{mesh_type_corrected}_{side_corrected}.gii",
+                )
+                mesh_path = gii_path if os.path.exists(gii_path) else fs_path
+
+                compute_gltf_from_gifti(
+                    mesh_path,
+                    subject,
+                    mesh_type_corrected,
+                    side_corrected,
+                    individual=True,
+                )
