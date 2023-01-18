@@ -1,49 +1,78 @@
-from distutils.util import strtobool
-import dotenv
+from pathlib import Path
+
 from flask import jsonify, request, send_from_directory
-import json
 import nibabel as nib
 import numpy as np
-import os
 import pandas as pd
 import pickle
-import sys
-from tqdm import tqdm
+import torch
 
 from api import app
-from api.surface_contrasts import load_data, parse_metadata
-import custom_utils.setup as setup
 
 from fugw import FUGW
 from msm.model import MSM
 
-# Load environment variables
-setup.load_env()
+AVAILABLE_ALIGNMENTS_DATASETS = [
+    {
+        "url_id": "ibc",
+        "name": "FUGW on IBC",
+        "path": "/home/alexis/singbrain/data/brain-cockpit-test-alignment/data.csv",
+    }
+]
 
-DEBUG = os.getenv("DEBUG")
-REACT_APP_ALIGNMENTS_VIEW = bool(
-    strtobool(os.getenv("REACT_APP_ALIGNMENTS_VIEW"))
-)
-AVAILABLE_GIFTI_FILES_DB = os.getenv("AVAILABLE_GIFTI_FILES_DB")
-MESH_PATH = os.getenv("MESH_PATH")
 
-mesh_shape = {
-    "fsaverage5": {"left": 10242, "right": 10242},
-    "fsaverage7": {"left": 163_842, "right": 163_842},
-    "individual": {},
-}
+def crow_indices_to_row_indices(crow_indices):
+    """
+    Computes a row indices tensor
+    from a CSR indptr tensor (ie crow indices tensor)
+    """
+    n_elements_per_row = crow_indices[1:] - crow_indices[:-1]
+    arange = torch.arange(crow_indices.shape[0] - 1)
+    row_indices = torch.repeat_interleave(arange, n_elements_per_row)
+    return row_indices
 
-MODEL_CLASSES = ["FUGW", "MSM"]
-AVAILABLE_MODELS = {
-    "fugw test": {
-        "model": "FUGW",
-        "path": "/home/alexis/singbrain/outputs/_058_test_alignment_classes/sub-07_sub-09_fugw.pkl",
-    },
-    "msm test": {
-        "model": "MSM",
-        "path": "/home/alexis/singbrain/outputs/_058_test_alignment_classes/sub-07_sub-09_msm.pkl",
-    },
-}
+
+def csr_dim_sum(inputs, group_indices, n_groups):
+    """In a given tensor, computes sum of elements belonging to the same group.
+    Taken from https://discuss.pytorch.org/t/sum-over-various-subsets-of-a-tensor/31881/8
+
+    Args:
+        inputs: torch.Tensor of size (n, ) whose values will be summed
+        group_indices: torch.Tensor of size (n, )
+        n_groups: int, total number of groups
+
+    Returns:
+        sums: torch.Tensor of size (n_groups)
+    """
+    n_inputs = inputs.size(0)
+    indices = torch.stack(
+        (
+            group_indices,
+            torch.arange(n_inputs, device=group_indices.device),
+        )
+    )
+    values = torch.ones_like(group_indices, dtype=torch.float)
+    one_hot = torch.sparse_coo_tensor(
+        indices, values, size=(n_groups, n_inputs)
+    )
+    return torch.sparse.mm(one_hot, inputs.reshape(-1, 1)).to_dense().flatten()
+
+
+def csr_sum(csr_matrix, dim=None):
+    """Computes sum of a CSR torch matrix along a given dimension."""
+    if dim is None:
+        return csr_matrix.values().sum()
+    elif dim == 0:
+        return csr_dim_sum(
+            csr_matrix.values(), csr_matrix.col_indices(), csr_matrix.shape[1]
+        )
+    elif dim == 1:
+        row_indices = crow_indices_to_row_indices(csr_matrix.crow_indices())
+        return csr_dim_sum(
+            csr_matrix.values(), row_indices, csr_matrix.shape[0]
+        )
+    else:
+        raise ValueError(f"Wrong dim: {dim}")
 
 
 # MAIN FUNCTION
@@ -51,66 +80,104 @@ AVAILABLE_MODELS = {
 # It loads fmri contrasts and exposes flask endpoints.
 
 
-def load_alignments():
-    df = pd.DataFrame()
-    meshes, subjects, tasks_contrasts, sides = [], [], [], []
+def create_alignents_dataset_endpoints(dataset):
+    """
+    For a given alignment dataset, generate endpoints
+    serving dataset meshes and alignment transforms.
+    """
 
-    if REACT_APP_ALIGNMENTS_VIEW:
-        ## Load all available contrasts
-        df = pd.read_csv(AVAILABLE_GIFTI_FILES_DB)
-        meshes, subjects, tasks_contrasts, sides = parse_metadata(df)
-        data = load_data(df)
+    df = pd.read_csv(dataset["path"])
+    id = dataset["url_id"]
+    dataset_path = Path(dataset["path"]).parent
 
-        # ROUTES
-        # Define a series of enpoints to expose contrasts, meshes, etc
+    @app.route(f"/alignments/{id}/models", methods=["GET"])
+    def get_models():
+        return jsonify(df.index.to_list())
 
-        @app.route("/alignments/models", methods=["GET"])
-        def get_models():
-            return jsonify(list(AVAILABLE_MODELS.keys()))
+    @app.route(f"/alignments/{id}/<int:model_id>/info", methods=["GET"])
+    def get_model_info(model_id):
+        df_row = df.iloc[model_id].copy()
+        df_row["source_mesh"] = str(
+            Path(df_row["source_mesh"]).with_suffix(".gltf")
+        )
+        df_row["target_mesh"] = str(
+            Path(df_row["target_mesh"]).with_suffix(".gltf")
+        )
+        return df_row.to_json()
 
-        @app.route("/alignments/single_voxel", methods=["GET"])
-        def align_single_voxel():
-            # source = request.args.get("source", type=int)
-            # target = request.args.get("target", type=int)
-            hemi = request.args.get("hemi", type=str, default="left")
-            mesh = request.args.get("mesh", type=str, default="fsaverage5")
-            voxel = request.args.get("voxel", type=int)
-            # role = request.args.get("role", type=str, default="source")
-            model_name = request.args.get("model")
+    @app.route(
+        f"/alignments/{id}/<int:model_id>/mesh/<path:path>", methods=["GET"]
+    )
+    def get_alignment_mesh(model_id, path):
+        return send_from_directory(Path(dataset["path"]).parent, path)
 
-            if model_name in AVAILABLE_MODELS:
-                with open(AVAILABLE_MODELS[model_name]["path"], "rb") as f:
-                    model = pickle.load(f)
+    @app.route(f"/alignments/{id}/single_voxel", methods=["GET"])
+    def align_single_voxel():
+        model_id = request.args.get("model_id", type=int)
+        voxel = request.args.get("voxel", type=int)
+        role = request.args.get("role", type=str)
 
-            input_map = np.zeros(mesh_shape[mesh][hemi])
+        with open(df.iloc[model_id]["alignment"], "rb") as f:
+            model = pickle.load(f)
+
+        if role == "target":
+            n_voxels = (
+                nib.load(dataset_path / df.iloc[model_id]["source_mesh"])
+                .darrays[0]
+                .data.shape[0]
+            )
+            input_map = np.zeros(n_voxels)
             input_map[voxel] = 1
-            m = model.transform(input_map)
 
-            return jsonify(m)
+            m = (
+                (
+                    torch.sparse.mm(
+                        model.pi.transpose(0, 1),
+                        torch.from_numpy(input_map)
+                        .reshape(-1, 1)
+                        .type(torch.FloatTensor),
+                    ).to_dense()
+                    / torch.sparse.sum(model.pi, dim=0)
+                    .to_dense()
+                    .reshape(-1, 1)
+                )
+                .T.flatten()
+                .detach()
+                .cpu()
+                .numpy()
+            )
+        elif role == "source":
+            n_voxels = (
+                nib.load(dataset_path / df.iloc[model_id]["target_mesh"])
+                .darrays[0]
+                .data.shape[0]
+            )
+            input_map = np.zeros(n_voxels)
+            input_map[voxel] = 1
 
-        @app.route("/alignments/contrast", methods=["GET"])
-        def align_contrast():
-            source = request.args.get("source", type=int)
-            # target = request.args.get("target", type=int)
-            hemi = request.args.get("hemi", type=str, default="left")
-            mesh = request.args.get("mesh", type=str, default="fsaverage5")
-            contrast_index = request.args.get("contrast", type=int)
-            role = request.args.get("role", type=str, default="source")
-            model_name = request.args.get("model")
+            m = (
+                (
+                    torch.sparse.mm(
+                        model.pi,
+                        torch.from_numpy(input_map)
+                        .reshape(-1, 1)
+                        .type(torch.FloatTensor),
+                    ).to_dense()
+                    / torch.sparse.sum(model.pi, dim=1)
+                    .to_dense()
+                    .reshape(-1, 1)
+                )
+                .T.flatten()
+                .detach()
+                .cpu()
+                .numpy()
+            )
 
-            if model_name in AVAILABLE_MODELS:
-                with open(AVAILABLE_MODELS[model_name]["path"], "rb") as f:
-                    model = pickle.load(f)
+        return jsonify(m)
 
-            if role == "source":
-                # TODO
-                # task, contrast = tasks_contrasts[contrast_index]
-                # input_map = data[mesh][subjects[target]][task][contrast][hemi]
-                # m = model.inverse_transform(input_map)
-                m = None
-            elif role == "target":
-                task, contrast = tasks_contrasts[contrast_index]
-                input_map = data[mesh][subjects[source]][task][contrast][hemi]
-                m = model.transform(input_map)
 
-            return jsonify(m)
+def create_alignments_endpoints():
+    """Create endpoints for all available alignments datasets."""
+
+    for dataset in AVAILABLE_ALIGNMENTS_DATASETS:
+        create_alignents_dataset_endpoints(dataset)

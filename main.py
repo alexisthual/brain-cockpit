@@ -6,8 +6,7 @@ from waitress import serve
 from api import app
 
 from api.surface_contrasts import load_contrasts
-from api.surface_gradient import load_gradients
-from api.alignments import load_alignments
+from api.alignments import create_alignments_endpoints
 
 # These functions are exposed for specific experiments
 # whose data might not be publicly available
@@ -27,8 +26,8 @@ REACT_APP_API_PORT = os.getenv("REACT_APP_API_PORT")
 # Define util function to load all data
 def create_app():
     load_contrasts()
-    load_gradients()
-    load_alignments()
+    # load_gradients()
+    create_alignments_endpoints()
 
     load_regressed_coordinates()
     load_correlations()

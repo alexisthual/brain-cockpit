@@ -32,6 +32,7 @@ interface IProps {
   markerIndices?: number[];
   meshType: MeshType;
   meshSupport: MeshSupport;
+  meshUrl?: string;
   subjectLabel?: string;
   hemi: HemisphereSide;
   uniqueKey?: string;
@@ -119,49 +120,61 @@ class Scene extends Component<IProps, IState> {
 
   // Load BufferGeometry object from backend
   static async loadGeometry(
+    meshUrl?: string,
     meshSupport: MeshSupport = MeshSupport.FSAVERAGE5,
     meshType: MeshType = MeshType.PIAL,
     hemisphereSide: HemisphereSide = HemisphereSide.LEFT,
     subjectLabel: string | undefined = undefined
   ): Promise<THREE.BufferGeometry | undefined> {
-    if (subjectLabel === undefined) {
-      return undefined;
-    }
+    if (meshUrl !== undefined) {
+      return Scene.load(meshUrl).then((gltf: any) => {
+        return gltf.scene.children[0].geometry as THREE.BufferGeometry;
+      });
+    } else {
+      if (subjectLabel === undefined) {
+        return undefined;
+      }
 
-    let url: string;
-    switch (meshSupport) {
-      case MeshSupport.INDIVIDUAL:
-        url = `ibc/mesh/${meshSupport}/${subjectLabel}`;
-        break;
-      default:
-        url = `ibc/mesh/${meshSupport}`;
-        break;
-    }
-    switch (hemisphereSide) {
-      case HemisphereSide.LEFT:
-        return Scene.load(`${url}/${meshType}_left.gltf`).then((gltf: any) => {
-          return gltf.scene.children[0].geometry as THREE.BufferGeometry;
-        });
-      case HemisphereSide.RIGHT:
-        return Scene.load(`${url}/${meshType}_right.gltf`).then((gltf: any) => {
-          return gltf.scene.children[0].geometry as THREE.BufferGeometry;
-        });
-      case HemisphereSide.BOTH:
-        // Load both meshes
-        const loadLeft = Scene.load(`${url}/${meshType}_left.gltf`);
-        const loadRight = Scene.load(`${url}/${meshType}_right.gltf`);
+      let url: string;
 
-        // Merge them in a common Mesh
-        return Promise.all([loadLeft, loadRight]).then((values: any) => {
-          const mergedBufferGeometries = BufferGeometryUtils.mergeBufferGeometries(
-            [
-              values[0].scene.children[0].geometry,
-              values[1].scene.children[0].geometry,
-            ]
+      switch (meshSupport) {
+        case MeshSupport.INDIVIDUAL:
+          url = `ibc/mesh/${meshSupport}/${subjectLabel}`;
+          break;
+        default:
+          url = `ibc/mesh/${meshSupport}`;
+          break;
+      }
+      switch (hemisphereSide) {
+        case HemisphereSide.LEFT:
+          return Scene.load(`${url}/${meshType}_left.gltf`).then(
+            (gltf: any) => {
+              return gltf.scene.children[0].geometry as THREE.BufferGeometry;
+            }
           );
+        case HemisphereSide.RIGHT:
+          return Scene.load(`${url}/${meshType}_right.gltf`).then(
+            (gltf: any) => {
+              return gltf.scene.children[0].geometry as THREE.BufferGeometry;
+            }
+          );
+        case HemisphereSide.BOTH:
+          // Load both meshes
+          const loadLeft = Scene.load(`${url}/${meshType}_left.gltf`);
+          const loadRight = Scene.load(`${url}/${meshType}_right.gltf`);
 
-          return mergedBufferGeometries;
-        });
+          // Merge them in a common Mesh
+          return Promise.all([loadLeft, loadRight]).then((values: any) => {
+            const mergedBufferGeometries = BufferGeometryUtils.mergeBufferGeometries(
+              [
+                values[0].scene.children[0].geometry,
+                values[1].scene.children[0].geometry,
+              ]
+            );
+
+            return mergedBufferGeometries;
+          });
+      }
     }
   }
 
@@ -359,6 +372,7 @@ class Scene extends Component<IProps, IState> {
 
     // Load exteral geometry
     const geometry = await Scene.loadGeometry(
+      this.props.meshUrl,
       this.props.meshSupport,
       this.props.meshType,
       this.props.hemi,
@@ -398,12 +412,14 @@ class Scene extends Component<IProps, IState> {
     // Update displayed mesh when meshType or hemi change
     if (
       this.scene !== undefined &&
-      (prevProps.meshSupport !== this.props.meshSupport ||
+      (prevProps.meshUrl !== this.props.meshUrl ||
+        prevProps.meshSupport !== this.props.meshSupport ||
         prevProps.meshType !== this.props.meshType ||
         prevProps.subjectLabel !== this.props.subjectLabel ||
         prevProps.hemi !== this.props.hemi)
     ) {
       let newGeometry = (await Scene.loadGeometry(
+        this.props.meshUrl,
         this.props.meshSupport,
         this.props.meshType,
         this.props.hemi,

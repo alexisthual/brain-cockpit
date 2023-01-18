@@ -115,7 +115,7 @@ def load_data(df):
         mesh_shape["individual"][subject] = {}
         for hemi in ["left", "right"]:
             with open(
-                f"./public/meshes/individual/{subject}/pial_{hemi}.gltf",
+                f"./api/public/meshes/individual/{subject}/pial_{hemi}.gltf",
                 "r",
             ) as f:
                 individual_mesh_meta = json.load(f)
@@ -126,7 +126,6 @@ def load_data(df):
     # Load gifti files
     # and populate missing (mesh, subject, task, contrast, side) tuples
     # with None
-    print(f"Loading {len(tasks_contrasts)} contrasts...")
     data = dict()
     for mesh in tqdm(meshes, file=sys.stdout, position=0):
         dsu = dict()
@@ -178,7 +177,6 @@ def load_data(df):
                 dtc[task][contrast] = dsi
             dsu[subject] = dtc
         data[mesh] = dsu
-    print(f"OK")
 
     return data
 
@@ -196,7 +194,9 @@ def load_contrasts():
         ## Load all available contrasts
         df = pd.read_csv(AVAILABLE_GIFTI_FILES_DB)
         meshes, subjects, tasks_contrasts, sides = parse_metadata(df)
+        print("Loading contrast maps...")
         data = load_data(df)
+        print("Loaded.")
 
         ## Load individual meshes' dimensions
         for subject in subjects:

@@ -29,132 +29,34 @@ export enum AlignmentIntent {
 }
 
 export interface AlignmentViewState {
-  model?: string;
-  meshSupport: MeshSupport;
-  hemi: HemisphereSide;
+  datasetId: string;
+  modelId: string;
   viewLayout: ViewLayout;
   contrast?: number;
   source: {
-    subject: number;
     selectedVoxel?: number;
+    meshPath?: string;
   };
   target: {
-    subject: number;
     selectedVoxel?: number;
+    meshPath?: string;
   };
 }
-
-// interface SurfaceViewState {
-//   panes: { [paneId: string]: SurfacePaneState };
-// }
-//
-// // Custom hook to load state from URL
-// const useSurfaceState = (): [
-//   SurfaceViewState,
-//   React.Dispatch<React.SetStateAction<SurfaceViewState>>
-// ] => {
-//   // Load state from URL and convert it to SurfaceViewState
-//   // (decode booleans and numbers with custom decoder)
-//   let urlState = qs.parse(window.location.search, {
-//     ignoreQueryPrefix: true,
-//     decoder(str, _, charset) {
-//       const strWithoutPlus = str.replace(/\+/g, " ");
-//       if (charset === "iso-8859-1") {
-//         // unescape never throws, no try...catch needed:
-//         return strWithoutPlus.replace(/%[0-9a-f]{2}/gi, unescape);
-//       }
-//
-//       if (/^(\d+|\d*\.\d+)$/.test(str)) {
-//         return parseFloat(str);
-//       }
-//
-//       const keywords = {
-//         true: true,
-//         false: false,
-//         null: null,
-//         undefined,
-//       } as any;
-//
-//       if (str in keywords) {
-//         return keywords[str];
-//       }
-//
-//       // utf-8
-//       try {
-//         return decodeURIComponent(strWithoutPlus);
-//       } catch (e) {
-//         return strWithoutPlus;
-//       }
-//     },
-//   });
-//   // as unknown) as SurfaceViewState;
-//
-//   // If no panes are present, create one with default state
-//   if (urlState.panes === undefined) {
-//     urlState = {
-//       ...urlState,
-//       panes: {
-//         [nanoid()]: defaultPaneState,
-//       },
-//     };
-//   }
-//
-//   // Instantiate new state
-//   const [state, setState] = useState<any>(urlState);
-//
-//   // Update URL on state change
-//   const history = useNavigate();
-//
-//   useEffect(() => {
-//     history.push({
-//       search: qs.stringify(state),
-//     });
-//   }, [state, history]);
-//
-//   return [state, setState];
-// };
 
 //
 // Alignment explorer
 //
 
 const AlignmentsExplorer = () => {
-  // Load state from url
-  // const [state, setState] = useSurfaceState();
-
-  //
-  // Keyboard events
-  //
-
-  // N
-  // const keyAddPane = useCallback(
-  //   (event: any) => {
-  //     if (event.isComposing || event.keyCode === 78) {
-  //       addPane();
-  //     }
-  //   },
-  //   [addPane]
-  // );
-  //
-  // useEffect(() => {
-  //   window.addEventListener("keydown", keyAddPane);
-  //   return () => {
-  //     window.removeEventListener("keydown", keyAddPane);
-  //   };
-  // }, [keyAddPane]);
-
   // Alignment state
   const [state, setState] = useState<AlignmentViewState>({
-    model: undefined,
-    meshSupport: MeshSupport.FSAVERAGE5,
-    hemi: HemisphereSide.LEFT,
+    datasetId: "ibc",
+    modelId: "0",
     viewLayout: ViewLayout.ALIGNMENT,
     source: {
-      subject: 5,
       selectedVoxel: 6680,
     },
     target: {
-      subject: 7,
       selectedVoxel: undefined,
     },
   });
@@ -178,7 +80,9 @@ const AlignmentsExplorer = () => {
       // Load static data
       const subjectLabels = server.get<string[]>("/ibc/subjects");
       const contrastLabels = server.get<string[][]>("/ibc/contrast_labels");
-      const modelLabels = server.get<string[]>("/alignments/models");
+      const modelLabels = server.get<string[]>(
+        `/alignments/${state.datasetId}/models`
+      );
 
       // Wait for all data to be loaded before setting app state
       Promise.all([subjectLabels, contrastLabels, modelLabels]).then(
@@ -217,6 +121,32 @@ const AlignmentsExplorer = () => {
     fetchAllData();
   }, []);
 
+  useEffect(() => {
+    const modelInfo = server.get<any>(
+      `/alignments/${state.datasetId}/${state.modelId}/info`
+    );
+
+    modelInfo
+      .then((value) => {
+        setState((state: AlignmentViewState) => {
+          return {
+            ...state,
+            source: {
+              ...state.source,
+              meshPath: value.data["source_mesh"],
+            },
+            target: {
+              ...state.target,
+              meshPath: value.data["target_mesh"],
+            },
+          };
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, [state.modelId]);
+
   let panes = null;
 
   switch (state.viewLayout) {
@@ -229,9 +159,8 @@ const AlignmentsExplorer = () => {
               setAlignmentState={setState}
               paneRole={AlignmentRole.SOURCE}
               paneIntent={AlignmentIntent.SINGLE_VOXEL}
-              subjectLabels={subjectLabels}
               showGridHelper={showGridHelper}
-              colormapName={"viridis"}
+              colormapName={"single_diverging_heat"}
               paneLabel={"SOURCE SUBJECT"}
             />
             <AlignmentPane
@@ -239,9 +168,8 @@ const AlignmentsExplorer = () => {
               setAlignmentState={setState}
               paneRole={AlignmentRole.TARGET}
               paneIntent={AlignmentIntent.SINGLE_VOXEL}
-              subjectLabels={subjectLabels}
               showGridHelper={showGridHelper}
-              colormapName={"viridis"}
+              colormapName={"single_diverging_heat"}
               paneLabel={"TARGET SUBJECT"}
             />
           </div>
@@ -258,7 +186,6 @@ const AlignmentsExplorer = () => {
               setAlignmentState={setState}
               paneRole={AlignmentRole.SOURCE}
               paneIntent={AlignmentIntent.TRUE_CONTRAST}
-              subjectLabels={subjectLabels}
               showGridHelper={showGridHelper}
               colormapName={"diverging_temperature"}
               paneLabel={"ORIGINAL CONTRAST"}
@@ -268,7 +195,6 @@ const AlignmentsExplorer = () => {
               setAlignmentState={setState}
               paneRole={AlignmentRole.SOURCE}
               paneIntent={AlignmentIntent.ALIGNED_CONTRAST}
-              subjectLabels={subjectLabels}
               showGridHelper={showGridHelper}
               colormapName={"diverging_temperature"}
               paneLabel={"TRANSFORMED CONTRAST"}
@@ -281,7 +207,6 @@ const AlignmentsExplorer = () => {
               setAlignmentState={setState}
               paneRole={AlignmentRole.TARGET}
               paneIntent={AlignmentIntent.TRUE_CONTRAST}
-              subjectLabels={subjectLabels}
               showGridHelper={showGridHelper}
               colormapName={"diverging_temperature"}
             />
@@ -290,7 +215,6 @@ const AlignmentsExplorer = () => {
               setAlignmentState={setState}
               paneRole={AlignmentRole.TARGET}
               paneIntent={AlignmentIntent.ALIGNED_CONTRAST}
-              subjectLabels={subjectLabels}
               showGridHelper={showGridHelper}
               colormapName={"diverging_temperature"}
             />
@@ -313,12 +237,12 @@ const AlignmentsExplorer = () => {
         <AlignmentControls
           showGridHelper={showGridHelper}
           showGridHelperCallback={() => setShowGridHelper(!showGridHelper)}
-          model={state.model}
+          model={state.modelId}
           modelLabels={modelLabels}
           changeModelCallback={(newModel: string) => {
             setState({
               ...state,
-              model: newModel,
+              modelId: newModel,
             });
           }}
           viewLayout={state.viewLayout}
