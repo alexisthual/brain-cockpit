@@ -1,0 +1,9 @@
+alignments:
+  show: true
+  datasets:
+    ibc:
+      name: FUGW on IBC
+      path: /home/alexis/singbrain/data/bc-alignments/ibc-alignments/data.csv
+    # monkey:
+    #   name: Inter-species
+    #   path: /home/alexis/singbrain/data/bc-alignments/monkey-alignments/data.csv

@@ -1,24 +1,23 @@
 from pathlib import Path
 
-from flask import jsonify, request, send_from_directory
 import nibabel as nib
 import numpy as np
 import pandas as pd
 import pickle
 import torch
+import yaml
 
-from api import app
-
+from flask import jsonify, request, send_from_directory
 from fugw import FUGW
 from msm.model import MSM
 
-AVAILABLE_ALIGNMENTS_DATASETS = [
-    {
-        "url_id": "ibc",
-        "name": "FUGW on IBC",
-        "path": "/home/alexis/singbrain/data/brain-cockpit-test-alignment/data.csv",
-    }
-]
+from api import app
+
+with open("./config.yaml", "r") as f:
+    try:
+        config = yaml.safe_load(f)
+    except yaml.YAMLError as exc:
+        print(exc)
 
 
 def crow_indices_to_row_indices(crow_indices):
@@ -80,14 +79,13 @@ def csr_sum(csr_matrix, dim=None):
 # It loads fmri contrasts and exposes flask endpoints.
 
 
-def create_alignents_dataset_endpoints(dataset):
+def create_alignents_dataset_endpoints(id, dataset):
     """
     For a given alignment dataset, generate endpoints
     serving dataset meshes and alignment transforms.
     """
 
     df = pd.read_csv(dataset["path"])
-    id = dataset["url_id"]
     dataset_path = Path(dataset["path"]).parent
 
     @app.route(f"/alignments/{id}/models", methods=["GET"])
@@ -179,5 +177,8 @@ def create_alignents_dataset_endpoints(dataset):
 def create_alignments_endpoints():
     """Create endpoints for all available alignments datasets."""
 
-    for dataset in AVAILABLE_ALIGNMENTS_DATASETS:
-        create_alignents_dataset_endpoints(dataset)
+    try:
+        for dataset_id, dataset in config["alignments"]["datasets"].items():
+            create_alignents_dataset_endpoints(dataset_id, dataset)
+    except KeyError:
+        print("Missing alignment datasets")

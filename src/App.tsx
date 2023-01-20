@@ -16,7 +16,10 @@ import FunctionalDistanceExplorer from "views/functionalDistance";
 import KnnExplorer from "views/knn";
 import RegressionExplorer from "views/regression";
 import SurfaceExplorer from "views/surface";
+
 import "./App.scss";
+let config = require("../config.yaml").default;
+console.log(config);
 
 export const server = axios.create({
   baseURL: `${process.env.REACT_APP_API_HTTP_PROTOCOL}://${process.env.REACT_APP_API_URL}`,
