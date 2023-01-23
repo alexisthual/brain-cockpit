@@ -99,9 +99,7 @@ def mesh_to_graph(mesh):
 
 
 # %%
-def compute_gltf_from_gifti(
-    mesh_path, original_mesh_name, mesh_type, side, individual=False
-):
+def compute_gltf_from_gifti(mesh_path, output_folder, output_filename):
     """
     Build GLTF files optimized for webGL from a given gifti file:
     - one GLTF file representing the given mesh itself (same vertices and triangles)
@@ -114,13 +112,9 @@ def compute_gltf_from_gifti(
     - side: string, ["left", "right"]
     """
     # Create output folder for mesh
-    mesh_output_path = os.path.join(OUTPUT_PATH, original_mesh_name)
-    if individual:
-        mesh_output_path = os.path.join(
-            OUTPUT_PATH, "individual", original_mesh_name
-        )
-    if not os.path.exists(mesh_output_path):
-        os.mkdir(mesh_output_path)
+    mesh_output_folder = os.path.join(OUTPUT_PATH, output_folder)
+    if not os.path.exists(mesh_output_folder):
+        os.mkdir(mesh_output_folder)
 
     vertices, triangles = [], []
     if mesh_path[-3:] == "gii" or mesh_path[-6:] == "gii.gz":
@@ -164,11 +158,11 @@ def compute_gltf_from_gifti(
         buffers=[
             Buffer(
                 byteLength=len(vertex_bytearray),
-                uri=f"vertices_{mesh_type}_{side}.bin",
+                uri=f"vertices_{output_filename}.bin",
             ),
             Buffer(
                 byteLength=len(triangles_bytearray),
-                uri=f"triangles_{mesh_type}_{side}.bin",
+                uri=f"triangles_{output_filename}.bin",
             ),
         ],
         bufferViews=[
@@ -206,13 +200,13 @@ def compute_gltf_from_gifti(
     )
 
     vertices_resource = FileResource(
-        f"vertices_{mesh_type}_{side}.bin", data=vertex_bytearray
+        f"vertices_{output_filename}.bin", data=vertex_bytearray
     )
     triangles_resource = FileResource(
-        f"triangles_{mesh_type}_{side}.bin", data=triangles_bytearray
+        f"triangles_{output_filename}.bin", data=triangles_bytearray
     )
     gltf = GLTF(model=model, resources=[vertices_resource, triangles_resource])
-    gltf.export(os.path.join(mesh_output_path, f"{mesh_type}_{side}.gltf"))
+    gltf.export(os.path.join(mesh_output_folder, f"{output_filename}.gltf"))
 
     # Compute edges related information
     # dataset = "pial_left"
@@ -261,11 +255,11 @@ def compute_gltf_from_gifti(
         buffers=[
             Buffer(
                 byteLength=len(edges_center_bytearray),
-                uri=f"edges_center_{mesh_type}_{side}.bin",
+                uri=f"edges_center_{output_filename}.bin",
             ),
             Buffer(
                 byteLength=len(edges_orientation_bytearray),
-                uri=f"edges_orientation_{mesh_type}_{side}.bin",
+                uri=f"edges_orientation_{output_filename}.bin",
             ),
         ],
         bufferViews=[
@@ -303,10 +297,10 @@ def compute_gltf_from_gifti(
     )
 
     edges_center_resource = FileResource(
-        f"edges_center_{mesh_type}_{side}.bin", data=edges_center_bytearray
+        f"edges_center_{output_filename}.bin", data=edges_center_bytearray
     )
     edges_orientation_resource = FileResource(
-        f"edges_orientation_{mesh_type}_{side}.bin",
+        f"edges_orientation_{output_filename}.bin",
         data=edges_orientation_bytearray,
     )
 
@@ -315,7 +309,7 @@ def compute_gltf_from_gifti(
         resources=[edges_center_resource, edges_orientation_resource],
     )
     edges_gltf.export(
-        os.path.join(mesh_output_path, f"edges_{mesh_type}_{side}.gltf")
+        os.path.join(mesh_output_folder, f"edges_{output_filename}.gltf")
     )
 
 
@@ -327,7 +321,9 @@ if __name__ == "__main__":
         for mesh_type in ["infl", "pial", "white"]:
             for side in ["left", "right"]:
                 compute_gltf_from_gifti(
-                    fsaverage[f"{mesh_type}_{side}"], mesh, mesh_type, side
+                    fsaverage[f"{mesh_type}_{side}"],
+                    mesh,
+                    f"{mesh_type}_{side}",
                 )
 
     # %% Export all individual meshes from IBC
@@ -373,8 +369,6 @@ if __name__ == "__main__":
 
                 compute_gltf_from_gifti(
                     mesh_path,
-                    subject,
-                    mesh_type_corrected,
-                    side_corrected,
-                    individual=True,
+                    os.path.join(OUTPUT_PATH, "individual", subject),
+                    f"{mesh_type_corrected}_{side_corrected}",
                 )

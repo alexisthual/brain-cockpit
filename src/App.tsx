@@ -19,7 +19,6 @@ import SurfaceExplorer from "views/surface";
 
 import "./App.scss";
 let config = require("../config.yaml").default;
-console.log(config);
 
 export const server = axios.create({
   baseURL: `${process.env.REACT_APP_API_HTTP_PROTOCOL}://${process.env.REACT_APP_API_URL}`,
@@ -69,9 +68,15 @@ const App = () => {
           {process.env.REACT_APP_SLICE_VIEW === "true" ? (
             <Route path="/cuts" element={<CutsExplorer />} />
           ) : null}
-          {process.env.REACT_APP_ALIGNMENTS_VIEW === "true" ? (
-            <Route path="/alignments" element={<AlignmentsExplorer />} />
-          ) : null}
+          {Object.entries(config.alignments.datasets).map(
+            ([id, dataset]: any) => (
+              <Route
+                key={`alignments-route-${id}`}
+                path={`/alignments/${id}`}
+                element={<AlignmentsExplorer id={id} />}
+              />
+            )
+          )}
           {process.env.REACT_APP_EXPERIMENT_REGRESSION_VIEW === "true" ? (
             <Route path="/regression" element={<RegressionExplorer />} />
           ) : null}
@@ -102,13 +107,19 @@ const Layout = () => {
             </NavLink>
           </Tooltip2>
         ) : null}
-        {process.env.REACT_APP_ALIGNMENTS_VIEW === "true" ? (
-          <Tooltip2 content="IBC subject alignments" position={Position.RIGHT}>
-            <NavLink className="view-button" to="/alignments">
-              <Icon icon="swap-horizontal" />
-            </NavLink>
-          </Tooltip2>
-        ) : null}
+        {Object.entries(config.alignments.datasets).map(
+          ([id, dataset]: any) => (
+            <Tooltip2
+              key={`alignment-dataset-${id}`}
+              content={dataset.name}
+              position={Position.RIGHT}
+            >
+              <NavLink className="view-button" to={`/alignments/${id}`}>
+                <Icon icon="swap-horizontal" />
+              </NavLink>
+            </Tooltip2>
+          )
+        )}
         {process.env.REACT_APP_SLICE_VIEW === "true" ? (
           <Tooltip2 content="Cross-species slices" position={Position.RIGHT}>
             <NavLink className="view-button" to="/cuts">

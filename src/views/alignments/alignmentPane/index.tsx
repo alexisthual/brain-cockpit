@@ -12,6 +12,7 @@ import { colormaps, getMin, getMax, MeshType } from "constants/index";
 import { AlignmentViewState, AlignmentIntent, AlignmentRole } from "../index";
 
 interface Props {
+  datasetId: string;
   alignmentState: AlignmentViewState;
   setAlignmentState: (AlignmentViewState: any) => void;
   paneRole: AlignmentRole;
@@ -22,6 +23,7 @@ interface Props {
 }
 
 const AlignmentPane = ({
+  datasetId,
   alignmentState,
   setAlignmentState = () => {},
   paneRole,
@@ -49,7 +51,7 @@ const AlignmentPane = ({
 
         if (voxel !== undefined) {
           server
-            .get(`/alignments/${alignmentState.datasetId}/single_voxel`, {
+            .get(`/alignments/${datasetId}/single_voxel`, {
               params: {
                 voxel: voxel,
                 role: paneRole,
@@ -175,7 +177,7 @@ const AlignmentPane = ({
               surfaceMap={surfaceMap}
               meshUrl={
                 alignmentState[paneRole].meshPath !== undefined
-                  ? `alignments/${alignmentState.datasetId}/${alignmentState.modelId}/mesh/${alignmentState[paneRole].meshPath}`
+                  ? `alignments/${datasetId}/${alignmentState.modelId}/mesh/${alignmentState[paneRole].meshPath}`
                   : undefined
               }
               wireframe={wireframe}
