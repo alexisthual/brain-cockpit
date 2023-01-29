@@ -15,14 +15,14 @@ Keys `J`, `L` allow one to switch between contrasts, `I`, `K` between subjects.
 
 ### Dependencies
 
-```
+```bash
 yarn install
 conda env create -f environment.yml
 ```
 
 Once the `conda` environment is created, activate it with
 
-```
+```bash
 conda activate brain-cockpit
 ```
 
@@ -30,7 +30,7 @@ conda activate brain-cockpit
 
 Dependencies in `package.json` and `environment.yml` might evolve quickly. In order to update your local environment, run the following commands:
 
-```
+```bash
 yarn install
 conda env update --file environment.yml
 ```
@@ -39,15 +39,15 @@ conda env update --file environment.yml
 
 This command generates `fsaverage` meshes from `nilearn` and stores them in `./public/assets`
 
-```
-python custom_utils/gifty_to_gltf.py
+```bash
+python bc_utils/gifty_to_gltf.py
 ```
 
 ### Download IBC contrasts
 
 Projected contrasts are available at `/storage/store2/work/athual/data/ibc_surface_conditions_db.zip`. You most likely want to download and unzip this archive locally:
 
-```
+```bash
 scp username@drago2:/storage/store2/work/athual/data/ibc_surface_conditions_db.zip /path/to/archive
 unzip /path/to/ibc_surface_conditions_db.zip
 ```
@@ -82,8 +82,8 @@ In separate prompts:
 
 This will resample functional images contained in `SLICE_DATA_PATH`, to later be displayed in `brain-cockpit`.
 
-```
-python custom_utils/resample_functional_images.py --env {development, production}
+```bash
+python bc_utils/resample_functional_images.py --env {development, production}
 ```
 
 ## Contributing
@@ -91,6 +91,6 @@ python custom_utils/resample_functional_images.py --env {development, production
 Commits must validate a pre-commit routine launched by a git hook.
 To enable this hook locally, run
 
-```
+```bash
 pre-commit install
 ```
