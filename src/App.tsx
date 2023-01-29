@@ -33,7 +33,7 @@ const App = () => {
         "Select a section from the navigation bar to start using the app."
       }
       action={
-        <Link to="/ibc">
+        <Link to="/datasets/ibc">
           <Button intent={"primary"} outlined>
             Explore IBC dataset
           </Button>
@@ -46,11 +46,11 @@ const App = () => {
     <NonIdealState
       icon={"warning-sign"}
       title="Page not found"
-      description={"This page is either under development or does not exist"}
+      description={"This page is either under development or does not exist."}
       action={
         <Link to="/">
-          <Button intent={"primary"} outlined>
-            Go to main view
+          <Button intent={"primary"} large icon="home">
+            Go to home page
           </Button>
         </Link>
       }
@@ -62,21 +62,27 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route path="/" element={indexPage} />
-          {process.env.REACT_APP_CONDITIONS_VIEW === "true" ? (
-            <Route path="/ibc" element={<SurfaceExplorer />} />
-          ) : null}
-          {process.env.REACT_APP_SLICE_VIEW === "true" ? (
-            <Route path="/cuts" element={<CutsExplorer />} />
-          ) : null}
-          {Object.entries(config.alignments.datasets).map(
-            ([id, dataset]: any) => (
+          {Object.entries(config.surfaces.datasets).map(
+            ([datasetId, dataset]: any) => (
               <Route
-                key={`alignments-route-${id}`}
-                path={`/alignments/${id}`}
-                element={<AlignmentsExplorer id={id} />}
+                key={`alignments-route-${datasetId}`}
+                path={`/datasets/${datasetId}`}
+                element={<SurfaceExplorer datasetId={datasetId} />}
               />
             )
           )}
+          {Object.entries(config.alignments.datasets).map(
+            ([datasetId, dataset]: any) => (
+              <Route
+                key={`alignments-route-${datasetId}`}
+                path={`/alignments/${datasetId}`}
+                element={<AlignmentsExplorer datasetId={datasetId} />}
+              />
+            )
+          )}
+          {process.env.REACT_APP_SLICE_VIEW === "true" ? (
+            <Route path="/cuts" element={<CutsExplorer />} />
+          ) : null}
           {process.env.REACT_APP_EXPERIMENT_REGRESSION_VIEW === "true" ? (
             <Route path="/regression" element={<RegressionExplorer />} />
           ) : null}
@@ -100,26 +106,43 @@ const Layout = () => {
   return (
     <div id="app-container">
       <div id="navbar">
-        {process.env.REACT_APP_CONDITIONS_VIEW === "true" ? (
-          <Tooltip2 content="IBC dataset explorer" position={Position.RIGHT}>
-            <NavLink className="view-button" to="/ibc">
-              <Icon icon="database" />
-            </NavLink>
-          </Tooltip2>
-        ) : null}
-        {Object.entries(config.alignments.datasets).map(
-          ([id, dataset]: any) => (
-            <Tooltip2
-              key={`alignment-dataset-${id}`}
-              content={dataset.name}
-              position={Position.RIGHT}
-            >
-              <NavLink className="view-button" to={`/alignments/${id}`}>
-                <Icon icon="swap-horizontal" />
-              </NavLink>
-            </Tooltip2>
-          )
-        )}
+        {config.surfaces !== undefined && config.surfaces.datasets !== undefined
+          ? Object.entries(config.surfaces.datasets).map(
+              ([datasetId, dataset]: any) => (
+                <Tooltip2
+                  key={`surface-dataset-${datasetId}`}
+                  content={dataset.name}
+                  position={Position.RIGHT}
+                >
+                  <NavLink
+                    className="view-button"
+                    to={`/datasets/${datasetId}`}
+                  >
+                    <Icon icon="database" />
+                  </NavLink>
+                </Tooltip2>
+              )
+            )
+          : null}
+        {config.alignments !== undefined &&
+        config.alignments.datasets !== undefined
+          ? Object.entries(config.alignments.datasets).map(
+              ([datasetId, dataset]: any) => (
+                <Tooltip2
+                  key={`alignment-dataset-${datasetId}`}
+                  content={dataset.name}
+                  position={Position.RIGHT}
+                >
+                  <NavLink
+                    className="view-button"
+                    to={`/alignments/${datasetId}`}
+                  >
+                    <Icon icon="swap-horizontal" />
+                  </NavLink>
+                </Tooltip2>
+              )
+            )
+          : null}
         {process.env.REACT_APP_SLICE_VIEW === "true" ? (
           <Tooltip2 content="Cross-species slices" position={Position.RIGHT}>
             <NavLink className="view-button" to="/cuts">

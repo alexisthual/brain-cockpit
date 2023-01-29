@@ -53,6 +53,7 @@ export const defaultPaneState: SurfacePaneState = {
 
 interface Props {
   paneId: string;
+  datasetId: string;
   paneState?: SurfacePaneState;
   paneCallbacks?: {
     updatePaneState: (id: string, state: SurfacePaneState) => void;
@@ -77,6 +78,7 @@ interface Props {
 
 const SurfacePane = ({
   paneId,
+  datasetId,
   paneState,
   paneCallbacks,
   closeCallback = () => {},
@@ -132,13 +134,52 @@ const SurfacePane = ({
     [state, paneCallbacks, paneId]
   );
 
-  // const [voxelIndex, setVoxelIndex] = useState<number | undefined>();
   const [surfaceMap, setSurfaceMap] = useState<number[] | undefined>();
   const [loadingSurfaceMap, setLoadingSurfaceMap] = useState(false);
   const [gradient, setGradient] = useState<number[][] | undefined>();
   const [loadingGradient, setLoadingGradient] = useState(false);
+  const [meshUrls, setMeshUrls] = useState<string[] | undefined>(undefined);
   const [wireframe] = useState(false);
   const panelEl = useRef<HTMLDivElement>(null);
+
+  // Update url used to fetch mesh
+  // on state change
+  useEffect(() => {
+    let newMeshUrls: Promise<any>[] = [];
+
+    if (
+      state.hemi === HemisphereSide.LEFT ||
+      state.hemi === HemisphereSide.RIGHT
+    ) {
+      newMeshUrls = [
+        server.get<string[][]>(`/datasets/${datasetId}/mesh_url`, {
+          params: {
+            subject: state.subject,
+            meshSupport: state.meshSupport,
+            meshType: state.meshType,
+            hemi: state.hemi,
+          },
+        }),
+      ];
+    } else if (state.hemi === HemisphereSide.BOTH) {
+      newMeshUrls = [HemisphereSide.LEFT, HemisphereSide.RIGHT].map((hemi) =>
+        server.get<string[][]>(`/datasets/${datasetId}/mesh_url`, {
+          params: {
+            subject: state.subject,
+            meshSupport: state.meshSupport,
+            meshType: state.meshType,
+            hemi: hemi,
+          },
+        })
+      );
+    }
+
+    Promise.all(newMeshUrls).then((values) => {
+      setMeshUrls(
+        values.map((value) => `datasets/${datasetId}/mesh/${value.data}`)
+      );
+    });
+  }, [datasetId, state.subject, state.meshSupport, state.meshType, state.hemi]);
 
   // Set key events
 
@@ -314,8 +355,8 @@ const SurfacePane = ({
         server
           .get(
             surfaceMode === SurfaceMode.GRADIENT
-              ? "/ibc/contrast_gradient_norm_mean"
-              : "/ibc/contrast_mean",
+              ? `/datasets/${datasetId}/contrast_gradient_norm_mean`
+              : `/datasets/${datasetId}/contrast_mean`,
             {
               params: {
                 contrast_index: state.contrast,
@@ -337,8 +378,8 @@ const SurfacePane = ({
         server
           .get(
             surfaceMode === SurfaceMode.GRADIENT
-              ? "/ibc/contrast_gradient_norm"
-              : "/ibc/contrast",
+              ? `/datasets/${datasetId}/contrast_gradient_norm`
+              : `/datasets/${datasetId}/contrast`,
             {
               params: {
                 subject_index: state.subject,
@@ -367,7 +408,7 @@ const SurfacePane = ({
         case GradientMode.LOCAL:
           if (state.subject !== undefined) {
             server
-              .get("/ibc/contrast_gradient", {
+              .get(`/datasets/${datasetId}/contrast_gradient`, {
                 params: {
                   subject_index: state.subject,
                   contrast_index: state.contrast,
@@ -386,6 +427,7 @@ const SurfacePane = ({
       }
     }
   }, [
+    datasetId,
     paneState,
     state.contrast,
     state.hemi,
@@ -658,6 +700,7 @@ const SurfacePane = ({
                 };
               })}
               surfaceMap={surfaceMap}
+              meshUrls={meshUrls}
               gradient={gradient}
               meshType={state.meshType}
               meshSupport={state.meshSupport}

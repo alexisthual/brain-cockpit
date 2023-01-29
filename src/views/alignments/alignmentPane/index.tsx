@@ -7,7 +7,7 @@ import Colorbar from "components/colorbar";
 import PaneControls, { InputType } from "components/paneControls";
 import Scene from "components/scene";
 import TextualLoader from "components/textualLoader";
-import { colormaps, getMin, getMax, MeshType } from "constants/index";
+import { colormaps, getMin, getMax } from "constants/index";
 
 import { AlignmentViewState, AlignmentIntent, AlignmentRole } from "../index";
 
@@ -74,7 +74,7 @@ const AlignmentPane = ({
       // case AlignmentIntent.TRUE_CONTRAST:
       //   if (alignmentState.contrast !== undefined) {
       //     server
-      //       .get("/ibc/contrast", {
+      //       .get("/datasets/ibc/contrast", {
       //         params: {
       //           contrast_index: alignmentState.contrast,
       //         },
@@ -124,6 +124,8 @@ const AlignmentPane = ({
         break;
     }
   }, [
+    datasetId,
+    alignmentState.modelId,
     alignmentState[oppositeRole].selectedVoxel,
     paneRole,
     paneIntent,
@@ -175,9 +177,11 @@ const AlignmentPane = ({
               colormap={colormaps[colormapName]}
               voxelIndex={alignmentState[paneRole].selectedVoxel}
               surfaceMap={surfaceMap}
-              meshUrl={
+              meshUrls={
                 alignmentState[paneRole].meshPath !== undefined
-                  ? `alignments/${datasetId}/${alignmentState.modelId}/mesh/${alignmentState[paneRole].meshPath}`
+                  ? [
+                      `alignments/${datasetId}/${alignmentState.modelId}/mesh/${alignmentState[paneRole].meshPath}`,
+                    ]
                   : undefined
               }
               wireframe={wireframe}

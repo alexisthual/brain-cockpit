@@ -7,22 +7,19 @@ import numpy as np
 import pandas as pd
 import pickle
 import torch
-import yaml
 
 from flask import jsonify, request, send_from_directory
 from tqdm import tqdm
 
+import bc_utils.setup as bc_setup
+
 from api import app
-from custom_utils.gifty_to_gltf import compute_gltf_from_gifti
+from bc_utils.gifty_to_gltf import compute_gltf_from_gifti
 
-with open("./config.yaml", "r") as f:
-    try:
-        config = yaml.safe_load(f)
-    except yaml.YAMLError as exc:
-        print(exc)
+config = bc_setup.load_config()
 
 
-def create_alignents_dataset_endpoints(id, dataset):
+def create_endpoints_one_alignment_dataset(id, dataset):
     """
     For a given alignment dataset, generate endpoints
     serving dataset meshes and alignment transforms.
@@ -31,7 +28,8 @@ def create_alignents_dataset_endpoints(id, dataset):
     df = pd.read_csv(dataset["path"])
     dataset_path = Path(dataset["path"]).parent
 
-    print(id)
+    # ROUTES
+    # Define endpoints
     alignment_models_endpoint = f"/alignments/{id}/models"
     alignment_model_info_endpoint = f"/alignments/{id}/<int:model_id>/info"
     alignment_mesh_endpoint = (
@@ -151,7 +149,7 @@ def create_alignents_dataset_endpoints(id, dataset):
         return jsonify(m)
 
 
-def create_alignments_endpoints():
+def create_endpoints_all_alignment_datasets():
     """Create endpoints for all available alignments datasets."""
 
     try:
@@ -186,6 +184,6 @@ def create_alignments_endpoints():
                     )
 
             # Create API endpoints
-            create_alignents_dataset_endpoints(dataset_id, dataset)
+            create_endpoints_one_alignment_dataset(dataset_id, dataset)
     except KeyError:
         print("No alignment datasets to load")

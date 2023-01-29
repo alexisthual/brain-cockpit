@@ -1,5 +1,5 @@
 from api import app
-import custom_utils.setup as setup
+import bc_utils.setup as setup
 from datetime import datetime
 from distutils.util import strtobool
 import dotenv

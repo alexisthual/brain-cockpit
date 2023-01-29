@@ -16,6 +16,10 @@ import {
 } from "constants/index";
 import { server } from "App";
 
+interface SurfaceViewProps {
+  datasetId: string;
+}
+
 interface SurfaceViewState {
   selectedTasks?: string[];
   panes: { [paneId: string]: SurfacePaneState };
@@ -101,8 +105,8 @@ const useSurfaceState = (): [
       setState(newUrlState);
     }
   }, [
-    // contrary to what warning is saying, window.location.href dependency
-    // is needed here
+    // contrary to what the warning is saying,
+    // window.location.href dependency is needed here
     window.location.href,
     state,
   ]);
@@ -110,7 +114,7 @@ const useSurfaceState = (): [
   return [state, setState];
 };
 
-const SurfaceExplorer = () => {
+const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
   // Load state from url
   const [state, setState] = useSurfaceState();
   const selectedVoxels = Object.keys(state.panes).map((paneId: any) => [
@@ -301,20 +305,21 @@ const SurfaceExplorer = () => {
   const [highThresholdMax, setHighThresholdMax] = useState(10);
   const [filterSurface, setFilterSurface] = useState(true);
   // Fingerprint
-  // const [selectedPaneId, setSelectedPaneId] = useState<string | undefined>(
-  //   undefined
-  // );
-  // const [contrastFingerprint, setContrastFingerprint] = useState<number[]>([]);
   const [loadingFingerprint, setLoadingFingerprint] = useState(false);
-  // const [meanFingerprint, setMeanFingerprint] = useState(false);
 
   // Initialise all pane state variables
   useEffect(() => {
     const fetchAllData = async () => {
       // Load static data
-      const subjectLabels = server.get<string[]>("/ibc/subjects");
-      const contrastLabels = server.get<string[][]>("/ibc/contrast_labels");
-      const datasetDescriptions = server.get<any>("/ibc/descriptions");
+      const subjectLabels = server.get<string[]>(
+        `/datasets/${datasetId}/subjects`
+      );
+      const contrastLabels = server.get<string[][]>(
+        `/datasets/${datasetId}/contrast_labels`
+      );
+      const datasetDescriptions = server.get<any>(
+        `/datasets/${datasetId}/descriptions`
+      );
 
       // Wait for all data to be loaded before setting app state
       Promise.all([subjectLabels, contrastLabels, datasetDescriptions]).then(
@@ -334,7 +339,7 @@ const SurfaceExplorer = () => {
     };
 
     fetchAllData();
-  }, []);
+  }, [datasetId]);
 
   // Update fingerprint when selected voxels
   // or selected subjects change
@@ -361,20 +366,25 @@ const SurfaceExplorer = () => {
         ...selectedVoxels.map(([paneId, voxels]) => {
           if (voxels !== undefined) {
             return voxels.map((voxel: number) => {
-              const { subject, meshSupport } = state.panes[paneId];
+              const { subject, meshSupport, hemi } = state.panes[paneId];
               if (subject !== undefined && meshSupport !== undefined) {
                 return state.panes[paneId].meanSurfaceMap
-                  ? server.get("/ibc/voxel_fingerprint_mean", {
-                      params: {
-                        voxel_index: voxel,
-                        mesh: meshSupport,
-                      },
-                    })
-                  : server.get("/ibc/voxel_fingerprint", {
+                  ? server.get(
+                      `/datasets/${datasetId}/voxel_fingerprint_mean`,
+                      {
+                        params: {
+                          voxel_index: voxel,
+                          mesh: meshSupport,
+                          hemi: hemi,
+                        },
+                      }
+                    )
+                  : server.get(`/datasets/${datasetId}/voxel_fingerprint`, {
                       params: {
                         subject_index: subject,
                         voxel_index: voxel,
                         mesh: meshSupport,
+                        hemi: hemi,
                       },
                     });
               } else {
@@ -403,6 +413,7 @@ const SurfaceExplorer = () => {
       }
     }
   }, [
+    datasetId,
     state.panes,
     selectedVoxels,
     previousSelectedVoxels,
@@ -440,6 +451,7 @@ const SurfaceExplorer = () => {
                 <SurfacePane
                   key={`scene-pane-${paneId}`}
                   paneId={paneId}
+                  datasetId={datasetId}
                   paneState={pane}
                   paneCallbacks={{
                     updatePaneState,

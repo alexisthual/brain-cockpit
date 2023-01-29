@@ -1,6 +1,6 @@
 allow_very_unsafe_file_sharing: true
+cache_folder: /tmp
 alignments:
-  show: true
   datasets:
     ibc:
       name: FUGW on IBC
@@ -8,3 +8,13 @@ alignments:
     monkey:
       name: Inter-species
       path: /home/alexis/singbrain/data/bc-alignments/monkey-alignments/data.csv
+surfaces:
+  datasets:
+    ibc:
+      name: Individual Brain Charting
+      path: /home/alexis/singbrain/data/mathlang_rsvp_fs5_fs7_individual_db/result_db.csv
+      descriptions: /home/alexis/singbrain/data/ibc_descriptions.json
+      default_mesh: pial
+      other_meshes:
+        - infl
+        - white

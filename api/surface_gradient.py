@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 from api import app
 from api.surface_contrasts import parse_metadata
-import custom_utils.setup as setup
+import bc_utils.setup as setup
 
 # Load environment variables
 env = setup.load_env()

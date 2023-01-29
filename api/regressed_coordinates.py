@@ -8,7 +8,7 @@ import os
 import pandas as pd
 from tqdm import tqdm
 
-import custom_utils.setup as setup
+import bc_utils.setup as setup
 
 # Load environment variables
 setup.load_env()

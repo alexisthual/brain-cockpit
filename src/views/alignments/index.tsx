@@ -29,7 +29,7 @@ export enum AlignmentIntent {
 }
 
 export interface AlignmentViewProps {
-  id: string;
+  datasetId: string;
 }
 
 export interface AlignmentViewState {
@@ -50,13 +50,13 @@ export interface AlignmentViewState {
 // Alignment explorer
 //
 
-const AlignmentsExplorer = ({ id }: AlignmentViewProps) => {
+const AlignmentsExplorer = ({ datasetId }: AlignmentViewProps) => {
   // Alignment state
   const [state, setState] = useState<AlignmentViewState>({
     modelId: "0",
     viewLayout: ViewLayout.ALIGNMENT,
     source: {
-      selectedVoxel: 6680,
+      selectedVoxel: undefined,
     },
     target: {
       selectedVoxel: undefined,
@@ -64,7 +64,6 @@ const AlignmentsExplorer = ({ id }: AlignmentViewProps) => {
   });
 
   // Label information
-  const [subjectLabels, setSubjectLabels] = useState<string[]>([]);
   const [contrastLabels, setContrastLabels] = useState<ContrastLabel[]>([]);
   const [modelLabels, setModelLabels] = useState<string[]>([]);
   // Page layout
@@ -80,42 +79,41 @@ const AlignmentsExplorer = ({ id }: AlignmentViewProps) => {
   useEffect(() => {
     const fetchAllData = async () => {
       // Load static data
-      const subjectLabels = server.get<string[]>("/ibc/subjects");
-      const contrastLabels = server.get<string[][]>("/ibc/contrast_labels");
-      const modelLabels = server.get<string[]>(`/alignments/${id}/models`);
+      const contrastLabels = server.get<string[][]>(
+        "/datasets/ibc/contrast_labels"
+      );
+      const modelLabels = server.get<string[]>(
+        `/alignments/${datasetId}/models`
+      );
 
       // Wait for all data to be loaded before setting app state
-      Promise.all([subjectLabels, contrastLabels, modelLabels]).then(
-        (values) => {
-          setSubjectLabels(values[0].data);
-
-          // Parse contrasts
-          const contrastLabels = values[1].data.map((label: any) => ({
-            task: label[0],
-            contrast: label[1],
-          }));
-          setContrastLabels(contrastLabels);
-          // Set current contrast to first contrast of list
-          if (contrastLabels.length > 0) {
-            setState((state: AlignmentViewState) => {
-              return {
-                ...state,
-                contrast: 0,
-              };
-            });
-          }
-
-          setModelLabels(values[2].data);
-          if (values[2].data.length > 0) {
-            setState((state: AlignmentViewState) => {
-              return {
-                ...state,
-                model: values[2].data[0],
-              };
-            });
-          }
+      Promise.all([contrastLabels, modelLabels]).then((values) => {
+        // Parse contrasts
+        const contrastLabels = values[0].data.map((label: any) => ({
+          task: label[0],
+          contrast: label[1],
+        }));
+        setContrastLabels(contrastLabels);
+        // Set current contrast to first contrast of list
+        if (contrastLabels.length > 0) {
+          setState((state: AlignmentViewState) => {
+            return {
+              ...state,
+              contrast: 0,
+            };
+          });
         }
-      );
+
+        setModelLabels(values[1].data);
+        if (values[1].data.length > 0) {
+          setState((state: AlignmentViewState) => {
+            return {
+              ...state,
+              model: values[1].data[0],
+            };
+          });
+        }
+      });
     };
 
     fetchAllData();
@@ -123,7 +121,7 @@ const AlignmentsExplorer = ({ id }: AlignmentViewProps) => {
 
   useEffect(() => {
     const modelInfo = server.get<any>(
-      `/alignments/${id}/${state.modelId}/info`
+      `/alignments/${datasetId}/${state.modelId}/info`
     );
 
     modelInfo
@@ -155,7 +153,7 @@ const AlignmentsExplorer = ({ id }: AlignmentViewProps) => {
         <>
           <div className="scene-row">
             <AlignmentPane
-              datasetId={id}
+              datasetId={datasetId}
               alignmentState={state}
               setAlignmentState={setState}
               paneRole={AlignmentRole.SOURCE}
@@ -165,7 +163,7 @@ const AlignmentsExplorer = ({ id }: AlignmentViewProps) => {
               paneLabel={"SOURCE SUBJECT"}
             />
             <AlignmentPane
-              datasetId={id}
+              datasetId={datasetId}
               alignmentState={state}
               setAlignmentState={setState}
               paneRole={AlignmentRole.TARGET}
@@ -184,7 +182,7 @@ const AlignmentsExplorer = ({ id }: AlignmentViewProps) => {
           <div className="scene-row">
             <div className="scene-row-label">SOURCE SUBJECT</div>
             <AlignmentPane
-              datasetId={id}
+              datasetId={datasetId}
               alignmentState={state}
               setAlignmentState={setState}
               paneRole={AlignmentRole.SOURCE}
@@ -194,7 +192,7 @@ const AlignmentsExplorer = ({ id }: AlignmentViewProps) => {
               paneLabel={"ORIGINAL CONTRAST"}
             />
             <AlignmentPane
-              datasetId={id}
+              datasetId={datasetId}
               alignmentState={state}
               setAlignmentState={setState}
               paneRole={AlignmentRole.SOURCE}
@@ -207,7 +205,7 @@ const AlignmentsExplorer = ({ id }: AlignmentViewProps) => {
           <div className="scene-row">
             <div className="scene-row-label">TARGET SUBJECT</div>
             <AlignmentPane
-              datasetId={id}
+              datasetId={datasetId}
               alignmentState={state}
               setAlignmentState={setState}
               paneRole={AlignmentRole.TARGET}
@@ -216,7 +214,7 @@ const AlignmentsExplorer = ({ id }: AlignmentViewProps) => {
               colormapName={"diverging_temperature"}
             />
             <AlignmentPane
-              datasetId={id}
+              datasetId={datasetId}
               alignmentState={state}
               setAlignmentState={setState}
               paneRole={AlignmentRole.TARGET}

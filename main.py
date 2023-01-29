@@ -5,8 +5,8 @@ from waitress import serve
 # We here load these files as independent pieces of logic
 from api import app
 
-from api.surface_contrasts import load_contrasts
-from api.alignments import create_alignments_endpoints
+from api.alignments import create_endpoints_all_alignment_datasets
+from api.surface_contrasts import create_endpoints_all_surface_datasets
 
 # These functions are exposed for specific experiments
 # whose data might not be publicly available
@@ -16,7 +16,7 @@ from api.knn_maps import load_knn
 import api.fmri_image
 
 # Custom utils
-import custom_utils.setup as setup
+import bc_utils.setup as setup
 
 env = setup.load_env(verbose=True)
 N_JOBS = os.getenv("N_JOBS")
@@ -25,9 +25,8 @@ REACT_APP_API_PORT = os.getenv("REACT_APP_API_PORT")
 
 # Define util function to load all data
 def create_app():
-    load_contrasts()
-    # load_gradients()
-    create_alignments_endpoints()
+    create_endpoints_all_surface_datasets()
+    create_endpoints_all_alignment_datasets()
 
     load_regressed_coordinates()
     load_correlations()

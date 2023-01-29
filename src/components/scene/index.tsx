@@ -1,6 +1,7 @@
 import { Colors } from "@blueprintjs/core";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import chroma from "chroma-js";
+import deepEqual from "fast-deep-equal";
 import { Component } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -20,7 +21,7 @@ import { Hotspots, IHotspot } from "./hotspots";
 import { CustomGradient } from "./gradient";
 import "./style.scss";
 
-interface IProps {
+interface SceneProps {
   clickedVoxelCallback?: any;
   surfaceMap?: number[];
   gradient?: number[][];
@@ -32,7 +33,7 @@ interface IProps {
   markerIndices?: number[];
   meshType: MeshType;
   meshSupport: MeshSupport;
-  meshUrl?: string;
+  meshUrls?: string[];
   subjectLabel?: string;
   hemi: HemisphereSide;
   uniqueKey?: string;
@@ -58,7 +59,7 @@ interface IState {
   hotspots?: { [i: number]: HotspotCoordinates };
 }
 
-class Scene extends Component<IProps, IState> {
+class Scene extends Component<SceneProps, IState> {
   container?: any;
   renderer?: any;
   scene?: any;
@@ -84,7 +85,7 @@ class Scene extends Component<IProps, IState> {
     colormap: colormaps["sequential"],
   };
 
-  constructor(props: IProps) {
+  constructor(props: SceneProps) {
     super(props);
     this.state = {};
 
@@ -120,61 +121,19 @@ class Scene extends Component<IProps, IState> {
 
   // Load BufferGeometry object from backend
   static async loadGeometry(
-    meshUrl?: string,
-    meshSupport: MeshSupport = MeshSupport.FSAVERAGE5,
-    meshType: MeshType = MeshType.PIAL,
-    hemisphereSide: HemisphereSide = HemisphereSide.LEFT,
-    subjectLabel: string | undefined = undefined
+    meshUrls?: string[]
   ): Promise<THREE.BufferGeometry | undefined> {
-    if (meshUrl !== undefined) {
-      return Scene.load(meshUrl).then((gltf: any) => {
-        return gltf.scene.children[0].geometry as THREE.BufferGeometry;
+    if (meshUrls !== undefined) {
+      const promises = meshUrls.map((url) => Scene.load(url));
+
+      // Merge them in a common Mesh
+      return Promise.all(promises).then((values: any) => {
+        const mergedBufferGeometries = BufferGeometryUtils.mergeBufferGeometries(
+          values.map((value: any) => value.scene.children[0].geometry)
+        );
+
+        return mergedBufferGeometries;
       });
-    } else {
-      if (subjectLabel === undefined) {
-        return undefined;
-      }
-
-      let url: string;
-
-      switch (meshSupport) {
-        case MeshSupport.INDIVIDUAL:
-          url = `ibc/mesh/${meshSupport}/${subjectLabel}`;
-          break;
-        default:
-          url = `ibc/mesh/${meshSupport}`;
-          break;
-      }
-      switch (hemisphereSide) {
-        case HemisphereSide.LEFT:
-          return Scene.load(`${url}/${meshType}_left.gltf`).then(
-            (gltf: any) => {
-              return gltf.scene.children[0].geometry as THREE.BufferGeometry;
-            }
-          );
-        case HemisphereSide.RIGHT:
-          return Scene.load(`${url}/${meshType}_right.gltf`).then(
-            (gltf: any) => {
-              return gltf.scene.children[0].geometry as THREE.BufferGeometry;
-            }
-          );
-        case HemisphereSide.BOTH:
-          // Load both meshes
-          const loadLeft = Scene.load(`${url}/${meshType}_left.gltf`);
-          const loadRight = Scene.load(`${url}/${meshType}_right.gltf`);
-
-          // Merge them in a common Mesh
-          return Promise.all([loadLeft, loadRight]).then((values: any) => {
-            const mergedBufferGeometries = BufferGeometryUtils.mergeBufferGeometries(
-              [
-                values[0].scene.children[0].geometry,
-                values[1].scene.children[0].geometry,
-              ]
-            );
-
-            return mergedBufferGeometries;
-          });
-      }
     }
   }
 
@@ -186,23 +145,23 @@ class Scene extends Component<IProps, IState> {
     switch (hemisphereSide) {
       case HemisphereSide.LEFT:
         return Scene.load(
-          `ibc/mesh/${meshSupport}/edges_${meshType}_left.gltf`
+          `datasets/ibc/mesh/${meshSupport}/edges_${meshType}_left.gltf`
         ).then((gltf: any) => {
           return gltf.scene.children[0] as any;
         });
       case HemisphereSide.RIGHT:
         return Scene.load(
-          `ibc/mesh/${meshSupport}/edges_${meshType}_right.gltf`
+          `datasets/ibc/mesh/${meshSupport}/edges_${meshType}_right.gltf`
         ).then((gltf: any) => {
           return gltf.scene.children[0] as any;
         });
       case HemisphereSide.BOTH:
         // Load both meshes
         const loadLeft = Scene.load(
-          `ibc/mesh/${meshSupport}/edges_${meshType}_left.gltf`
+          `datasets/ibc/mesh/${meshSupport}/edges_${meshType}_left.gltf`
         );
         const loadRight = Scene.load(
-          `ibc/mesh/${meshSupport}/edges_${meshType}_right.gltf`
+          `datasets/ibc/mesh/${meshSupport}/edges_${meshType}_right.gltf`
         );
 
         // Merge them in a common Mesh
@@ -371,13 +330,7 @@ class Scene extends Component<IProps, IState> {
     window.addEventListener("resize", this.handleWindowResize);
 
     // Load exteral geometry
-    const geometry = await Scene.loadGeometry(
-      this.props.meshUrl,
-      this.props.meshSupport,
-      this.props.meshType,
-      this.props.hemi,
-      this.props.subjectLabel
-    );
+    const geometry = await Scene.loadGeometry(this.props.meshUrls);
 
     if (geometry !== undefined) {
       const { geometry: colorizedGeometry, material } = Scene.initialiseMesh(
@@ -400,7 +353,7 @@ class Scene extends Component<IProps, IState> {
     await this.setupScene();
   }
 
-  async componentDidUpdate(prevProps: IProps) {
+  async componentDidUpdate(prevProps: SceneProps) {
     // Update height and width
     if (
       prevProps.width !== this.props.width ||
@@ -412,19 +365,13 @@ class Scene extends Component<IProps, IState> {
     // Update displayed mesh when meshType or hemi change
     if (
       this.scene !== undefined &&
-      (prevProps.meshUrl !== this.props.meshUrl ||
+      (!deepEqual(prevProps.meshUrls, this.props.meshUrls) ||
         prevProps.meshSupport !== this.props.meshSupport ||
         prevProps.meshType !== this.props.meshType ||
         prevProps.subjectLabel !== this.props.subjectLabel ||
         prevProps.hemi !== this.props.hemi)
     ) {
-      let newGeometry = (await Scene.loadGeometry(
-        this.props.meshUrl,
-        this.props.meshSupport,
-        this.props.meshType,
-        this.props.hemi,
-        this.props.subjectLabel
-      )) as any;
+      let newGeometry = (await Scene.loadGeometry(this.props.meshUrls)) as any;
 
       const { geometry, material } = Scene.initialiseMesh(
         newGeometry,
