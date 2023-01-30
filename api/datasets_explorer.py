@@ -430,7 +430,7 @@ def create_endpoints_one_surface_dataset(id, dataset):
             return jsonify([])
 
 
-def create_endpoints_all_surface_datasets():
+def create_all_endpoints():
     """Create endpoints for all available surface datasets."""
 
     try:

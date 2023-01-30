@@ -12,10 +12,6 @@ import {
 
 import HomeView from "views/home";
 import AlignmentsExplorer from "views/alignments";
-import CutsExplorer from "views/cuts";
-import FunctionalDistanceExplorer from "views/functionalDistance";
-import KnnExplorer from "views/knn";
-import RegressionExplorer from "views/regression";
 import SurfaceExplorer from "views/surface";
 
 import "./App.scss";
@@ -64,21 +60,6 @@ const App = () => {
               />
             )
           )}
-          {process.env.REACT_APP_SLICE_VIEW === "true" ? (
-            <Route path="/cuts" element={<CutsExplorer />} />
-          ) : null}
-          {process.env.REACT_APP_EXPERIMENT_REGRESSION_VIEW === "true" ? (
-            <Route path="/regression" element={<RegressionExplorer />} />
-          ) : null}
-          {process.env.REACT_APP_EXPERIMENT_KNN_VIEW === "true" ? (
-            <Route path="/knn" element={<KnnExplorer />} />
-          ) : null}
-          {process.env.REACT_APP_EXPERIMENT_CORRELATION_VIEW === "true" ? (
-            <Route
-              path="/functional-distance"
-              element={<FunctionalDistanceExplorer />}
-            />
-          ) : null}
           <Route path="*" element={pageNotFound} />
         </Route>
       </Routes>
@@ -133,40 +114,6 @@ const Layout = () => {
               )
             )
           : null}
-        {process.env.REACT_APP_SLICE_VIEW === "true" ? (
-          <Tooltip2 content="Cross-species slices" position={Position.RIGHT}>
-            <NavLink className="view-button" to="/cuts">
-              <Icon icon="symbol-circle" />
-            </NavLink>
-          </Tooltip2>
-        ) : null}
-        {process.env.REACT_APP_EXPERIMENT_REGRESSION_VIEW === "true" ? (
-          <Tooltip2
-            content="Regressed MNI coordinates"
-            position={Position.RIGHT}
-          >
-            <NavLink className="view-button" to="/regression">
-              <Icon icon="regression-chart" />
-            </NavLink>
-          </Tooltip2>
-        ) : null}
-        {process.env.REACT_APP_EXPERIMENT_KNN_VIEW === "true" ? (
-          <Tooltip2 content="Functional KNN" position={Position.RIGHT}>
-            <NavLink className="view-button" to="/knn">
-              <Icon icon="graph" />
-            </NavLink>
-          </Tooltip2>
-        ) : null}
-        {process.env.REACT_APP_EXPERIMENT_CORRELATION_VIEW === "true" ? (
-          <Tooltip2
-            content="Functional distance maps"
-            position={Position.RIGHT}
-          >
-            <NavLink className="view-button" to="/functional-distance">
-              <Icon icon="heatmap" />
-            </NavLink>
-          </Tooltip2>
-        ) : null}
       </div>
 
       <Outlet />

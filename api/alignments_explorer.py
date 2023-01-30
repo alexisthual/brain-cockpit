@@ -149,7 +149,7 @@ def create_endpoints_one_alignment_dataset(id, dataset):
         return jsonify(m)
 
 
-def create_endpoints_all_alignment_datasets():
+def create_all_endpoints():
     """Create endpoints for all available alignments datasets."""
 
     try:
