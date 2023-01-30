@@ -3,12 +3,7 @@ import { useEffect, useState } from "react";
 import FingerprintPane from "components/pane/fingerprint";
 import AlignmentControls from "./alignmentControls";
 import AlignmentPane from "./alignmentPane";
-import {
-  ContrastLabel,
-  HemisphereSide,
-  Orientation,
-  MeshSupport,
-} from "constants/index";
+import { ContrastLabel, Orientation } from "constants/index";
 import { server } from "App";
 
 export enum ViewLayout {
@@ -117,7 +112,7 @@ const AlignmentsExplorer = ({ datasetId }: AlignmentViewProps) => {
     };
 
     fetchAllData();
-  }, []);
+  }, [datasetId]);
 
   useEffect(() => {
     const modelInfo = server.get<any>(
@@ -143,7 +138,7 @@ const AlignmentsExplorer = ({ datasetId }: AlignmentViewProps) => {
       .catch((error) => {
         console.log(error);
       });
-  }, [state.modelId]);
+  }, [datasetId, state.modelId]);
 
   let panes = null;
 

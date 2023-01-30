@@ -38,22 +38,22 @@ const AlignmentPane = ({
   const panelEl = useRef<HTMLDivElement>(null);
 
   const oppositeRole = paneRole === "source" ? "target" : "source";
+  // Voxel index of interest depends on pane role.
+  // If pane role is source, take target selectedVoxel,
+  // otherwise, take source selectedVoxel.
+  const selectedVoxelOpposidePanel = alignmentState[oppositeRole].selectedVoxel;
+
   // Update surface map when subject changes
   useEffect(() => {
     setLoadingSurfaceMap(true);
 
     switch (paneIntent) {
       case AlignmentIntent.SINGLE_VOXEL:
-        // Voxel index of interest depends on pane role.
-        // If pane role is source, take target selectedVoxel,
-        // otherwise, take source selectedVoxel.
-        const voxel = alignmentState[oppositeRole].selectedVoxel;
-
-        if (voxel !== undefined) {
+        if (selectedVoxelOpposidePanel !== undefined) {
           server
             .get(`/alignments/${datasetId}/single_voxel`, {
               params: {
-                voxel: voxel,
+                voxel: selectedVoxelOpposidePanel,
                 role: paneRole,
                 model_id: alignmentState.modelId,
               },
@@ -71,54 +71,6 @@ const AlignmentPane = ({
           setLoadingSurfaceMap(false);
         }
         break;
-      // case AlignmentIntent.TRUE_CONTRAST:
-      //   if (alignmentState.contrast !== undefined) {
-      //     server
-      //       .get("/datasets/ibc/contrast", {
-      //         params: {
-      //           contrast_index: alignmentState.contrast,
-      //         },
-      //       })
-      //       .then((response: AxiosResponse<number[]>) => {
-      //         setSurfaceMap(response.data);
-      //         setLoadingSurfaceMap(false);
-      //       })
-      //       .catch((error: AxiosError) => {
-      //         console.error(error);
-      //         setSurfaceMap(undefined);
-      //         setLoadingSurfaceMap(false);
-      //       });
-      //   } else {
-      //     setLoadingSurfaceMap(false);
-      //   }
-      //   break;
-      // case AlignmentIntent.ALIGNED_CONTRAST:
-      //   if (alignmentState.contrast !== undefined) {
-      //     server
-      //       .get("/alignments/contrast", {
-      //         params: {
-      //           source: alignmentState.source.subject,
-      //           target: alignmentState.target.subject,
-      //           hemi: alignmentState.hemi,
-      //           mesh: alignmentState.meshSupport,
-      //           contrast: alignmentState.contrast,
-      //           role: paneRole,
-      //           model: alignmentState.model,
-      //         },
-      //       })
-      //       .then((response: AxiosResponse<number[]>) => {
-      //         setSurfaceMap(response.data);
-      //         setLoadingSurfaceMap(false);
-      //       })
-      //       .catch((error: AxiosError) => {
-      //         console.error(error);
-      //         setSurfaceMap(undefined);
-      //         setLoadingSurfaceMap(false);
-      //       });
-      //   } else {
-      //     setLoadingSurfaceMap(false);
-      //   }
-      //   break;
       default:
         setLoadingSurfaceMap(false);
         break;
@@ -126,7 +78,7 @@ const AlignmentPane = ({
   }, [
     datasetId,
     alignmentState.modelId,
-    alignmentState[oppositeRole].selectedVoxel,
+    selectedVoxelOpposidePanel,
     paneRole,
     paneIntent,
     oppositeRole,
