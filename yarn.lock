@@ -3187,10 +3187,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/three@npm:^0.148.1":
+  version: 0.148.1
+  resolution: "@types/three@npm:0.148.1"
+  dependencies:
+    "@types/webxr": "*"
+  checksum: 166eb03b80ece4d400641c17cc74a9ad28331dc1f255964dee3d9bead9a4d46e2c287beb1f65a44254b224163a8102f4fe1d50685c896c7fb84fd01c11c43e2d
+  languageName: node
+  linkType: hard
+
 "@types/trusted-types@npm:^2.0.2":
   version: 2.0.2
   resolution: "@types/trusted-types@npm:2.0.2"
   checksum: 3371eef5f1c50e1c3c07a127c1207b262ba65b83dd167a1c460fc1b135a3fb0c97b9f508efebd383f239cc5dd5b7169093686a692a501fde9c3f7208657d9b0d
+  languageName: node
+  linkType: hard
+
+"@types/webxr@npm:*":
+  version: 0.5.1
+  resolution: "@types/webxr@npm:0.5.1"
+  checksum: a77c6be72623679341526dbec18971db0824d5697626d56decc8bb5b73491582b64d094c168ae8d00861549122ca066d7dc45d9cbb5c608626be7f48a6cd7c43
   languageName: node
   linkType: hard
 
@@ -4493,6 +4509,7 @@ __metadata:
     "@types/react": ^18.0.27
     "@types/react-dom": ^18.0.10
     "@types/react-router-dom": ^5.3.3
+    "@types/three": ^0.148.1
     "@visx/axis": ^3.0.0
     "@visx/drag": ^3.0.0
     "@visx/gradient": ^3.0.0
@@ -4517,7 +4534,7 @@ __metadata:
     react-scripts: ^5.0.1
     sass: ^1.29.0
     sass-loader: ^10.1.0
-    three: 0.116
+    three: ^0.149.0
     typescript: ^4.9.4
     yaml-loader: ^0.8.0
   languageName: unknown
@@ -13026,10 +13043,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"three@npm:0.116":
-  version: 0.116.1
-  resolution: "three@npm:0.116.1"
-  checksum: cd94e55818fd6582a57e0e124ecd4c8f270d4411a0d83d624dad8d19cc823842a033ea0b3cce9f26064009f4f4cd1a2cb737f9ebdedab9acd7abf4cb894e74d1
+"three@npm:^0.149.0":
+  version: 0.149.0
+  resolution: "three@npm:0.149.0"
+  checksum: bb11e28054ce11ecfbe94150c2f253fe149cd7532b7b9253cf0806022d234ba3711944f42d65131d146193e7396b92c9965d88cd779b979f007795e13dfb44e9
   languageName: node
   linkType: hard
 

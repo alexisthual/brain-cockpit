@@ -60,7 +60,7 @@ export class MeshGradient extends THREE.Mesh {
     // performances when drawing the same geometry several times
     // (draws all instances in one single call).
     const geometry = new THREE.InstancedBufferGeometry();
-    geometry.copy(new THREE.ConeBufferGeometry(0.3, 2, 4));
+    geometry.copy(new THREE.ConeGeometry(0.3, 2, 4));
 
     const quaternion = new THREE.Quaternion();
     const nVertices = mesh.geometry.attributes.position.count;
@@ -138,14 +138,13 @@ export class MeshGradient extends THREE.Mesh {
     }
 
     const quaternion = new THREE.Quaternion();
-    // const colors = (this.geometry as THREE.ConeBufferGeometry).getAttribute(
+    // const colors = (this.geometry as THREE.ConeGeometry).getAttribute(
     //   "color"
     // );
-    const scales = (this.geometry as THREE.ConeBufferGeometry).getAttribute(
-      "scale"
+    const scales = (this.geometry as THREE.ConeGeometry).getAttribute("scale");
+    const orientations = (this.geometry as THREE.ConeGeometry).getAttribute(
+      "orientation"
     );
-    const orientations = (this
-      .geometry as THREE.ConeBufferGeometry).getAttribute("orientation");
 
     gradientNorm.forEach((edge: number, index: number) => {
       const vertex = new THREE.Vector3();
@@ -199,7 +198,7 @@ export class CustomGradient extends THREE.Mesh {
     // performances when drawing the same geometry several times
     // (draws all instances in one single call).
     const geometry = new THREE.InstancedBufferGeometry();
-    geometry.copy(new THREE.ConeBufferGeometry(0.3, 2, 4));
+    geometry.copy(new THREE.ConeGeometry(0.3, 2, 4));
 
     const quaternion = new THREE.Quaternion();
     const nVertices =
@@ -261,11 +260,10 @@ export class CustomGradient extends THREE.Mesh {
     }
 
     const quaternion = new THREE.Quaternion();
-    const scales = (this.geometry as THREE.ConeBufferGeometry).getAttribute(
-      "scale"
+    const scales = (this.geometry as THREE.ConeGeometry).getAttribute("scale");
+    const orientations = (this.geometry as THREE.ConeGeometry).getAttribute(
+      "orientation"
     );
-    const orientations = (this
-      .geometry as THREE.ConeBufferGeometry).getAttribute("orientation");
 
     vectors.forEach((vector: number[], index: number) => {
       const v = new THREE.Vector3();

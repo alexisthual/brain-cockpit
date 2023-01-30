@@ -6,7 +6,7 @@ import { Component } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 import {
   colormaps,
@@ -585,7 +585,7 @@ class Scene extends Component<SceneProps, IState> {
     controls.dampingFactor = 0.2;
     controls.enableZoom = true;
     controls.zoomSpeed = 0.3;
-    controls.enableKeys = true;
+    // controls.enableKeys = true;
     controls.enableRotate = true;
     controls.enablePan = true;
     controls.screenSpacePanning = true;
