@@ -1,5 +1,5 @@
 import { Button } from "@blueprintjs/core";
-import { Select } from "@blueprintjs/select";
+import { Select2 } from "@blueprintjs/select";
 import React from "react";
 
 import { ViewLayout } from "../index";
@@ -61,7 +61,7 @@ const AlignmentControls = ({
           }}
         />
       ) : null}
-      <Select<string>
+      <Select2<string>
         filterable={false}
         items={Object.keys(ViewLayout)}
         itemRenderer={stringRenderer}
@@ -83,8 +83,8 @@ const AlignmentControls = ({
           minimal
           outlined
         />
-      </Select>
-      <Select<string>
+      </Select2>
+      <Select2<string>
         filterable={false}
         items={modelLabels ?? []}
         itemRenderer={stringRenderer}
@@ -103,7 +103,7 @@ const AlignmentControls = ({
           minimal
           outlined
         />
-      </Select>
+      </Select2>
     </div>
   );
 };

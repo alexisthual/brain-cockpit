@@ -1,4 +1,5 @@
-import { Drag } from "@vx/drag";
+// import { Drag } from "@vx/drag";
+import { Drag } from "@visx/drag";
 import { useRef } from "react";
 
 import "./style.scss";

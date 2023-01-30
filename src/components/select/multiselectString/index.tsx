@@ -1,5 +1,5 @@
 import { MenuItem, PopoverPosition } from "@blueprintjs/core";
-import { MultiSelect } from "@blueprintjs/select";
+import { MultiSelect2 } from "@blueprintjs/select";
 import React, { useState } from "react";
 
 import { highlightText } from "constants/index";
@@ -31,8 +31,8 @@ const MultiSelectString = ({
   const [query, setQuery] = useState<string | undefined>(undefined);
 
   return (
-    <MultiSelect<string>
-      selectedItems={selectedItems}
+    <MultiSelect2<string>
+      selectedItems={selectedItems ?? []}
       className={"bp4-outlined"}
       items={items ?? []}
       itemPredicate={stringPredicate}

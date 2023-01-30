@@ -1,5 +1,5 @@
 import { Button, Colors, Slider } from "@blueprintjs/core";
-import { Select } from "@blueprintjs/select";
+import { Select2 } from "@blueprintjs/select";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import { AxiosResponse } from "axios";
 import { useEffect, useState } from "react";
@@ -188,8 +188,8 @@ const CutsExplorer = () => {
     }
   }, [subject, image, position.z, t, anatSize, contSize]);
 
-  const SelectSubject = Select.ofType<string>();
-  const SelectSequence = Select.ofType<string>();
+  // const SelectSubject = Select2.ofType<string>();
+  // const SelectSequence = Select2.ofType<string>();
 
   const color1 = Colors.VERMILION1;
   const color2 = Colors.GOLD5;
@@ -200,7 +200,7 @@ const CutsExplorer = () => {
         <div className="item">
           <div className="item-label">Subject</div>
           <div className="item-value">
-            <SelectSubject
+            <Select2<string>
               filterable={false}
               items={subjects}
               itemRenderer={stringRenderer}
@@ -209,13 +209,13 @@ const CutsExplorer = () => {
               }}
             >
               <Button rightIcon="double-caret-vertical" text={subject} />
-            </SelectSubject>
+            </Select2>
           </div>
         </div>
         <div className="item">
           <div className="item-label">Image</div>
           <div className="item-value">
-            <SelectSequence
+            <Select2<string>
               filterable={false}
               items={images}
               itemRenderer={stringRenderer}
@@ -224,7 +224,7 @@ const CutsExplorer = () => {
               }}
             >
               <Button rightIcon="double-caret-vertical" text={image} />
-            </SelectSequence>
+            </Select2>
           </div>
         </div>
         <div className="item">

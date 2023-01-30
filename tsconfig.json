@@ -17,5 +17,8 @@
     "baseUrl": "src",
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "./src/**/*.ts"]
+  "include": ["src", "./src/**/*.ts"],
+  "paths": {
+    "react": ["./node_modules/@types/react"]
+  }
 }

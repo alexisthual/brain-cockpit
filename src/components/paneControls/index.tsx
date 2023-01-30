@@ -1,6 +1,6 @@
 import { Button, ButtonGroup, Colors, Icon, Switch } from "@blueprintjs/core";
 import { IconName } from "@blueprintjs/icons";
-import { Select } from "@blueprintjs/select";
+import { Select2 } from "@blueprintjs/select";
 import React from "react";
 
 import MultiSelectString from "components/select/multiselectString";
@@ -107,7 +107,7 @@ const PaneControls = ({ rows }: IProps) => {
                       break;
                     case InputType.SELECT_STRING:
                       element = (
-                        <Select<string>
+                        <Select2<string>
                           key={`input-${inputIndex}`}
                           activeItem={input.selectedItem as string}
                           filterable={false}
@@ -124,11 +124,11 @@ const PaneControls = ({ rows }: IProps) => {
                         >
                           <Button
                             rightIcon="double-caret-vertical"
-                            text={input.selectedItem}
+                            text={input.selectedItem as string}
                             minimal
                             outlined
                           />
-                        </Select>
+                        </Select2>
                       );
                       break;
                     case InputType.SELECT_CONTRAST:

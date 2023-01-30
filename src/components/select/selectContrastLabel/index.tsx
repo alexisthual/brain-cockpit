@@ -1,5 +1,5 @@
 import { Button, Colors, Icon, MenuItem } from "@blueprintjs/core";
-import { Select } from "@blueprintjs/select";
+import { Select2 } from "@blueprintjs/select";
 import React, { useState } from "react";
 
 import {
@@ -65,7 +65,7 @@ const SelectContrastLabel = ({
   );
 
   return (
-    <Select<ContrastLabel>
+    <Select2<ContrastLabel>
       activeItem={selectedItem}
       itemPredicate={contrastLabelPredicate}
       itemRenderer={contrastLabelRenderer}
@@ -88,7 +88,7 @@ const SelectContrastLabel = ({
         minimal
         outlined
       />
-    </Select>
+    </Select2>
   );
 };
 
