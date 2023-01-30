@@ -56,49 +56,53 @@ const SurfaceControls = ({
 
   return (
     <div className="surface-controls">
-      <Tooltip2 content="Add pane" placement={"top-start"}>
-        <Button icon="plus" onClick={addPaneCallback} outlined />
-      </Tooltip2>
-      <Tooltip2 content="Toggle grid" placement={"top-start"}>
-        <Button
-          active={showGridHelper}
-          icon={"grid"}
-          onClick={showGridHelperCallback}
-          outlined
-        />
-      </Tooltip2>
-      {process.env.REACT_APP_ENABLE_GRADIENTS === "true" ? (
-        <>
+      <div className="surface-controls-left">
+        <Tooltip2 content="Add pane" placement={"top-start"}>
+          <Button icon="plus" onClick={addPaneCallback} outlined />
+        </Tooltip2>
+        <Tooltip2 content="Toggle grid" placement={"top-start"}>
           <Button
-            icon={"function"}
-            onClick={showSurfaceCallback}
-            text={surfaceButtonText}
+            active={showGridHelper}
+            icon={"grid"}
+            onClick={showGridHelperCallback}
             outlined
           />
+        </Tooltip2>
+        {process.env.REACT_APP_ENABLE_GRADIENTS === "true" ? (
+          <>
+            <Button
+              icon={"function"}
+              onClick={showSurfaceCallback}
+              text={surfaceButtonText}
+              outlined
+            />
+            <Button
+              icon={"flows"}
+              onClick={showGradientCallback}
+              text={gradientButtonText}
+              outlined
+            />
+          </>
+        ) : null}
+        <Tooltip2 content="Normalise surface map" placement={"top-start"}>
           <Button
-            icon={"flows"}
-            onClick={showGradientCallback}
-            text={gradientButtonText}
+            active={filterSurface}
+            icon={"filter"}
+            onClick={filterSurfaceCallback}
             outlined
           />
-        </>
-      ) : null}
-      <Tooltip2 content="Normalise surface map" placement={"top-start"}>
-        <Button
-          active={filterSurface}
-          icon={"filter"}
-          onClick={filterSurfaceCallback}
-          outlined
-        />
-      </Tooltip2>
-      <Tooltip2 content="Show shortcuts" placement={"top-start"}>
-        <Button
-          active={showKeyDialog}
-          icon={"key-command"}
-          onClick={showKeyDialogCallback}
-          outlined
-        />
-      </Tooltip2>
+        </Tooltip2>
+      </div>
+      <div className="surface-controls-right">
+        <Tooltip2 content="Show shortcuts" placement={"top-start"}>
+          <Button
+            active={showKeyDialog}
+            icon={"help"}
+            onClick={showKeyDialogCallback}
+            outlined
+          />
+        </Tooltip2>
+      </div>
     </div>
   );
 };

@@ -2,9 +2,22 @@
   position: absolute;
   z-index: 5;
   bottom: 10px;
-  left: 10px;
+  left: 0px;
+  width: 100%;
 
-  & > *:not(:last-child) {
+  & > * > *:not(:last-child) {
     margin-right: 5px;
+  }
+
+  .surface-controls-left {
+    position: absolute;
+    left: 10px;
+    bottom: 0;
+  }
+
+  .surface-controls-right {
+    position: absolute;
+    right: 10px;
+    bottom: 0;
   }
 }
