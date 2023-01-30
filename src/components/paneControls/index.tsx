@@ -98,9 +98,7 @@ const PaneControls = ({ rows }: IProps) => {
                           />
                           <Icon
                             icon={input.iconRight}
-                            color={
-                              input.selectedItem ? Colors.GRAY2 : Colors.GRAY5
-                            }
+                            color={input.value ? Colors.GRAY2 : Colors.GRAY5}
                           />
                         </div>
                       );
