@@ -1,0 +1,56 @@
+@import "~@blueprintjs/core/lib/scss/variables";
+@import "~@blueprintjs/popover2/lib/css/blueprint-popover2.css";
+
+#home {
+  padding: 30px;
+
+  .home-title {
+    display: flex;
+    align-items: center;
+    margin: 0px 0px 80px 0px;
+    color: $light-gray3;
+
+    h1 {
+      color: $light-gray3;
+      margin: 0px 20px;
+      text-transform: uppercase;
+      font-weight: 300;
+      font-size: 70px;
+      line-height: 60px;
+    }
+  }
+
+  .app-warnings {
+    margin: 0px 0px 60px 0px;
+  }
+
+  .home-section {
+    margin: 0px 0px 60px 0px;
+  }
+
+  .home-section-title {
+    color: $dark-gray5;
+    color: $gray5;
+    display: flex;
+    align-items: center;
+    margin: 15px 0px;
+
+    h2 {
+      color: $dark-gray5;
+      margin: 0px 10px;
+    }
+  }
+
+  .home-section-items {
+    width: 100%;
+    display: inline-grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+
+    .bp4-card {
+      p {
+        color: $gray2;
+      }
+    }
+  }
+}

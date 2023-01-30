@@ -10,6 +10,7 @@ import {
   Routes,
 } from "react-router-dom";
 
+import HomeView from "views/home";
 import AlignmentsExplorer from "views/alignments";
 import CutsExplorer from "views/cuts";
 import FunctionalDistanceExplorer from "views/functionalDistance";
@@ -25,23 +26,6 @@ export const server = axios.create({
 });
 
 const App = () => {
-  const indexPage = (
-    <NonIdealState
-      icon={"predictive-analysis"}
-      title="brain-cockpit"
-      description={
-        "Select a section from the navigation bar to start using the app."
-      }
-      action={
-        <Link to="/datasets/ibc">
-          <Button intent={"primary"} outlined>
-            Explore IBC dataset
-          </Button>
-        </Link>
-      }
-    />
-  );
-
   const pageNotFound = (
     <NonIdealState
       icon={"warning-sign"}
@@ -61,7 +45,7 @@ const App = () => {
     <Router>
       <Routes>
         <Route path="/" element={<Layout />}>
-          <Route path="/" element={indexPage} />
+          <Route path="/" element={<HomeView />} />
           {Object.entries(config.surfaces.datasets).map(
             ([datasetId, dataset]: any) => (
               <Route
@@ -106,6 +90,12 @@ const Layout = () => {
   return (
     <div id="app-container">
       <div id="navbar">
+        <Tooltip2 content="Home" position={Position.RIGHT}>
+          <NavLink className="view-button" to="/">
+            <Icon icon="home" />
+          </NavLink>
+        </Tooltip2>
+        <span className="bp4-navbar-divider"></span>
         {config.surfaces !== undefined && config.surfaces.datasets !== undefined
           ? Object.entries(config.surfaces.datasets).map(
               ([datasetId, dataset]: any) => (
