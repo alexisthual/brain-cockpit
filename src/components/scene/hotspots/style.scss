@@ -11,7 +11,7 @@
   touch-action: none;
 
   .hotspot-cross {
-    fill: $gray1;
+    fill: $gray3;
 
     &:hover {
       cursor: pointer;
@@ -34,10 +34,10 @@
     pointer-events: auto;
 
     rect.hotspot-back {
-      fill: $light-gray2;
+      fill: $light-gray3;
 
       &:hover {
-        fill: $light-gray1;
+        fill: $light-gray2;
       }
     }
 

@@ -53,72 +53,81 @@ const FingerprintPane = ({
   ].sort();
 
   return (
-    <div className="fingerprint">
-      <CloseButton closeCallback={closeCallback} />
-      {loading ? <OverlayLoader /> : null}
-      <PaneControls
-        rows={[
-          {
-            inputs: [
-              {
-                inputType: InputType.MULTISELECT_STRING,
-                selectedItems:
-                  selectedTasks === undefined ? allTasks : selectedTasks,
-                items: allTasks,
-                onChangeCallback: (value: string) => {
-                  const index = (selectedTasks ?? allTasks).indexOf(value);
-                  // Add item if it's not already in list
-                  // otherwise filter it out
-                  if (index === -1) {
-                    setSelectedTasks([...(selectedTasks ?? []), value]);
-                  } else {
-                    setSelectedTasks(
-                      (selectedTasks ?? allTasks).filter((_t, i) => i !== index)
+    <div className="fingerprint-pane">
+      <div className="fingerprint-controls">
+        <CloseButton closeCallback={closeCallback} />
+        {loading ? <OverlayLoader /> : null}
+        <PaneControls
+          rows={[
+            {
+              inputs: [
+                {
+                  inputType: InputType.MULTISELECT_STRING,
+                  selectedItems:
+                    selectedTasks === undefined ? allTasks : selectedTasks,
+                  items: allTasks,
+                  onChangeCallback: (value: string) => {
+                    const index = (selectedTasks ?? allTasks).indexOf(value);
+                    // Add item if it's not already in list
+                    // otherwise filter it out
+                    if (index === -1) {
+                      setSelectedTasks([...(selectedTasks ?? []), value]);
+                    } else {
+                      setSelectedTasks(
+                        (selectedTasks ?? allTasks).filter(
+                          (_t, i) => i !== index
+                        )
+                      );
+                    }
+                  },
+                  onRemoveCallback: (_value: string, index: number) => {
+                    if (index !== -1) {
+                      setSelectedTasks(
+                        (selectedTasks ?? allTasks).filter(
+                          (_t, i) => i !== index
+                        )
+                      );
+                    }
+                  },
+                },
+                {
+                  inputType: InputType.SELECT_STRING,
+                  selectedItem: filter,
+                  items: Object.keys(FingerprintFilter),
+                  onChangeCallback: (newValue: string) => {
+                    setFilter(
+                      FingerprintFilter[
+                        newValue as keyof typeof FingerprintFilter
+                      ]
                     );
-                  }
+                  },
                 },
-                onRemoveCallback: (_value: string, index: number) => {
-                  if (index !== -1) {
-                    setSelectedTasks(
-                      (selectedTasks ?? allTasks).filter((_t, i) => i !== index)
-                    );
-                  }
+                {
+                  inputType: InputType.BUTTON,
+                  onChangeCallback: () => {
+                    switch (orientation) {
+                      case Orientation.VERTICAL:
+                        setOrientation(Orientation.HORIZONTAL);
+                        break;
+                      case Orientation.HORIZONTAL:
+                        setOrientation(Orientation.VERTICAL);
+                        break;
+                      default:
+                        setOrientation(Orientation.HORIZONTAL);
+                        break;
+                    }
+                  },
+                  iconActive: "rotate-page",
                 },
-              },
-              {
-                inputType: InputType.SELECT_STRING,
-                selectedItem: filter,
-                items: Object.keys(FingerprintFilter),
-                onChangeCallback: (newValue: string) => {
-                  setFilter(
-                    FingerprintFilter[
-                      newValue as keyof typeof FingerprintFilter
-                    ]
-                  );
-                },
-              },
-              {
-                inputType: InputType.BUTTON,
-                onChangeCallback: () => {
-                  switch (orientation) {
-                    case Orientation.VERTICAL:
-                      setOrientation(Orientation.HORIZONTAL);
-                      break;
-                    case Orientation.HORIZONTAL:
-                      setOrientation(Orientation.VERTICAL);
-                      break;
-                    default:
-                      setOrientation(Orientation.HORIZONTAL);
-                      break;
-                  }
-                },
-                iconActive: "rotate-page",
-              },
-            ],
-          },
-        ]}
-      />
-      <ParentSize className="fingerprint-container" debounceTime={10}>
+              ],
+            },
+          ]}
+        />
+      </div>
+      <ParentSize
+        className={`fingerprint-container ${orientation}-orientation`}
+        debounceTime={10}
+      >
         {({ width: fingerprintWidth, height: fingerprintHeight }) => (
           <Fingerprint
             filter={filter}

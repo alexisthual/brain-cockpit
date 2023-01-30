@@ -1,7 +1,33 @@
-.fingerprint {
-  .pane-controls {
-    // In order to not overlap close button,
-    // substract left and right padding + button size + padding
-    max-width: calc(100% - 10px - 10px - 30px - 10px);
+@import "~@blueprintjs/core/lib/scss/variables";
+@import "~@blueprintjs/popover2/lib/css/blueprint-popover2.css";
+
+.fingerprint-pane {
+  display: grid;
+  justify-content: stretch;
+  align-content: stretch;
+  grid-template-rows: 40px 1fr;
+  width: 100%;
+  overflow: hidden;
+
+  .fingerprint-controls {
+    position: relative;
+    background-color: $light-gray4;
+
+    .pane-controls {
+      top: 5px;
+      left: 5px;
+      // In order to not overlap close button,
+      // substract left and right padding + button size + padding
+      max-width: calc(100% - 10px - 10px - 30px - 10px);
+    }
+
+    .close-button {
+      top: 5px;
+      right: 5px;
+    }
+  }
+
+  .fingerprint-container {
+    overflow-y: hidden;
   }
 }

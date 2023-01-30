@@ -8,14 +8,13 @@ $offsetRight: 70px;
 
 .fingerprint {
   box-sizing: border-box;
+  border-top: 1px solid $light-gray1;
 
   .fingerprint-slider {
     position: absolute;
   }
 
   &.horizontal-orientation {
-    border-top: 1px solid $light-gray3;
-
     .fingerprint-slider {
       top: calc(#{$padding} + #{$offsetTop});
       left: $padding;
@@ -24,8 +23,6 @@ $offsetRight: 70px;
   }
 
   &.vertical-orientation {
-    border-left: 1px solid $light-gray3;
-
     .fingerprint-slider {
       top: $padding;
       left: calc(#{$padding} + #{$offsetLeft});
