@@ -120,19 +120,8 @@ def load_data(dataset_path):
                 for side in ["lh", "rh"]:
                     hemi = "left" if side == "lh" else "right"
                     try:
-                        # Try following absolute path read from db...
+                        # Try relative path from where the db is located
                         if os.path.exists(
-                            paths[mesh][subject][task][contrast][side]
-                        ):
-                            dsi[hemi] = (
-                                nib.load(
-                                    paths[mesh][subject][task][contrast][side]
-                                )
-                                .darrays[0]
-                                .data
-                            )
-                        # or try relative path from where the db is located
-                        elif os.path.exists(
                             os.path.join(
                                 os.path.split(dataset_path)[0],
                                 paths[mesh][subject][task][contrast][side],
@@ -146,6 +135,17 @@ def load_data(dataset_path):
                                             side
                                         ],
                                     )
+                                )
+                                .darrays[0]
+                                .data
+                            )
+                        # or try following absolute path read from db...
+                        elif os.path.exists(
+                            paths[mesh][subject][task][contrast][side]
+                        ):
+                            dsi[hemi] = (
+                                nib.load(
+                                    paths[mesh][subject][task][contrast][side]
                                 )
                                 .darrays[0]
                                 .data
@@ -195,7 +195,7 @@ def create_endpoints_one_surface_dataset(id, dataset):
         dataset_info = {
             "subjects": subjects,
             "meshes": meshes,
-            "sides": list(map(side_to_hemi(sides))),
+            "hemis": list(map(side_to_hemi, sides)),
             "tasks_contrasts": tasks_contrasts,
             "n_files": len(df),
         }
@@ -265,8 +265,6 @@ def create_endpoints_one_surface_dataset(id, dataset):
         subject_index = request.args.get("subject_index", type=int)
         voxel_index = request.args.get("voxel_index", type=int)
         hemi = request.args.get("hemi", type=str)
-
-        print(mesh, subject_index, voxel_index, hemi)
 
         subject = subjects[subject_index]
 
