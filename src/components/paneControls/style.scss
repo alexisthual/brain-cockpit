@@ -19,7 +19,8 @@
       padding: 0px 0px 5px 0px;
     }
 
-    & .bp4-button {
+    & .bp4-button,
+    & .custom-button {
       background-color: $light-gray5;
       height: 30px;
     }
