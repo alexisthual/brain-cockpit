@@ -66,6 +66,20 @@ const Fingerprint = ({
   let offsetRight = 0;
   let offsetBottom = 0;
 
+  const maxFingerprints = _.max(
+    fingerprints.map((fingerprint) => _.max(fingerprint))
+  );
+  const minFingerprints = _.min(
+    fingerprints.map((fingerprint) => _.min(fingerprint))
+  );
+  const maxAbsFingerprints = Math.max(
+    Math.abs(maxFingerprints ?? 0),
+    Math.abs(minFingerprints ?? 1)
+  );
+
+  lowThresholdMin = -maxAbsFingerprints;
+  highThresholdMax = maxAbsFingerprints;
+
   switch (orientation) {
     case Orientation.VERTICAL:
       offsetLeft = 120;
@@ -130,7 +144,10 @@ const Fingerprint = ({
   }
 
   const valueScale = scaleLinear<number>({
-    domain: orientation === Orientation.VERTICAL ? [-10, 10] : [10, -10],
+    domain:
+      orientation === Orientation.VERTICAL
+        ? [-maxAbsFingerprints, maxAbsFingerprints]
+        : [maxAbsFingerprints, -maxAbsFingerprints],
     range: [0, orientation === Orientation.VERTICAL ? xMax : yMax],
     round: true,
   });
@@ -169,8 +186,8 @@ const Fingerprint = ({
       <MultiSlider
         className="fingerprint-slider"
         labelStepSize={2}
-        max={10}
-        min={-10}
+        max={maxAbsFingerprints}
+        min={-maxAbsFingerprints}
         showTrackFill={true}
         stepSize={1}
         vertical={orientation === Orientation.HORIZONTAL}
@@ -252,14 +269,14 @@ const Fingerprint = ({
                     <line
                       key={`task-line-${taskLabels[index]}`}
                       className="task-line"
-                      x1={valueScale(10) + labelMargin / 2}
+                      x1={valueScale(maxAbsFingerprints) + labelMargin / 2}
                       y1={
                         (labelScale(
                           contrastLabelToId(filteredContrastLabels[0])
                         ) ?? 0) +
                         labelScale.step() * (taskCumulatedSum[index] + 0.2)
                       }
-                      x2={valueScale(10) + labelMargin / 2}
+                      x2={valueScale(maxAbsFingerprints) + labelMargin / 2}
                       y2={
                         (labelScale(
                           contrastLabelToId(filteredContrastLabels[0])
@@ -273,7 +290,7 @@ const Fingerprint = ({
                       key={`task-label-${taskLabels[index]}`}
                       textAnchor="start"
                       verticalAnchor="middle"
-                      x={valueScale(10) + labelMargin}
+                      x={valueScale(maxAbsFingerprints) + labelMargin}
                       y={
                         (labelScale(
                           contrastLabelToId(filteredContrastLabels[0])
@@ -343,8 +360,8 @@ const Fingerprint = ({
 
               switch (orientation) {
                 case Orientation.VERTICAL:
-                  backBarX = valueScale(-10);
-                  backBarWidth = valueScale(10);
+                  backBarX = valueScale(-maxAbsFingerprints);
+                  backBarWidth = valueScale(maxAbsFingerprints);
                   backBarY =
                     (labelScale(contrastLabelToId(label)) ?? 0) -
                     (labelScale.step() * labelScale.padding()) / 2;
@@ -355,8 +372,8 @@ const Fingerprint = ({
                     (labelScale(contrastLabelToId(label)) ?? 0) -
                     (labelScale.step() * labelScale.padding()) / 2;
                   backBarWidth = labelScale.step();
-                  backBarY = valueScale(10);
-                  backBarHeight = valueScale(-10);
+                  backBarY = valueScale(maxAbsFingerprints);
+                  backBarHeight = valueScale(-maxAbsFingerprints);
                   break;
               }
 
@@ -466,7 +483,7 @@ const Fingerprint = ({
                       orientation === Orientation.VERTICAL
                         ? (labelScale(contrastLabelToId(label)) ?? 0) +
                           labelScale.step() / 2
-                        : valueScale(-10) + labelMargin
+                        : valueScale(-maxAbsFingerprints) + labelMargin
                     }
                   >
                     {label.contrast}
