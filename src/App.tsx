@@ -51,10 +51,8 @@ export const useConfig = () => {
   const [config, setConfig] = useState<Config | undefined>(undefined);
 
   useEffect(() => {
-    console.log("use effect");
     const configPromise = server.get<Config>("/config");
     configPromise.then((value) => {
-      console.log(value);
       setConfig(value.data);
     });
   }, []);
