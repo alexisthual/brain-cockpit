@@ -47,7 +47,7 @@ const FingerprintPane = ({
   highThresholdMax,
   setHighThresholdMax = () => {},
 }: Props) => {
-  const [filter, setFilter] = useState(FingerprintFilter.CONTRASTS);
+  const [filter, setFilter] = useState(FingerprintFilter.ALL);
   const allTasks = [
     ...new Set(contrastLabels.map((label) => label.task)),
   ].sort();

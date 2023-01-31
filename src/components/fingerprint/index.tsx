@@ -42,7 +42,7 @@ interface Props {
 
 const Fingerprint = ({
   contrastLabels,
-  filter = FingerprintFilter.CONDITIONS,
+  filter = FingerprintFilter.ALL,
   selectedTasks,
   fingerprints,
   width,
