@@ -127,7 +127,11 @@ const Layout = () => {
               content={dataset.name}
               position={Position.RIGHT}
             >
-              <NavLink className="view-button" to={`/datasets/${datasetId}`}>
+              <NavLink
+                className="view-button"
+                to={`/datasets/${datasetId}`}
+                reloadDocument
+              >
                 <Icon icon="database" />
               </NavLink>
             </Tooltip2>
@@ -140,7 +144,11 @@ const Layout = () => {
               content={dataset.name}
               position={Position.RIGHT}
             >
-              <NavLink className="view-button" to={`/alignments/${datasetId}`}>
+              <NavLink
+                className="view-button"
+                to={`/alignments/${datasetId}`}
+                reloadDocument
+              >
                 <Icon icon="swap-horizontal" />
               </NavLink>
             </Tooltip2>
