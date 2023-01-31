@@ -23,14 +23,13 @@ def get_json_server_config():
                 (
                     meshes,
                     subjects,
-                    tasks_contrasts,
+                    _,
                     sides,
                 ) = datasets_explorer.parse_metadata(df)
                 dataset_info = {
                     "subjects": subjects,
                     "meshes": meshes,
                     "sides": list(map(datasets_explorer.side_to_hemi, sides)),
-                    "tasks_contrasts": tasks_contrasts,
                     "n_files": len(df),
                 }
                 d.update(dataset_info)
