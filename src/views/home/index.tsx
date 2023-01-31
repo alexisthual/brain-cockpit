@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { useConfig } from "App";
 
 import "./style.scss";
-// let config = require("../../../config.yaml").default;
 
 const HomeView = () => {
   const config = useConfig();

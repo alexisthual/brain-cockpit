@@ -1,7 +1,7 @@
 import deepEqual from "fast-deep-equal";
 import { nanoid } from "nanoid";
 import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import * as qs from "qs";
 
 import FingerprintPane from "components/pane/fingerprint";
@@ -99,17 +99,13 @@ const useSurfaceState = (): [
   }, [state, navigate]);
 
   // Update state on URL change
+  const location = useLocation();
   useEffect(() => {
     const newUrlState = stateFromUrl();
     if (!deepEqual(newUrlState, state)) {
       setState(newUrlState);
     }
-  }, [
-    // contrary to what the warning is saying,
-    // window.location.href dependency is needed here
-    window.location.href,
-    state,
-  ]);
+  }, [location, state]);
 
   return [state, setState];
 };
