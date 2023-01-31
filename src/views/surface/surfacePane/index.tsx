@@ -23,30 +23,28 @@ import {
   getMin,
   GradientMode,
   HemisphereSide,
-  MeshSupport,
-  MeshType,
   modulo,
   SurfaceMode,
 } from "constants/index";
 
 export interface SurfacePaneState {
-  subject: number;
-  contrast: number;
+  subject?: number;
+  contrast?: number;
   selectedVoxel?: number;
-  meshSupport: MeshSupport;
-  meshType: MeshType;
-  hemi: HemisphereSide;
+  meshSupport?: string;
+  meshType?: string;
+  hemi?: string;
   meanSurfaceMap?: boolean;
   showDescription?: boolean;
   voxels?: number[];
 }
 
 export const defaultPaneState: SurfacePaneState = {
-  subject: 0,
-  contrast: 0,
-  meshSupport: MeshSupport.FSAVERAGE5,
-  meshType: MeshType.PIAL,
-  hemi: HemisphereSide.LEFT,
+  subject: undefined,
+  contrast: undefined,
+  meshSupport: undefined,
+  meshType: undefined,
+  hemi: undefined,
   meanSurfaceMap: false,
   showDescription: false,
 };
@@ -65,6 +63,9 @@ interface Props {
   colormapName?: string;
   subjectLabels: string[];
   contrastLabels: ContrastLabel[];
+  meshLabels: string[];
+  meshTypeLabels?: string[];
+  hemiLabels: string[];
   datasetDescriptions: DatasetDescriptions;
   filterSurface?: boolean;
   lowThresholdMin?: number;
@@ -85,6 +86,9 @@ const SurfacePane = ({
   colormapName = "diverging_temperature",
   subjectLabels = [],
   contrastLabels = [],
+  meshLabels = [],
+  meshTypeLabels,
+  hemiLabels = [],
   datasetDescriptions = {},
   filterSurface,
   lowThresholdMin,
@@ -148,6 +152,15 @@ const SurfacePane = ({
     let newMeshUrls: Promise<any>[] = [];
 
     if (
+      state.subject === undefined ||
+      state.meshSupport === undefined ||
+      state.meshType === undefined ||
+      state.hemi === undefined
+    ) {
+      return;
+    }
+
+    if (
       state.hemi === HemisphereSide.LEFT ||
       state.hemi === HemisphereSide.RIGHT
     ) {
@@ -196,7 +209,10 @@ const SurfacePane = ({
           paneCallbacks?.shiftAllPanes("contrast", 1, contrastLabels.length);
         } else if (event.isComposing || event.keyCode === 76) {
           changeState("contrast")(
-            modulo(state.contrast + 1, contrastLabels.length)
+            modulo(
+              state.contrast !== undefined ? state.contrast + 1 : 0,
+              contrastLabels.length
+            )
           );
         }
       }
@@ -214,7 +230,10 @@ const SurfacePane = ({
           paneCallbacks?.shiftAllPanes("contrast", -1, contrastLabels.length);
         } else if (event.isComposing || event.keyCode === 74) {
           changeState("contrast")(
-            modulo(state.contrast - 1, contrastLabels.length)
+            modulo(
+              state.contrast !== undefined ? state.contrast - 1 : 0,
+              contrastLabels.length
+            )
           );
         }
       }
@@ -232,7 +251,10 @@ const SurfacePane = ({
           paneCallbacks?.shiftAllPanes("subject", 1, subjectLabels.length);
         } else if (event.isComposing || event.keyCode === 73) {
           changeState("subject")(
-            modulo(state.subject + 1, subjectLabels.length)
+            modulo(
+              state.subject !== undefined ? state.subject + 1 : 0,
+              subjectLabels.length
+            )
           );
         }
       }
@@ -251,7 +273,10 @@ const SurfacePane = ({
         } else if (event.isComposing || event.keyCode === 75) {
           if (!state.meanSurfaceMap) {
             changeState("subject")(
-              modulo(state.subject - 1, subjectLabels.length)
+              modulo(
+                state.subject !== undefined ? state.subject - 1 : 0,
+                subjectLabels.length
+              )
             );
           }
         }
@@ -448,13 +473,13 @@ const SurfacePane = ({
     let newDescriptions = [];
 
     // Add task description
-    const task = contrastLabels[state.contrast]?.task;
+    const task = contrastLabels[state.contrast ?? 0]?.task;
     if (task !== undefined) {
       newDescriptions.push([task, datasetDescriptions[task]?.description]);
     }
 
     // Add contrast / condition description
-    const contrast = contrastLabels[state.contrast]?.contrast;
+    const contrast = contrastLabels[state.contrast ?? 0]?.contrast;
     if (contrast !== undefined) {
       newDescriptions.push([
         contrast,
@@ -508,7 +533,7 @@ const SurfacePane = ({
                 {
                   inputType: InputType.SELECT_STRING,
                   selectedItem: state.meshSupport,
-                  items: Object.keys(MeshSupport),
+                  items: meshLabels,
                   onChangeCallback: (
                     newValue: string,
                     event: React.SyntheticEvent<HTMLElement>
@@ -516,52 +541,40 @@ const SurfacePane = ({
                     if ((event as any).altKey) {
                       paneCallbacks?.updateAllPanesState(
                         "meshSupport",
-                        MeshSupport[newValue as keyof typeof MeshSupport]
+                        newValue
                       );
                     } else {
-                      changeState("meshSupport")(
-                        MeshSupport[newValue as keyof typeof MeshSupport]
-                      );
+                      changeState("meshSupport")(newValue);
                     }
                   },
                 },
                 {
                   inputType: InputType.SELECT_STRING,
                   selectedItem: state.meshType,
-                  items: Object.keys(MeshType),
+                  items: meshTypeLabels,
                   onChangeCallback: (
                     newValue: string,
                     event: React.SyntheticEvent<HTMLElement>
                   ) => {
                     if ((event as any).altKey) {
-                      paneCallbacks?.updateAllPanesState(
-                        "meshType",
-                        MeshType[newValue as keyof typeof MeshType]
-                      );
+                      paneCallbacks?.updateAllPanesState("meshType", newValue);
                     } else {
-                      changeState("meshType")(
-                        MeshType[newValue as keyof typeof MeshType]
-                      );
+                      changeState("meshType")(newValue);
                     }
                   },
                 },
                 {
                   inputType: InputType.SELECT_STRING,
                   selectedItem: state.hemi,
-                  items: Object.keys(HemisphereSide),
+                  items: hemiLabels,
                   onChangeCallback: (
                     newValue: string,
                     event: React.SyntheticEvent<HTMLElement>
                   ) => {
                     if ((event as any).altKey) {
-                      paneCallbacks?.updateAllPanesState(
-                        "hemi",
-                        HemisphereSide[newValue as keyof typeof HemisphereSide]
-                      );
+                      paneCallbacks?.updateAllPanesState("hemi", newValue);
                     } else {
-                      changeState("hemi")(
-                        HemisphereSide[newValue as keyof typeof HemisphereSide]
-                      );
+                      changeState("hemi")(newValue);
                     }
                   },
                 },
@@ -571,7 +584,7 @@ const SurfacePane = ({
               inputs: [
                 {
                   inputType: InputType.SELECT_STRING,
-                  selectedItem: subjectLabels[state.subject],
+                  selectedItem: subjectLabels[state.subject ?? 0],
                   items: subjectLabels,
                   onChangeCallback: (
                     newValue: string,
@@ -612,7 +625,7 @@ const SurfacePane = ({
               inputs: [
                 {
                   inputType: InputType.SELECT_CONTRAST,
-                  selectedItem: contrastLabels[state.contrast],
+                  selectedItem: contrastLabels[state.contrast ?? 0],
                   items: contrastLabels,
                   onChangeCallback: (
                     newValue: ContrastLabel,
@@ -702,10 +715,6 @@ const SurfacePane = ({
               surfaceMap={surfaceMap}
               meshUrls={meshUrls}
               gradient={gradient}
-              meshType={state.meshType}
-              meshSupport={state.meshSupport}
-              subjectLabel={subjectLabels[state.subject]}
-              hemi={state.hemi}
               wireframe={wireframe}
               width={sceneWidth}
               height={sceneHeight}

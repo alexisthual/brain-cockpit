@@ -8,15 +8,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
-import {
-  colormaps,
-  getMax,
-  getMin,
-  HemisphereSide,
-  MeshSupport,
-  MeshType,
-  View,
-} from "constants/index";
+import { colormaps, getMax, getMin, View } from "constants/index";
 import { Hotspots, IHotspot } from "./hotspots";
 import { CustomGradient } from "./gradient";
 import "./style.scss";
@@ -31,11 +23,7 @@ interface SceneProps {
   wireframe?: boolean;
   markerCoordinates?: number[][];
   markerIndices?: number[];
-  meshType: MeshType;
-  meshSupport: MeshSupport;
   meshUrls?: string[];
-  subjectLabel?: string;
-  hemi: HemisphereSide;
   uniqueKey?: string;
   lowThresholdMin?: number;
   lowThresholdMax?: number;
@@ -79,9 +67,6 @@ class Scene extends Component<SceneProps, IState> {
   edgesMesh?: THREE.Mesh;
 
   static defaultProps = {
-    meshType: MeshType.PIAL,
-    meshSupport: MeshSupport.FSAVERAGE5,
-    hemi: HemisphereSide.LEFT,
     colormap: colormaps["sequential"],
   };
 
@@ -362,14 +347,10 @@ class Scene extends Component<SceneProps, IState> {
       this.handleWindowResize();
     }
 
-    // Update displayed mesh when meshType or hemi change
+    // Update displayed mesh when meshUrls update
     if (
       this.scene !== undefined &&
-      (!deepEqual(prevProps.meshUrls, this.props.meshUrls) ||
-        prevProps.meshSupport !== this.props.meshSupport ||
-        prevProps.meshType !== this.props.meshType ||
-        prevProps.subjectLabel !== this.props.subjectLabel ||
-        prevProps.hemi !== this.props.hemi)
+      !deepEqual(prevProps.meshUrls, this.props.meshUrls)
     ) {
       let newGeometry = (await Scene.loadGeometry(this.props.meshUrls)) as any;
 
@@ -405,7 +386,6 @@ class Scene extends Component<SceneProps, IState> {
       this.props.surfaceMap !== undefined &&
       this.props.surfaceMap !== null &&
       (this.props.surfaceMap !== prevProps.surfaceMap ||
-        prevProps.hemi !== this.props.hemi ||
         this.props.lowThresholdMin !== prevProps.lowThresholdMin ||
         this.props.lowThresholdMax !== prevProps.lowThresholdMax ||
         this.props.highThresholdMin !== prevProps.highThresholdMin ||
@@ -592,7 +572,7 @@ class Scene extends Component<SceneProps, IState> {
     controls.update();
 
     renderer.setSize(this.props.width, this.props.height);
-    this.container.appendChild(renderer.domElement);
+    this.container?.appendChild(renderer.domElement);
 
     // Update class instance attributes
     this.renderer = renderer;
@@ -607,8 +587,8 @@ class Scene extends Component<SceneProps, IState> {
   }
 
   start() {
-    this.container.addEventListener("pointerdown", this.onMouseDown, false);
-    this.container.addEventListener("pointerup", this.onMouseUp, false);
+    this.container?.addEventListener("pointerdown", this.onMouseDown, false);
+    this.container?.addEventListener("pointerup", this.onMouseUp, false);
     window.addEventListener("keydown", this.switchView, false);
 
     if (!this.frameId) {
@@ -741,28 +721,28 @@ class Scene extends Component<SceneProps, IState> {
     // E
     if (
       (event.isComposing || event.keyCode === 69) &&
-      this.container.matches(":hover")
+      this.container?.matches(":hover")
     ) {
       this.focusOnMainObject(View.FRONTAL);
     }
     // S
     if (
       (event.isComposing || event.keyCode === 83) &&
-      this.container.matches(":hover")
+      this.container?.matches(":hover")
     ) {
       this.focusOnMainObject(View.LATERAL);
     }
     // D
     if (
       (event.isComposing || event.keyCode === 68) &&
-      this.container.matches(":hover")
+      this.container?.matches(":hover")
     ) {
       this.focusOnMainObject(View.DORSAL);
     }
     // F
     if (
       (event.isComposing || event.keyCode === 70) &&
-      this.container.matches(":hover")
+      this.container?.matches(":hover")
     ) {
       this.focusOnMainObject(View.MEDIAL);
     }
@@ -887,9 +867,11 @@ class Scene extends Component<SceneProps, IState> {
 
     // Remove Three.js related objects
     cancelAnimationFrame(this.frameId);
-    this.container.removeChild(this.renderer.domElement);
+    if (this.renderer !== undefined) {
+      this.container.removeChild(this.renderer.domElement);
+    }
     if (this.gridHelper) {
-      this.gridHelper.geometry.dispose();
+      this.gridHelper.geometry?.dispose();
       if (this.gridHelper.material instanceof THREE.Material) {
         this.gridHelper.material.dispose();
       } else {
@@ -903,10 +885,10 @@ class Scene extends Component<SceneProps, IState> {
     this.meshMaterial?.dispose();
 
     this.removeAndDisposeMarkers();
-    this.controls.dispose();
-    this.renderer.dispose();
-    this.renderer.forceContextLoss();
-    this.renderer.info.reset();
+    this.controls?.dispose();
+    this.renderer?.dispose();
+    this.renderer?.forceContextLoss();
+    this.renderer?.info.reset();
     // Check remaining objects with
     // console.log(this.renderer.info);
   }

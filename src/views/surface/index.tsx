@@ -7,14 +7,25 @@ import * as qs from "qs";
 import FingerprintPane from "components/pane/fingerprint";
 import KeyDialog from "./keyDialog";
 import SurfaceControls from "./surfaceControls";
-import SurfacePane, { defaultPaneState, SurfacePaneState } from "./surfacePane";
+import SurfacePane, { SurfacePaneState } from "./surfacePane";
 import {
   ContrastLabel,
   Orientation,
   modulo,
   usePrevious,
+  MeshType,
+  HemisphereSide,
 } from "constants/index";
 import { server } from "App";
+
+interface DatasetInfo {
+  subjects: string[];
+  mesh_supports: string[];
+  mesh_types?: string[];
+  hemis: string[];
+  tasks_contrasts: string[][];
+  n_files: number;
+}
 
 interface SurfaceViewProps {
   datasetId: string;
@@ -34,7 +45,7 @@ const stateFromUrl = (): SurfaceViewState => {
     // for performance purposes ; we disable this feature here
     arrayLimit: 1000,
     decoder(str, _, charset) {
-      const strWithoutPlus = str.replace(/\+/g, " ");
+      const strWithoutPlus: any = str.replace(/\+/g, " ");
       if (charset === "iso-8859-1") {
         // unescape never throws, no try...catch needed:
         return strWithoutPlus.replace(/%[0-9a-f]{2}/gi, _);
@@ -64,13 +75,11 @@ const stateFromUrl = (): SurfaceViewState => {
     },
   });
 
-  // If no panes are present, create one with default state
+  // If there are no panes, instanciate empty dict
   if (urlState.panes === undefined) {
     urlState = {
       ...urlState,
-      panes: {
-        [nanoid(4)]: defaultPaneState,
-      },
+      panes: {},
     };
   }
 
@@ -111,8 +120,43 @@ const useSurfaceState = (): [
 };
 
 const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
+  // Dataset information
+  const [subjectLabels, setSubjectLabels] = useState<string[]>([]);
+  const [contrastLabels, setContrastLabels] = useState<ContrastLabel[]>([]);
+  const [meshLabels, setMeshLabels] = useState<string[]>([]);
+  const [meshTypeLabels, setMeshTypeLabels] = useState<string[]>([]);
+  const [hemiLabels, setHemiLabels] = useState<string[]>([]);
+  const [datasetDescriptions, setDatasetDescriptions] = useState<any>({});
+
   // Load state from url
   const [state, setState] = useSurfaceState();
+
+  // Initialise all pane state variables
+  useEffect(() => {
+    const datasetInfo = server.get<DatasetInfo>(`/datasets/${datasetId}/info`);
+
+    datasetInfo.then((value) => {
+      setSubjectLabels(value.data.subjects);
+
+      setContrastLabels(
+        value.data.tasks_contrasts.map((label: any) => ({
+          task: label[0],
+          contrast: label[1],
+        }))
+      );
+
+      setMeshLabels(value.data.mesh_supports);
+
+      setHemiLabels(value.data.hemis);
+
+      if (value.data.mesh_types !== undefined) {
+        setMeshTypeLabels(value.data.mesh_types);
+      }
+    });
+
+    setState({ panes: {} });
+  }, [datasetId]);
+
   const selectedVoxels = Object.keys(state.panes).map((paneId: any) => [
     paneId,
     state.panes[paneId].voxels,
@@ -121,6 +165,50 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
   const [fingerprints, setFingerprints] = useState<number[][]>([]);
 
   const [showKeyDialog, setShowKeyDialog] = useState(false);
+
+  const defaultPaneState = useCallback(
+    (s: string[], c: ContrastLabel[], m: string[]) => {
+      return {
+        subject: s.length > 0 ? 0 : undefined,
+        contrast: c.length > 0 ? 0 : undefined,
+        meshSupport: m.length > 0 ? m[0] : undefined,
+        meshType: MeshType.PIAL,
+        hemi: HemisphereSide.LEFT,
+        meanSurfaceMap: false,
+        showDescription: false,
+      };
+    },
+    []
+  );
+
+  useEffect(() => {
+    // If no panes are present, create one with default state
+    if (
+      subjectLabels?.length > 0 &&
+      contrastLabels?.length > 0 &&
+      meshLabels?.length > 0
+    ) {
+      if (Object.keys(state.panes).length === 0) {
+        setState(({
+          ...state,
+          panes: {
+            [nanoid(4)]: defaultPaneState(
+              subjectLabels,
+              contrastLabels,
+              meshLabels
+            ),
+          },
+        } as unknown) as SurfaceViewState);
+      }
+    }
+  }, [
+    state,
+    setState,
+    subjectLabels,
+    contrastLabels,
+    meshLabels,
+    defaultPaneState,
+  ]);
 
   //
   // Util functions to modify view state
@@ -131,12 +219,23 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
       ...state,
       panes: {
         ...state.panes,
-        [nanoid(4)]: defaultPaneState,
+        [nanoid(4)]: defaultPaneState(
+          subjectLabels,
+          contrastLabels,
+          meshLabels
+        ),
       },
     };
 
     setState(newState);
-  }, [state, setState]);
+  }, [
+    state,
+    setState,
+    subjectLabels,
+    contrastLabels,
+    meshLabels,
+    defaultPaneState,
+  ]);
 
   const removePane = useCallback(
     (paneId: string) => {
@@ -287,10 +386,6 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
     };
   }, [keyAddPane, toggleKeyDialog]);
 
-  // Label information
-  const [subjectLabels, setSubjectLabels] = useState<string[]>([]);
-  const [contrastLabels, setContrastLabels] = useState<ContrastLabel[]>([]);
-  const [datasetDescriptions, setDatasetDescriptions] = useState<any>({});
   // Page layout
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [showGridHelper, setShowGridHelper] = useState(true);
@@ -303,46 +398,14 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
   // Fingerprint
   const [loadingFingerprint, setLoadingFingerprint] = useState(false);
 
-  // Initialise all pane state variables
-  useEffect(() => {
-    const fetchAllData = async () => {
-      // Load static data
-      const subjectLabels = server.get<string[]>(
-        `/datasets/${datasetId}/subjects`
-      );
-      const contrastLabels = server.get<string[][]>(
-        `/datasets/${datasetId}/contrast_labels`
-      );
-      const datasetDescriptions = server.get<any>(
-        `/datasets/${datasetId}/descriptions`
-      );
-
-      // Wait for all data to be loaded before setting app state
-      Promise.all([subjectLabels, contrastLabels, datasetDescriptions]).then(
-        (values) => {
-          setSubjectLabels(values[0].data);
-
-          setContrastLabels(
-            values[1].data.map((label: any) => ({
-              task: label[0],
-              contrast: label[1],
-            }))
-          );
-
-          setDatasetDescriptions(values[2].data);
-        }
-      );
-    };
-
-    fetchAllData();
-  }, [datasetId]);
-
   // Update fingerprint when selected voxels
   // or selected subjects change
   const paneSubjects = Object.keys(state.panes).map(
     (k) => state.panes[k].subject
   );
-  const previousPaneSubjects = usePrevious<number[]>(paneSubjects);
+  const previousPaneSubjects = usePrevious<(number | undefined)[]>(
+    paneSubjects
+  );
   const paneMeanSurfaceMaps = Object.keys(state.panes).map(
     (k) => state.panes[k].meanSurfaceMap
   );
@@ -460,6 +523,9 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
                   }}
                   subjectLabels={subjectLabels}
                   contrastLabels={contrastLabels}
+                  meshLabels={meshLabels}
+                  meshTypeLabels={meshTypeLabels}
+                  hemiLabels={hemiLabels}
                   datasetDescriptions={datasetDescriptions}
                   filterSurface={filterSurface}
                   lowThresholdMin={filterSurface ? lowThresholdMin : undefined}

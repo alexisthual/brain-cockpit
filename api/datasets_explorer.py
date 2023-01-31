@@ -194,11 +194,22 @@ def create_endpoints_one_surface_dataset(id, dataset):
     def get_info():
         dataset_info = {
             "subjects": subjects,
-            "meshes": meshes,
+            "mesh_supports": meshes,
             "hemis": list(map(side_to_hemi, sides)),
             "tasks_contrasts": tasks_contrasts,
             "n_files": len(df),
         }
+
+        try:
+            mesh_types = config["surfaces"]["datasets"][id]["mesh_types"]
+            available_mesh_types = [
+                mesh_types["default"],
+                *mesh_types["other"],
+            ]
+            dataset_info["mesh_types"] = available_mesh_types
+        except KeyError:
+            mesh_types = None
+
         return jsonify(dataset_info)
 
     @app.route(subjects_endpoint, endpoint=subjects_endpoint, methods=["GET"])
@@ -238,10 +249,12 @@ def create_endpoints_one_surface_dataset(id, dataset):
         ]["mesh_path"].unique()
         df_mesh_path = Path(df_mesh_paths[0]).with_suffix(".gltf")
 
-        if "default_mesh" in dataset and "other_meshes" in dataset:
-            df_mesh_path = df_mesh_path.parent / str(
-                df_mesh_path.name
-            ).replace(dataset["default_mesh"], mesh_type)
+        if "mesh_types" in dataset:
+            mesh_types = dataset["mesh_types"]
+            if "default" in mesh_types and "other" in mesh_types:
+                df_mesh_path = df_mesh_path.parent / str(
+                    df_mesh_path.name
+                ).replace(mesh_types["default"], mesh_type)
 
         return str(df_mesh_path)
 

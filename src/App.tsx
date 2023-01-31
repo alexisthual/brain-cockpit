@@ -29,8 +29,10 @@ export interface Config {
         name: string;
         path: string;
         descriptions?: string;
-        default_mesh?: string;
-        other_meshes?: string[];
+        mesh_types?: {
+          default: string;
+          other: string[];
+        };
         subjects: string[];
         meshes: string[];
         n_files: string;
