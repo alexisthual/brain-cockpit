@@ -16,13 +16,12 @@ const HomeView = () => {
   if (config?.allow_very_unsafe_file_sharing) {
     warningDiv = (
       <div className="app-warnings">
-        <Callout intent="warning" title="Granted unsafe file access">
-          You set{" "}
+        <Callout intent="warning" title="Unsafe access to server files">
+          The config file set{" "}
           <code className="bp4-code">allow_very_unsafe_file_sharing</code> to{" "}
-          <code className="bp4-code">true</code> in the configuration file.
-          While this is ok for staging instances of brain-cockpit, you should
-          absolutely set this parameters to{" "}
-          <code className="bp4-code">false</code> on production instances.
+          <code className="bp4-code">true</code>. While this is ok for staging
+          instances of brain-cockpit, you should absolutely set this parameters
+          to <code className="bp4-code">false</code> on production instances.
         </Callout>
       </div>
     );
@@ -39,6 +38,7 @@ const HomeView = () => {
           {Object.entries(config?.surfaces?.datasets ?? {}).map(
             ([key, d]: any) => (
               <Card
+                key={key}
                 className="dataset"
                 interactive={true}
                 elevation={Elevation.TWO}
@@ -72,6 +72,7 @@ const HomeView = () => {
           {Object.entries(config?.alignments?.datasets ?? {}).map(
             ([key, d]: any) => (
               <Card
+                key={key}
                 className="dataset"
                 interactive={true}
                 elevation={Elevation.TWO}
