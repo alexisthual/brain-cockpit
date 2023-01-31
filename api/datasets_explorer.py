@@ -171,7 +171,7 @@ def load_data(dataset_path):
 def create_endpoints_one_surface_dataset(id, dataset):
     ## Load all available contrasts
     df = pd.read_csv(dataset["path"])
-    _, subjects, tasks_contrasts, _ = parse_metadata(df)
+    meshes, subjects, tasks_contrasts, sides = parse_metadata(df)
 
     print("Loading contrast maps...")
     data = load_data(dataset["path"])
@@ -179,6 +179,7 @@ def create_endpoints_one_surface_dataset(id, dataset):
 
     # ROUTES
     # Define a series of enpoints to expose contrasts, meshes, etc
+    info_endpoint = f"/datasets/{id}/info"
     subjects_endpoint = f"/datasets/{id}/subjects"
     contrasts_endpoint = f"/datasets/{id}/contrast_labels"
     descriptions_endpoint = f"/datasets/{id}/descriptions"
@@ -188,6 +189,17 @@ def create_endpoints_one_surface_dataset(id, dataset):
     fingerprint_mean_endpoint = f"/datasets/{id}/voxel_fingerprint_mean"
     contrast_endpoint = f"/datasets/{id}/contrast"
     contrast_mean_endpoint = f"/datasets/{id}/contrast_mean"
+
+    @app.route(info_endpoint, endpoint=info_endpoint, methods=["GET"])
+    def get_info():
+        dataset_info = {
+            "subjects": subjects,
+            "meshes": meshes,
+            "sides": list(map(side_to_hemi(sides))),
+            "tasks_contrasts": tasks_contrasts,
+            "n_files": len(df),
+        }
+        return jsonify(dataset_info)
 
     @app.route(subjects_endpoint, endpoint=subjects_endpoint, methods=["GET"])
     def get_subjects():

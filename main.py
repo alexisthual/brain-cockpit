@@ -1,11 +1,11 @@
 import os
+
 from waitress import serve
 
 # API logic is implemented in /api
 # We here load these files as independent pieces of logic
 from api import app
-
-from api import datasets_explorer, alignments_explorer
+from api import server, datasets_explorer, alignments_explorer
 
 # Custom utils
 import bc_utils.setup as setup
@@ -17,6 +17,7 @@ REACT_APP_API_PORT = os.getenv("REACT_APP_API_PORT")
 
 # Define util function to load all data
 def create_app():
+    server.create_all_endpoints()
     datasets_explorer.create_all_endpoints()
     alignments_explorer.create_all_endpoints()
 

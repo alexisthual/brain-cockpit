@@ -1,17 +1,20 @@
-import { Callout, Card, Elevation, Icon } from "@blueprintjs/core";
+import { Callout, Card, Elevation, Icon, Tag } from "@blueprintjs/core";
 import { useNavigate } from "react-router-dom";
 
+import { useConfig } from "App";
+
 import "./style.scss";
-let config = require("../../../config.yaml").default;
+// let config = require("../../../config.yaml").default;
 
 const HomeView = () => {
+  const config = useConfig();
   const navigate = useNavigate();
 
   let warningDiv = null;
   let surfaceDatasetsDiv = null;
   let alignmentDatasetsDiv = null;
 
-  if (config.allow_very_unsafe_file_sharing) {
+  if (config?.allow_very_unsafe_file_sharing) {
     warningDiv = (
       <div className="app-warnings">
         <Callout intent="warning" title="Granted unsafe file access">
@@ -26,11 +29,7 @@ const HomeView = () => {
     );
   }
 
-  if (
-    config.surfaces &&
-    config.surfaces.datasets &&
-    Object.keys(config.surfaces.datasets).length > 0
-  ) {
+  if (Object.keys(config?.surfaces?.datasets ?? {}).length > 0) {
     surfaceDatasetsDiv = (
       <div className="home-section">
         <div className="home-section-title">
@@ -38,26 +37,32 @@ const HomeView = () => {
           <h2 className="bp4-heading">Available surface datasets</h2>
         </div>
         <div className="home-section-items">
-          {Object.entries(config.surfaces.datasets).map(([key, value]: any) => (
-            <Card
-              interactive={true}
-              elevation={Elevation.TWO}
-              onClick={() => navigate(`/datasets/${key}`)}
-            >
-              <h3>{value.name}</h3>
-              <p className="bp4-monospace-text">{value.path}</p>
-            </Card>
-          ))}
+          {Object.entries(config?.surfaces?.datasets ?? {}).map(
+            ([key, d]: any) => (
+              <Card
+                className="dataset"
+                interactive={true}
+                elevation={Elevation.TWO}
+                onClick={() => navigate(`/datasets/${key}`)}
+              >
+                <h3>{d.name}</h3>
+                <div className="dataset-tags">
+                  <Tag icon="people" minimal large>
+                    {d.subjects.length}
+                  </Tag>
+                  <Tag icon="document" minimal large>
+                    {d.n_files}
+                  </Tag>
+                </div>
+              </Card>
+            )
+          )}
         </div>
       </div>
     );
   }
 
-  if (
-    config.alignments &&
-    config.alignments.datasets &&
-    Object.keys(config.alignments.datasets).length > 0
-  ) {
+  if (Object.keys(config?.alignments?.datasets ?? {}).length > 0) {
     alignmentDatasetsDiv = (
       <div className="home-section">
         <div className="home-section-title">
@@ -65,15 +70,20 @@ const HomeView = () => {
           <h2 className="bp4-heading">Available alignments datasets</h2>
         </div>
         <div className="home-section-items">
-          {Object.entries(config.alignments.datasets).map(
-            ([key, value]: any) => (
+          {Object.entries(config?.alignments?.datasets ?? {}).map(
+            ([key, d]: any) => (
               <Card
+                className="dataset"
                 interactive={true}
                 elevation={Elevation.TWO}
                 onClick={() => navigate(`/alignments/${key}`)}
               >
-                <h3>{value.name}</h3>
-                <p className="bp4-monospace-text">{value.path}</p>
+                <h3>{d.name}</h3>
+                <div className="dataset-tags">
+                  <Tag icon="document" minimal large>
+                    {d.n_files}
+                  </Tag>
+                </div>
               </Card>
             )
           )}

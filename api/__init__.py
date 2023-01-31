@@ -1,6 +1,6 @@
+import numpy as np
 from flask import Flask
 from flask_cors import CORS
-import numpy as np
 from simplejson import JSONEncoder
 
 # Common variable which will be shared
