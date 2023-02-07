@@ -248,7 +248,11 @@ def create_endpoints_one_surface_dataset(id, dataset):
             & (df["mesh"] == mesh_support)
             & (df["side"] == hemi_to_side(hemi))
         ]["mesh_path"].unique()
-        df_mesh_path = Path(df_mesh_paths[0]).with_suffix(".gltf")
+        df_mesh_path_original = Path(df_mesh_paths[0])
+        df_mesh_basename = os.path.splitext(df_mesh_path_original.name)[0]
+        df_mesh_path = df_mesh_path_original.parent / Path(
+            df_mesh_basename
+        ).with_suffix(".gltf")
 
         if "mesh_types" in dataset:
             mesh_types = dataset["mesh_types"]
@@ -459,35 +463,61 @@ def create_all_endpoints():
 
     try:
         for dataset_id, dataset in config["surfaces"]["datasets"].items():
-            # # Check that dataset gifti meshes exist
-            # dataset_folder = Path(dataset["path"]).parent
+            # Check that dataset gifti meshes exist
+            dataset_folder = Path(dataset["path"]).parent
 
-            # df = pd.read_csv(dataset["path"])
+            df = pd.read_csv(dataset["path"])
 
-            # df["mesh_path"] = "meshes/" + df[""]
+            mesh_paths = list(map(Path, np.unique(df["mesh_path"])))
 
-            # mesh_paths = list(
-            #     map(
-            #         Path,
-            #         np.unique(df["mesh_path"])
-            #     )
-            # )
+            for mesh_path in tqdm(
+                mesh_paths, desc="Building GLTF mesh", leave=False
+            ):
+                mesh_stem = mesh_path.stem.split(".")[0]
+                if mesh_path.is_absolute():
+                    mesh_absolute_path = mesh_path
+                    output_folder = mesh_path.parent
+                    output_filename = mesh_stem
+                else:
+                    mesh_absolute_path = dataset_folder / mesh_path
+                    output_folder = dataset_folder / mesh_path.parent
+                    output_filename = mesh_stem
 
-            # for mesh_path in tqdm(
-            #     mesh_paths, desc="Building GLTF mesh", leave=False
-            # ):
-            #     mesh_stem = mesh_path.stem.split(".")[0]
-            #     if mesh_path.is_absolute():
-            #         output_folder = mesh_path.parent
-            #         output_filename = mesh_stem
-            #     else:
-            #         output_folder = dataset_folder / mesh_path.parent
-            #         output_filename = mesh_stem
+                if not (output_folder / f"{output_filename}.gltf").exists():
+                    compute_gltf_from_gifti(
+                        str(mesh_absolute_path),
+                        str(output_folder),
+                        output_filename,
+                    )
 
-            #     if not (output_folder / f"{output_filename}.gltf").exists():
-            #         compute_gltf_from_gifti(
-            #             str(mesh_path), str(output_folder), output_filename
-            #         )
+                if "mesh_types" in dataset:
+                    if (
+                        "default" in dataset["mesh_types"]
+                        and "other" in dataset["mesh_types"]
+                    ):
+                        mesh_absolute_path = Path(mesh_absolute_path)
+                        default_mesh_type = dataset["mesh_types"]["default"]
+                        other_mesh_types = dataset["mesh_types"]["other"]
+
+                        for other_mesh_type in other_mesh_types:
+                            other_mesh_stem = mesh_stem.replace(
+                                default_mesh_type, other_mesh_type
+                            )
+                            other_mesh_absolute_path = (
+                                mesh_absolute_path.parent
+                                / mesh_absolute_path.name.replace(
+                                    default_mesh_type, other_mesh_type
+                                )
+                            )
+
+                            if not (
+                                output_folder / f"{other_mesh_stem}.gltf"
+                            ).exists():
+                                compute_gltf_from_gifti(
+                                    str(other_mesh_absolute_path),
+                                    str(output_folder),
+                                    other_mesh_stem,
+                                )
 
             # Create API endpoints
             create_endpoints_one_surface_dataset(dataset_id, dataset)

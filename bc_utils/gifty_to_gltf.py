@@ -22,9 +22,8 @@ from gltflib import (
     ComponentType,
     FileResource,
 )
-from nilearn import datasets
-from scipy.sparse import coo_matrix, triu
-from sklearn.preprocessing import normalize
+from nilearn import datasets, surface
+from scipy.sparse import coo_matrix
 from tqdm import tqdm
 
 OUTPUT_PATH = "/home/alexis/singbrain/repo/brain-cockpit/public/meshes"
@@ -55,11 +54,7 @@ def read_gii(gii_file):
             ).T.squeeze()
             f.close()
     elif gii_file[-3:] == "gii":
-        img = nib.load(gii_file)
-        arrays = [
-            img.get_arrays_from_intent("NIFTI_INTENT_POINTSET")[0].data,
-            img.get_arrays_from_intent("NIFTI_INTENT_TRIANGLE")[0].data,
-        ]
+        arrays = surface.load_surf_mesh(gii_file)
 
     return list(arrays)
 
@@ -207,110 +202,6 @@ def compute_gltf_from_gifti(mesh_path, output_folder, output_filename):
     )
     gltf = GLTF(model=model, resources=[vertices_resource, triangles_resource])
     gltf.export(os.path.join(mesh_output_folder, f"{output_filename}.gltf"))
-
-    # Compute edges related information
-    # dataset = "pial_left"
-    coordinates, _ = mesh_to_coordinates(mesh_path)
-    connectivity = mesh_to_graph(mesh_path)
-    # Keep only upper triangular portion of connectivity matrix
-    # to deduplicate edges
-    col_indices = triu(connectivity).tocoo().col
-    row_indices = triu(connectivity).tocoo().row
-
-    edges_center = (coordinates[col_indices] + coordinates[row_indices]) / 2
-    edges_orientation = coordinates[col_indices] - coordinates[row_indices]
-    edges_orientation = normalize(edges_orientation)
-
-    assert len(col_indices) == len(row_indices)
-    assert edges_center.shape[0] == len(col_indices)
-    assert edges_orientation.shape[0] == len(col_indices)
-
-    # Build byte array containing coordinates
-    # of center of edges
-    edges_center_bytearray = bytearray()
-    for center in edges_center:
-        for value in center:
-            edges_center_bytearray.extend(struct.pack("f", value))
-
-    # Build byte array containing normalized vector
-    # orientation of edge
-    edges_orientation_bytearray = bytearray()
-    for orientation in edges_orientation:
-        for value in orientation:
-            edges_orientation_bytearray.extend(struct.pack("f", value))
-
-    edges_model = GLTFModel(
-        asset=Asset(version="2.0"),
-        scenes=[Scene(nodes=[0])],
-        nodes=[Node(mesh=0)],
-        meshes=[
-            Mesh(
-                primitives=[
-                    Primitive(
-                        attributes=Attributes(POSITION=0, TANGENT=1), indices=1
-                    )
-                ]
-            )
-        ],
-        buffers=[
-            Buffer(
-                byteLength=len(edges_center_bytearray),
-                uri=f"edges_center_{output_filename}.bin",
-            ),
-            Buffer(
-                byteLength=len(edges_orientation_bytearray),
-                uri=f"edges_orientation_{output_filename}.bin",
-            ),
-        ],
-        bufferViews=[
-            BufferView(
-                buffer=0,
-                byteOffset=0,
-                byteLength=len(edges_center_bytearray),
-                target=BufferTarget.ARRAY_BUFFER.value,
-            ),
-            BufferView(
-                buffer=1,
-                byteOffset=0,
-                byteLength=len(edges_orientation_bytearray),
-                target=BufferTarget.ARRAY_BUFFER.value,
-            ),
-        ],
-        accessors=[
-            Accessor(
-                bufferView=0,
-                byteOffset=0,
-                componentType=ComponentType.FLOAT.value,
-                count=len(col_indices),
-                type=AccessorType.VEC3.value,
-                min=mins,
-                max=maxs,
-            ),
-            Accessor(
-                bufferView=1,
-                byteOffset=0,
-                componentType=ComponentType.FLOAT.value,
-                count=len(col_indices),
-                type=AccessorType.VEC3.value,
-            ),
-        ],
-    )
-
-    edges_center_resource = FileResource(
-        f"edges_center_{output_filename}.bin", data=edges_center_bytearray
-    )
-    edges_orientation_resource = FileResource(
-        f"edges_orientation_{output_filename}.bin",
-        data=edges_orientation_bytearray,
-    )
-
-    edges_gltf = GLTF(
-        model=edges_model,
-        resources=[edges_center_resource, edges_orientation_resource],
-    )
-    edges_gltf.export(
-        os.path.join(mesh_output_folder, f"edges_{output_filename}.gltf")
-    )
 
 
 # %%
