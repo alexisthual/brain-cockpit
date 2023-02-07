@@ -113,14 +113,6 @@ export enum MeshSupport {
   INDIVIDUAL = "individual",
 }
 
-export enum MeshType {
-  PIAL = "pial",
-  WHITE = "white",
-  INFL = "infl",
-}
-
-export type MeshTypeString = keyof typeof MeshType;
-
 export enum SurfaceMapType {
   SEED_BASED = "seed-based",
   M_DISTANCE = "m-distance",

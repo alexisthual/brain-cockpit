@@ -18,14 +18,10 @@ interface Props {
   closeCallback: () => void;
   orientation?: Orientation;
   setOrientation?: (newOrientation: Orientation) => void;
-  lowThresholdMin?: number;
-  setLowThresholdMin?: (newValue: number) => void;
-  lowThresholdMax?: number;
-  setLowThresholdMax?: (newValue: number) => void;
-  highThresholdMin?: number;
-  setHighThresholdMin?: (newValue: number) => void;
-  highThresholdMax?: number;
-  setHighThresholdMax?: (newValue: number) => void;
+  thresholdLow?: number;
+  setThresholdLow?: (newValue: number) => void;
+  thresholdHigh?: number;
+  setThresholdHigh?: (newValue: number) => void;
 }
 
 const FingerprintPane = ({
@@ -38,14 +34,10 @@ const FingerprintPane = ({
   closeCallback,
   orientation,
   setOrientation = () => {},
-  lowThresholdMin,
-  setLowThresholdMin = () => {},
-  lowThresholdMax,
-  setLowThresholdMax = () => {},
-  highThresholdMin,
-  setHighThresholdMin = () => {},
-  highThresholdMax,
-  setHighThresholdMax = () => {},
+  thresholdLow,
+  setThresholdLow = () => {},
+  thresholdHigh,
+  setThresholdHigh = () => {},
 }: Props) => {
   const [filter, setFilter] = useState(FingerprintFilter.ALL);
   const allTasks = [
@@ -144,21 +136,13 @@ const FingerprintPane = ({
             fingerprints={fingerprints}
             width={fingerprintWidth}
             height={fingerprintHeight}
-            lowThresholdMin={filterSurface ? lowThresholdMin : undefined}
-            lowThresholdMax={filterSurface ? lowThresholdMax : undefined}
-            highThresholdMin={filterSurface ? highThresholdMin : undefined}
-            highThresholdMax={filterSurface ? highThresholdMax : undefined}
-            lowHandleMinRelease={(newValue: number) =>
-              setLowThresholdMin(newValue)
+            thresholdLow={filterSurface ? thresholdLow : undefined}
+            thresholdHigh={filterSurface ? thresholdHigh : undefined}
+            thresholdLowHandleRelease={(newValue: number) =>
+              setThresholdLow(newValue)
             }
-            lowHandleMaxRelease={(newValue: number) =>
-              setLowThresholdMax(newValue)
-            }
-            highHandleMinRelease={(newValue: number) =>
-              setHighThresholdMin(newValue)
-            }
-            highHandleMaxRelease={(newValue: number) =>
-              setHighThresholdMax(newValue)
+            thresholdHighHandleRelease={(newValue: number) =>
+              setThresholdHigh(newValue)
             }
           />
         )}

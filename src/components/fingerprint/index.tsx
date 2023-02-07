@@ -30,14 +30,10 @@ interface Props {
   clickedLabelCallback?: (labelIndex: number) => void;
   orientation: Orientation;
   selectedContrast?: Contrast;
-  lowThresholdMin?: number;
-  lowThresholdMax?: number;
-  highThresholdMin?: number;
-  highThresholdMax?: number;
-  lowHandleMinRelease?: (newValue: number) => void;
-  lowHandleMaxRelease?: (newValue: number) => void;
-  highHandleMinRelease?: (newValue: number) => void;
-  highHandleMaxRelease?: (newValue: number) => void;
+  thresholdLow?: number;
+  thresholdHigh?: number;
+  thresholdLowHandleRelease?: (newValue: number) => void;
+  thresholdHighHandleRelease?: (newValue: number) => void;
 }
 
 const Fingerprint = ({
@@ -50,14 +46,10 @@ const Fingerprint = ({
   clickedLabelCallback,
   orientation = Orientation.VERTICAL,
   selectedContrast,
-  lowThresholdMin = -10,
-  lowThresholdMax = 0,
-  highThresholdMin = 0,
-  highThresholdMax = 10,
-  lowHandleMinRelease,
-  lowHandleMaxRelease,
-  highHandleMinRelease,
-  highHandleMaxRelease,
+  thresholdLow = 0,
+  thresholdHigh = 0,
+  thresholdLowHandleRelease,
+  thresholdHighHandleRelease,
 }: Props) => {
   let padding = 40;
   let labelMargin = 15;
@@ -65,6 +57,7 @@ const Fingerprint = ({
   let offsetTop = 0;
   let offsetRight = 0;
   let offsetBottom = 0;
+  let nSteps = 10;
 
   const maxFingerprints = _.max(
     fingerprints.map((fingerprint) => _.max(fingerprint))
@@ -76,9 +69,6 @@ const Fingerprint = ({
     Math.abs(maxFingerprints ?? 0),
     Math.abs(minFingerprints ?? 1)
   );
-
-  lowThresholdMin = -maxAbsFingerprints;
-  highThresholdMax = maxAbsFingerprints;
 
   switch (orientation) {
     case Orientation.VERTICAL:
@@ -176,77 +166,49 @@ const Fingerprint = ({
     return acc + count;
   }, 0);
 
-  const [lowHandleMin, setLowHandleMin] = useState(lowThresholdMin);
-  const [lowHandleMax, setLowHandleMax] = useState(lowThresholdMax);
-  const [highHandleMin, setHighHandleMin] = useState(highThresholdMin);
-  const [highHandleMax, setHighHandleMax] = useState(highThresholdMax);
+  const [lowHandleMax, setLowHandleMax] = useState(thresholdLow);
+  const [highHandleMin, setHighHandleMin] = useState(thresholdHigh);
 
   return (
     <div className={`fingerprint ${orientation}-orientation`}>
       <MultiSlider
         className="fingerprint-slider"
-        labelStepSize={2}
+        labelStepSize={(2 * maxAbsFingerprints) / nSteps}
+        labelPrecision={3}
         max={maxAbsFingerprints}
         min={-maxAbsFingerprints}
         showTrackFill={true}
-        stepSize={1}
+        stepSize={maxAbsFingerprints / nSteps}
         vertical={orientation === Orientation.HORIZONTAL}
         onChange={(newValues: number[]) => {
-          if (newValues[0] !== lowHandleMin) {
-            setLowHandleMin(newValues[0]);
+          if (newValues[0] !== lowHandleMax) {
+            setLowHandleMax(newValues[0]);
           }
-          if (newValues[1] !== lowHandleMax) {
-            setLowHandleMax(newValues[1]);
-          }
-          if (newValues[2] !== highHandleMin) {
-            setHighHandleMin(newValues[2]);
-          }
-          if (newValues[3] !== highHandleMax) {
-            setHighHandleMax(newValues[3]);
+          if (newValues[1] !== highHandleMin) {
+            setHighHandleMin(newValues[1]);
           }
         }}
         onRelease={(newValues: number[]) => {
-          if (lowHandleMinRelease !== undefined) {
-            lowHandleMinRelease(newValues[0]);
+          if (thresholdLowHandleRelease !== undefined) {
+            thresholdLowHandleRelease(newValues[0]);
           }
-          if (lowHandleMaxRelease !== undefined) {
-            lowHandleMaxRelease(newValues[1]);
-          }
-          if (highHandleMinRelease !== undefined) {
-            highHandleMinRelease(newValues[2]);
-          }
-          if (highHandleMaxRelease !== undefined) {
-            highHandleMaxRelease(newValues[3]);
+          if (thresholdHighHandleRelease !== undefined) {
+            thresholdHighHandleRelease(newValues[1]);
           }
         }}
       >
-        {lowHandleMinRelease !== undefined ? (
-          <MultiSlider.Handle
-            intentBefore={undefined}
-            type="start"
-            value={lowHandleMin}
-          />
-        ) : null}
-        {highHandleMinRelease !== undefined ? (
+        {thresholdLowHandleRelease !== undefined ? (
           <MultiSlider.Handle
             intentBefore={"primary"}
             type="end"
             value={lowHandleMax}
           />
         ) : null}
-        {highHandleMinRelease !== undefined ? (
+        {thresholdHighHandleRelease !== undefined ? (
           <MultiSlider.Handle
-            intentBefore={undefined}
+            intentAfter={"primary"}
             type="start"
             value={highHandleMin}
-          />
-        ) : null}
-        {highHandleMinRelease !== undefined ? (
-          <MultiSlider.Handle
-            intentBefore={"primary"}
-            intentAfter={undefined}
-            type="end"
-            value={highHandleMax}
           />
         ) : null}
       </MultiSlider>

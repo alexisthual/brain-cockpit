@@ -25,10 +25,9 @@ interface SceneProps {
   markerIndices?: number[];
   meshUrls?: string[];
   uniqueKey?: string;
-  lowThresholdMin?: number;
-  lowThresholdMax?: number;
-  highThresholdMin?: number;
-  highThresholdMax?: number;
+  filterSurface?: boolean;
+  thresholdLow?: number;
+  thresholdHigh?: number;
   hotspots?: IHotspot[];
   colormap: chroma.Scale;
   showGridHelper?: boolean;
@@ -173,10 +172,9 @@ class Scene extends Component<SceneProps, IState> {
     wireframe: boolean = false,
     surfaceMap: number[] | undefined = undefined,
     colormap: chroma.Scale | undefined = undefined,
-    lowThresholdMin: number | undefined = undefined,
-    lowThresholdMax: number | undefined = undefined,
-    highThresholdMin: number | undefined = undefined,
-    highThresholdMax: number | undefined = undefined
+    filterSurface: boolean | undefined = undefined,
+    thresholdLow: number | undefined = undefined,
+    thresholdHigh: number | undefined = undefined
   ): {
     geometry: THREE.BufferGeometry;
     material: THREE.MeshStandardMaterial;
@@ -199,10 +197,9 @@ class Scene extends Component<SceneProps, IState> {
         geometry,
         surfaceMap,
         colormap,
-        lowThresholdMin,
-        lowThresholdMax,
-        highThresholdMin,
-        highThresholdMax
+        filterSurface,
+        thresholdLow,
+        thresholdHigh
       );
     } else {
       geometry = Scene.coloriseFromRandomMap(geometry);
@@ -252,10 +249,9 @@ class Scene extends Component<SceneProps, IState> {
     geometry: THREE.BufferGeometry,
     surfaceMap: number[],
     colormap: chroma.Scale,
-    lowThresholdMin: number | undefined,
-    lowThresholdMax: number | undefined,
-    highThresholdMin: number | undefined,
-    highThresholdMax: number | undefined
+    filterSurface: boolean | undefined,
+    thresholdLow: number | undefined,
+    thresholdHigh: number | undefined
   ): THREE.BufferGeometry {
     const color = new THREE.Color();
     const count = geometry.attributes.position.count;
@@ -265,31 +261,15 @@ class Scene extends Component<SceneProps, IState> {
 
     for (let i = 0; i < count; i++) {
       // Get and scale voxelIntensity
+      // in order to get color from colormap
       let voxelIntensity = (surfaceMap[i] - min) / (max - min);
 
-      if (lowThresholdMin !== undefined && highThresholdMax !== undefined) {
-        // In case thresholds are defined, voxelIntensity should be scaled
-        // according to them
-        voxelIntensity =
-          (surfaceMap[i] - lowThresholdMin) /
-          (highThresholdMax - lowThresholdMin);
-      }
-
       if (
-        (lowThresholdMin !== undefined && surfaceMap[i] <= lowThresholdMin) ||
-        (lowThresholdMin !== undefined &&
-          lowThresholdMax !== undefined &&
-          lowThresholdMin <= surfaceMap[i] &&
-          surfaceMap[i] <= lowThresholdMax) ||
-        (highThresholdMin !== undefined &&
-          highThresholdMax !== undefined &&
-          highThresholdMin <= surfaceMap[i] &&
-          surfaceMap[i] <= highThresholdMax) ||
-        (highThresholdMax !== undefined && highThresholdMax <= surfaceMap[i]) ||
-        (lowThresholdMin === undefined &&
-          lowThresholdMax === undefined &&
-          highThresholdMin === undefined &&
-          highThresholdMax === undefined)
+        (filterSurface &&
+          ((thresholdLow !== undefined && surfaceMap[i] <= thresholdLow) ||
+            (thresholdHigh !== undefined && thresholdHigh <= surfaceMap[i]))) ||
+        !filterSurface ||
+        (thresholdLow === undefined && thresholdHigh === undefined)
       ) {
         color.setRGB(
           colormap(voxelIntensity).get("rgb.r") / 255,
@@ -323,10 +303,9 @@ class Scene extends Component<SceneProps, IState> {
         this.props.wireframe,
         this.props.surfaceMap,
         this.props.colormap,
-        this.props.lowThresholdMin,
-        this.props.lowThresholdMax,
-        this.props.highThresholdMin,
-        this.props.highThresholdMax
+        this.props.filterSurface,
+        this.props.thresholdLow,
+        this.props.thresholdHigh
       );
 
       this.meshGeometry = colorizedGeometry;
@@ -359,10 +338,9 @@ class Scene extends Component<SceneProps, IState> {
         this.props.wireframe,
         this.props.surfaceMap,
         this.props.colormap,
-        this.props.lowThresholdMin,
-        this.props.lowThresholdMax,
-        this.props.highThresholdMin,
-        this.props.highThresholdMax
+        this.props.filterSurface,
+        this.props.thresholdLow,
+        this.props.thresholdHigh
       );
       this.meshGeometry = geometry;
       this.meshMaterial = material;
@@ -386,10 +364,9 @@ class Scene extends Component<SceneProps, IState> {
       this.props.surfaceMap !== undefined &&
       this.props.surfaceMap !== null &&
       (this.props.surfaceMap !== prevProps.surfaceMap ||
-        this.props.lowThresholdMin !== prevProps.lowThresholdMin ||
-        this.props.lowThresholdMax !== prevProps.lowThresholdMax ||
-        this.props.highThresholdMin !== prevProps.highThresholdMin ||
-        this.props.highThresholdMax !== prevProps.highThresholdMax)
+        this.props.filterSurface !== prevProps.filterSurface ||
+        this.props.thresholdLow !== prevProps.thresholdLow ||
+        this.props.thresholdHigh !== prevProps.thresholdHigh)
     ) {
       if (
         this.mesh !== undefined &&
@@ -401,10 +378,9 @@ class Scene extends Component<SceneProps, IState> {
           this.meshGeometry,
           this.props.surfaceMap,
           this.props.colormap,
-          this.props.lowThresholdMin,
-          this.props.lowThresholdMax,
-          this.props.highThresholdMin,
-          this.props.highThresholdMax
+          this.props.filterSurface,
+          this.props.thresholdLow,
+          this.props.thresholdHigh
         );
       } else if (this.props.surfaceMap.length > 0) {
         console.warn(

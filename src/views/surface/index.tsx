@@ -13,8 +13,6 @@ import {
   Orientation,
   modulo,
   usePrevious,
-  MeshType,
-  HemisphereSide,
 } from "constants/index";
 import { server } from "App";
 
@@ -390,10 +388,8 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
   const [orientation, setOrientation] = useState(Orientation.VERTICAL);
   const [showGridHelper, setShowGridHelper] = useState(true);
   // Surface map filtering and normalisation
-  const [lowThresholdMin, setLowThresholdMin] = useState(-10);
-  const [lowThresholdMax, setLowThresholdMax] = useState(0);
-  const [highThresholdMin, setHighThresholdMin] = useState(0);
-  const [highThresholdMax, setHighThresholdMax] = useState(10);
+  const [thresholdLow, setThresholdLow] = useState(0);
+  const [thresholdHigh, setThresholdHigh] = useState(0);
   const [filterSurface, setFilterSurface] = useState(true);
   // Fingerprint
   const [loadingFingerprint, setLoadingFingerprint] = useState(false);
@@ -528,14 +524,8 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
                   hemiLabels={hemiLabels}
                   datasetDescriptions={datasetDescriptions}
                   filterSurface={filterSurface}
-                  lowThresholdMin={filterSurface ? lowThresholdMin : undefined}
-                  lowThresholdMax={filterSurface ? lowThresholdMax : undefined}
-                  highThresholdMin={
-                    filterSurface ? highThresholdMin : undefined
-                  }
-                  highThresholdMax={
-                    filterSurface ? highThresholdMax : undefined
-                  }
+                  thresholdLow={thresholdLow}
+                  thresholdHigh={thresholdHigh}
                   showGridHelper={showGridHelper}
                 />
               );
@@ -556,14 +546,10 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
           }}
           orientation={orientation}
           setOrientation={setOrientation}
-          lowThresholdMin={lowThresholdMin}
-          setLowThresholdMin={setLowThresholdMin}
-          lowThresholdMax={lowThresholdMax}
-          setLowThresholdMax={setLowThresholdMax}
-          highThresholdMin={highThresholdMin}
-          setHighThresholdMin={setHighThresholdMin}
-          highThresholdMax={highThresholdMax}
-          setHighThresholdMax={setHighThresholdMax}
+          thresholdLow={thresholdLow}
+          setThresholdLow={setThresholdLow}
+          thresholdHigh={thresholdHigh}
+          setThresholdHigh={setThresholdHigh}
         />
       ) : null}
     </div>

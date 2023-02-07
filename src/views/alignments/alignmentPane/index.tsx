@@ -108,8 +108,8 @@ const AlignmentPane = ({
         ) : null}
         <Colorbar
           colormap={colormaps[colormapName]}
-          vmin={0}
-          vmax={1}
+          vmin={getMin(surfaceMap)}
+          vmax={getMax(surfaceMap)}
           unit={""}
         />
         <ParentSize className="scene-container" debounceTime={10}>
@@ -139,10 +139,8 @@ const AlignmentPane = ({
               wireframe={wireframe}
               width={sceneWidth}
               height={sceneHeight}
-              lowThresholdMin={getMin(surfaceMap)}
-              lowThresholdMax={0}
-              highThresholdMin={0}
-              highThresholdMax={getMax(surfaceMap)}
+              thresholdLow={0}
+              thresholdHigh={0}
               showGridHelper={showGridHelper}
             />
           )}

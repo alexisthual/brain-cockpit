@@ -24,7 +24,6 @@ import {
   GradientMode,
   HemisphereSide,
   modulo,
-  SurfaceMode,
 } from "constants/index";
 
 export interface SurfacePaneState {
@@ -68,13 +67,10 @@ interface Props {
   hemiLabels: string[];
   datasetDescriptions: DatasetDescriptions;
   filterSurface?: boolean;
-  lowThresholdMin?: number;
-  lowThresholdMax?: number;
-  highThresholdMin?: number;
-  highThresholdMax?: number;
+  thresholdLow?: number;
+  thresholdHigh?: number;
   showGridHelper?: boolean;
   gradientMode?: GradientMode;
-  surfaceMode?: SurfaceMode;
 }
 
 const SurfacePane = ({
@@ -91,13 +87,10 @@ const SurfacePane = ({
   hemiLabels = [],
   datasetDescriptions = {},
   filterSurface,
-  lowThresholdMin,
-  lowThresholdMax,
-  highThresholdMin,
-  highThresholdMax,
+  thresholdLow,
+  thresholdHigh,
   showGridHelper,
   gradientMode,
-  surfaceMode,
 }: Props) => {
   const state = useMemo(() => {
     return {
@@ -378,18 +371,13 @@ const SurfacePane = ({
       setLoadingSurfaceMap(true);
       if (state.meanSurfaceMap) {
         server
-          .get(
-            surfaceMode === SurfaceMode.GRADIENT
-              ? `/datasets/${datasetId}/contrast_gradient_norm_mean`
-              : `/datasets/${datasetId}/contrast_mean`,
-            {
-              params: {
-                contrast_index: state.contrast,
-                hemi: state.hemi,
-                mesh: state.meshSupport,
-              },
-            }
-          )
+          .get(`/datasets/${datasetId}/contrast_mean`, {
+            params: {
+              contrast_index: state.contrast,
+              hemi: state.hemi,
+              mesh: state.meshSupport,
+            },
+          })
           .then((response: AxiosResponse<number[]>) => {
             setSurfaceMap(response.data);
             setLoadingSurfaceMap(false);
@@ -401,19 +389,14 @@ const SurfacePane = ({
           });
       } else if (state.subject !== undefined) {
         server
-          .get(
-            surfaceMode === SurfaceMode.GRADIENT
-              ? `/datasets/${datasetId}/contrast_gradient_norm`
-              : `/datasets/${datasetId}/contrast`,
-            {
-              params: {
-                subject_index: state.subject,
-                contrast_index: state.contrast,
-                hemi: state.hemi,
-                mesh: state.meshSupport,
-              },
-            }
-          )
+          .get(`/datasets/${datasetId}/contrast`, {
+            params: {
+              subject_index: state.subject,
+              contrast_index: state.contrast,
+              hemi: state.hemi,
+              mesh: state.meshSupport,
+            },
+          })
           .then((response: AxiosResponse<number[]>) => {
             setSurfaceMap(response.data);
             setLoadingSurfaceMap(false);
@@ -459,7 +442,6 @@ const SurfacePane = ({
     state.meanSurfaceMap,
     state.meshSupport,
     state.subject,
-    surfaceMode,
     gradientMode,
   ]);
 
@@ -667,28 +649,11 @@ const SurfacePane = ({
           <TextualLoader text="Loading gradient map..." />
         ) : null}
         <Colorbar
-          colormap={
-            surfaceMode === SurfaceMode.GRADIENT
-              ? colormaps["single_diverging_heat"]
-              : colormaps[colormapName]
-          }
-          vmin={
-            filterSurface
-              ? lowThresholdMin
-              : surfaceMode === SurfaceMode.CONTRAST
-              ? getMin(surfaceMap)
-              : getMin(gradient)
-          }
-          vmax={
-            filterSurface
-              ? highThresholdMax
-              : surfaceMode === SurfaceMode.CONTRAST
-              ? getMax(surfaceMap)
-              : getMax(gradient)
-          }
-          unit={
-            surfaceMode === SurfaceMode.CONTRAST ? "Z-Score" : "Z-Score / mm"
-          }
+          colormap={colormaps[colormapName]}
+          vmin={getMin(surfaceMap)}
+          vmax={getMax(surfaceMap)}
+          unit={unit}
+          symmetric={true}
         />
         <ParentSize className="scene-container" debounceTime={10}>
           {({ width: sceneWidth, height: sceneHeight }) => (
@@ -718,10 +683,9 @@ const SurfacePane = ({
               wireframe={wireframe}
               width={sceneWidth}
               height={sceneHeight}
-              lowThresholdMin={lowThresholdMin}
-              lowThresholdMax={lowThresholdMax}
-              highThresholdMin={highThresholdMin}
-              highThresholdMax={highThresholdMax}
+              filterSurface={filterSurface}
+              thresholdLow={thresholdLow}
+              thresholdHigh={thresholdHigh}
               showGridHelper={showGridHelper}
             />
           )}
