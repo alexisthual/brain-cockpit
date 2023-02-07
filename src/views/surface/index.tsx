@@ -23,6 +23,7 @@ interface DatasetInfo {
   hemis: string[];
   tasks_contrasts: string[][];
   n_files: number;
+  unit?: string;
 }
 
 interface SurfaceViewProps {
@@ -124,6 +125,7 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
   const [meshLabels, setMeshLabels] = useState<string[]>([]);
   const [meshTypeLabels, setMeshTypeLabels] = useState<string[]>([]);
   const [hemiLabels, setHemiLabels] = useState<string[]>([]);
+  const [unit, setUnit] = useState<string | undefined>(undefined);
   const [datasetDescriptions, setDatasetDescriptions] = useState<any>({});
 
   // Load state from url
@@ -150,6 +152,8 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
       if (value.data.mesh_types !== undefined) {
         setMeshTypeLabels(value.data.mesh_types);
       }
+
+      setUnit(value.data.unit);
     });
 
     setState({ panes: {} });
@@ -522,6 +526,7 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
                   meshLabels={meshLabels}
                   meshTypeLabels={meshTypeLabels}
                   hemiLabels={hemiLabels}
+                  unit={unit}
                   datasetDescriptions={datasetDescriptions}
                   filterSurface={filterSurface}
                   thresholdLow={thresholdLow}

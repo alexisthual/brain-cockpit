@@ -65,6 +65,7 @@ interface Props {
   meshLabels: string[];
   meshTypeLabels?: string[];
   hemiLabels: string[];
+  unit?: string;
   datasetDescriptions: DatasetDescriptions;
   filterSurface?: boolean;
   thresholdLow?: number;
@@ -85,6 +86,7 @@ const SurfacePane = ({
   meshLabels = [],
   meshTypeLabels,
   hemiLabels = [],
+  unit,
   datasetDescriptions = {},
   filterSurface,
   thresholdLow,
