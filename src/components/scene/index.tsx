@@ -694,6 +694,8 @@ class Scene extends Component<SceneProps, IState> {
   }
 
   switchView(event: any) {
+    if (event.target.matches("input")) return;
+
     // E
     if (
       (event.isComposing || event.keyCode === 69) &&
