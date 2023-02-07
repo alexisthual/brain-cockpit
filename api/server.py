@@ -12,7 +12,7 @@ memory = Memory(config["cache_folder"], verbose=0)
 
 
 @memory.cache
-def get_json_server_config():
+def get_json_server_config(config):
     json_config = copy.deepcopy(config)
     del json_config["cache_folder"]
 
@@ -49,4 +49,4 @@ def get_json_server_config():
 def create_all_endpoints():
     @app.route("/config", methods=["GET"])
     def get_config():
-        return get_json_server_config()
+        return get_json_server_config(config)
