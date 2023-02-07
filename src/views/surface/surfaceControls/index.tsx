@@ -84,7 +84,7 @@ const SurfaceControls = ({
             />
           </>
         ) : null}
-        <Tooltip2 content="Normalise surface map" placement={"top-start"}>
+        <Tooltip2 content="Threshold surface map" placement={"top-start"}>
           <Button
             active={filterSurface}
             icon={"filter"}
