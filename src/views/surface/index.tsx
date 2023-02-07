@@ -157,7 +157,7 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
     });
 
     setState({ panes: {} });
-  }, [datasetId]);
+  }, [datasetId, setState]);
 
   const selectedVoxels = Object.keys(state.panes).map((paneId: any) => [
     paneId,
