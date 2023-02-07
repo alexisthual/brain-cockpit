@@ -198,6 +198,7 @@ def create_endpoints_one_surface_dataset(id, dataset):
             "hemis": list(map(side_to_hemi, sides)),
             "tasks_contrasts": tasks_contrasts,
             "n_files": len(df),
+            "unit": dataset["unit"] if "unit" in dataset else None,
         }
 
         try:

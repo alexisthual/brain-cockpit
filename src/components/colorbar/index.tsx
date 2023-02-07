@@ -3,9 +3,8 @@ import { AxisLeft } from "@visx/axis";
 import { Group } from "@visx/group";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import { scaleLinear } from "@visx/scale";
-import { Text } from "@visx/text";
 import chroma from "chroma-js";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import "./style.scss";
 import { colormaps } from "constants/index";
@@ -18,7 +17,8 @@ interface ColorbarProps {
   nUniqueValues?: number;
   maxHeight?: number;
   colormap?: chroma.Scale;
-  unit?: string;
+  unit?: any;
+  symmetric?: boolean;
 }
 
 interface Props extends ColorbarProps {
@@ -35,6 +35,7 @@ const Colorbar = ({
   maxHeight = 300,
   colormap = defaultColorMap,
   unit,
+  symmetric = false,
 }: Props) => {
   const canvasEl = useRef<HTMLCanvasElement>(null);
   const margin = {
@@ -49,13 +50,26 @@ const Colorbar = ({
   const realHeight =
     maxHeight !== undefined ? Math.min(maxHeight, height) : height;
 
+  const [barvmin, setBarvmin] = useState<number>(
+    nUniqueValues !== undefined ? 0 : vmin
+  );
+  const [barvmax, setBarvmax] = useState<number>(nUniqueValues ?? vmax);
+
+  useEffect(() => {
+    if (symmetric && nUniqueValues === undefined) {
+      const absoluteMax = Math.max(Math.abs(vmin), Math.abs(vmax));
+      setBarvmin(-absoluteMax);
+      setBarvmax(absoluteMax);
+    }
+  }, [symmetric, nUniqueValues, vmin, vmax]);
+
   const scale = useMemo(
     () =>
       scaleLinear<number>({
         range: [realHeight - margin.top - margin.bottom, 0],
-        domain: [nUniqueValues !== undefined ? 0 : vmin, nUniqueValues ?? vmax],
+        domain: [barvmin, barvmax],
       }),
-    [vmin, vmax, realHeight, margin.top, margin.bottom, nUniqueValues]
+    [barvmin, barvmax, realHeight, margin.top, margin.bottom]
   );
 
   useEffect(() => {
@@ -97,11 +111,16 @@ const Colorbar = ({
     <>
       <svg height={height} width={(width * 3) / 4} className="colorbar-info">
         {unit !== undefined ? (
-          <Group top={offset} left={margin.left}>
-            <Text className="unit" textAnchor="middle" verticalAnchor="end">
-              {unit}
-            </Text>
-          </Group>
+          <foreignObject
+            className="unit-container"
+            x={-margin.right - 25}
+            y={offset - 5}
+            width="100"
+            height="20"
+            textAnchor="middle"
+          >
+            <div className="unit">{unit}</div>
+          </foreignObject>
         ) : null}
         <Group top={margin.top + offset} left={margin.left}>
           <AxisLeft
@@ -138,6 +157,7 @@ const ColorbarWrapper = ({
   maxHeight,
   colormap,
   unit,
+  symmetric,
 }: ColorbarProps) => {
   return (
     <div className="colorbar">
@@ -152,6 +172,7 @@ const ColorbarWrapper = ({
             width={width}
             colormap={colormap}
             unit={unit}
+            symmetric={symmetric}
           />
         )}
       </ParentSize>
