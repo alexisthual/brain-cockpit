@@ -169,13 +169,19 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
   const [showKeyDialog, setShowKeyDialog] = useState(false);
 
   const defaultPaneState = useCallback(
-    (s: string[], c: ContrastLabel[], m: string[]) => {
+    (
+      subjects: string[],
+      contrasts: ContrastLabel[],
+      meshes: string[],
+      meshTypes: string[],
+      hemis: string[]
+    ) => {
       return {
-        subject: s.length > 0 ? 0 : undefined,
-        contrast: c.length > 0 ? 0 : undefined,
-        meshSupport: m.length > 0 ? m[0] : undefined,
-        meshType: MeshType.PIAL,
-        hemi: HemisphereSide.LEFT,
+        subject: subjects.length > 0 ? 0 : undefined,
+        contrast: contrasts.length > 0 ? 0 : undefined,
+        meshSupport: meshes.length > 0 ? meshes[0] : undefined,
+        meshType: meshTypes.length > 0 ? meshTypes[0] : undefined,
+        hemi: hemis.length > 0 ? hemis[0] : undefined,
         meanSurfaceMap: false,
         showDescription: false,
       };
@@ -188,7 +194,9 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
     if (
       subjectLabels?.length > 0 &&
       contrastLabels?.length > 0 &&
-      meshLabels?.length > 0
+      meshLabels?.length > 0 &&
+      meshTypeLabels?.length > 0 &&
+      hemiLabels?.length > 0
     ) {
       if (Object.keys(state.panes).length === 0) {
         setState(({
@@ -197,7 +205,9 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
             [nanoid(4)]: defaultPaneState(
               subjectLabels,
               contrastLabels,
-              meshLabels
+              meshLabels,
+              meshTypeLabels,
+              hemiLabels
             ),
           },
         } as unknown) as SurfaceViewState);
@@ -209,6 +219,8 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
     subjectLabels,
     contrastLabels,
     meshLabels,
+    meshTypeLabels,
+    hemiLabels,
     defaultPaneState,
   ]);
 
@@ -224,7 +236,9 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
         [nanoid(4)]: defaultPaneState(
           subjectLabels,
           contrastLabels,
-          meshLabels
+          meshLabels,
+          meshTypeLabels,
+          hemiLabels
         ),
       },
     };
@@ -236,6 +250,8 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
     subjectLabels,
     contrastLabels,
     meshLabels,
+    meshTypeLabels,
+    hemiLabels,
     defaultPaneState,
   ]);
 
