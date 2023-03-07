@@ -3,7 +3,10 @@
 ![GitHub license](https://img.shields.io/badge/VERSION-0.1.0-black.svg?style=for-the-badge)
 ![Python version](https://img.shields.io/badge/PYTHON-3.7-black.svg?style=for-the-badge)
 
-`brain-cockpit` is a Typescript and Python application meant to help explore fMRI datasets.
+`brain-cockpit` is a Typescript and Python web-application meant to help explore
+(1) fMRI datasets projected on surface meshes as well as
+(2) alignments computed between individuals.
+
 It comes as a React application making calls to Python functions through a [`flask`](https://flask.palletsprojects.com/en/2.0.x/) server.
 
 For now, it consists of a sole view to help looking at IBC contrasts projected on `fsaverage`. Key features include selecting subject, selecting contrast, and clicking on voxel to display its functional fingerprint.
