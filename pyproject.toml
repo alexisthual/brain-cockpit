@@ -65,3 +65,6 @@ ignore = ["E203", "W503"]
 
 [tool.setuptools.dynamic]
 version = {attr = "brain_cockpit.__version__"}
+
+[tool.setuptools.packages.find]
+where = ["api/src"]
