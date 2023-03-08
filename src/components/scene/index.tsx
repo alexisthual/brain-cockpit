@@ -121,49 +121,6 @@ class Scene extends Component<SceneProps, IState> {
     }
   }
 
-  static async loadGradientMesh(
-    meshSupport: MeshSupport = MeshSupport.FSAVERAGE5,
-    meshType: MeshType = MeshType.PIAL,
-    hemisphereSide: HemisphereSide = HemisphereSide.LEFT
-  ) {
-    switch (hemisphereSide) {
-      case HemisphereSide.LEFT:
-        return Scene.load(
-          `datasets/ibc/mesh/${meshSupport}/edges_${meshType}_left.gltf`
-        ).then((gltf: any) => {
-          return gltf.scene.children[0] as any;
-        });
-      case HemisphereSide.RIGHT:
-        return Scene.load(
-          `datasets/ibc/mesh/${meshSupport}/edges_${meshType}_right.gltf`
-        ).then((gltf: any) => {
-          return gltf.scene.children[0] as any;
-        });
-      case HemisphereSide.BOTH:
-        // Load both meshes
-        const loadLeft = Scene.load(
-          `datasets/ibc/mesh/${meshSupport}/edges_${meshType}_left.gltf`
-        );
-        const loadRight = Scene.load(
-          `datasets/ibc/mesh/${meshSupport}/edges_${meshType}_right.gltf`
-        );
-
-        // Merge them in a common Mesh
-        return Promise.all([loadLeft, loadRight]).then((values: any) => {
-          const mergedBufferGeometries = BufferGeometryUtils.mergeBufferGeometries(
-            [
-              values[0].scene.children[0].geometry,
-              values[1].scene.children[0].geometry,
-            ]
-          );
-
-          const mesh = new THREE.Mesh(mergedBufferGeometries);
-
-          return mesh;
-        });
-    }
-  }
-
   // Static method to build mesh from geometry and surface map.
   // In case surface map is given, simply apply it to mesh.
   // Otherwise, generate and apply random material.
