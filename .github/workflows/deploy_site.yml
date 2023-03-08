@@ -1,0 +1,56 @@
+name: Build and/or deploy documentation
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  build_docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Generate HTML docs
+        uses: ammaraskar/sphinx-action@master
+        with:
+          docs-folder: "doc/"
+          pre-build-command: |
+            apt-get update
+            pip install -U pip
+            pip install -e ".[doc]"
+      - name: Upload generated HTML as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: DocHTML
+          path: doc/_build/html/
+
+  deploy_docs:
+    if: github.ref == 'refs/heads/main'
+    needs: build_docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: DocHTML
+          path: doc/_build/html/
+      - name: Commit to documentation branch
+        run: |
+          git clone --no-checkout --depth 1 https://github.com/alexisthual/brain-cockpit.git --branch gh-pages --single-branch gh-pages
+          cp -r doc/_build/html/* gh-pages/
+          cd gh-pages
+          touch .nojekyll
+          git config --local user.email "brain-cockpit@github.com"
+          git config --local user.name "brain-cockpit GitHub Action"
+          git add .
+          git commit -m "Update documentation" -a || true
+      - name: Push changes
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          branch: gh-pages
+          directory: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
