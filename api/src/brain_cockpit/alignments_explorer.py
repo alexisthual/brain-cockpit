@@ -11,10 +11,10 @@ import torch
 from flask import jsonify, request, send_from_directory
 from tqdm import tqdm
 
-import bc_utils.setup as bc_setup
+import brain_cockpit.utils.setup as bc_setup
 
-from api import app
-from bc_utils.gifty_to_gltf import compute_gltf_from_gifti
+from brain_cockpit import app
+from brain_cockpit.utils.gifti_to_gltf import compute_gltf_from_gifti
 
 config = bc_setup.load_config()
 

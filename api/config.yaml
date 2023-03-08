@@ -1,0 +1,40 @@
+allow_very_unsafe_file_sharing: true
+cache_folder: /home/alexis/singbrain/tmp/brain-cockpit
+alignments:
+  datasets:
+    ibc:
+      name: FUGW on IBC
+      path: /home/alexis/singbrain/data/bc-alignments/ibc-alignments/data.csv
+    monkey:
+      name: Inter-species
+      path: /home/alexis/singbrain/data/bc-alignments/monkey-alignments/data.csv
+surfaces:
+  datasets:
+    # ibc:
+    #   name: Individual Brain Charting
+    #   path: /home/alexis/singbrain/data/mathlang_rsvp_fs5_fs7_individual_db/result_db.csv
+    #   descriptions: /home/alexis/singbrain/data/ibc_descriptions.json
+    # mesh_types:
+    #   default: pial
+    #   other:
+    #     - infl
+    #     - white
+    encoding:
+      name: GPT-2 features on Narratives
+      path: /home/alexis/singbrain/data/fmri2text/dataset/data-200.csv
+      unit: beta
+      mesh_types:
+        default: pial
+        other:
+          - infl
+          - sphere
+          - white
+    bilingual:
+      name: Bilingual 7T
+      path: /home/alexis/singbrain/data/bilingual-dataset/data.csv
+      mesh_types:
+        default: mid
+        other:
+          - inflated
+          - pial
+          - white

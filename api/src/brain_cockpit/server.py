@@ -1,11 +1,10 @@
 import copy
 
 import pandas as pd
-from flask import jsonify
 from joblib import Memory
 
-import bc_utils.setup as bc_setup
-from api import app, datasets_explorer
+import brain_cockpit.utils.setup as bc_setup
+from brain_cockpit import app, datasets_explorer
 
 config = bc_setup.load_config(verbose=True)
 memory = Memory(config["cache_folder"], verbose=0)

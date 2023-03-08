@@ -4,11 +4,11 @@ from waitress import serve
 
 # API logic is implemented in /api
 # We here load these files as independent pieces of logic
-from api import app
-from api import server, datasets_explorer, alignments_explorer
+from brain_cockpit import app
+from brain_cockpit import server, datasets_explorer, alignments_explorer
 
 # Custom utils
-import bc_utils.setup as setup
+import brain_cockpit.utils.setup as setup
 
 env = setup.load_env(verbose=True)
 N_JOBS = os.getenv("N_JOBS")

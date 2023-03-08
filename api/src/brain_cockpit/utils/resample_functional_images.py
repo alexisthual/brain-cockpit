@@ -1,4 +1,3 @@
-import dotenv
 from joblib import Parallel, delayed
 import nibabel as nib
 from nilearn.image import load_img
@@ -48,7 +47,6 @@ def resample_subject(folder, subject):
 
     # The commented nifti path is rotated
     # I presume this can be solved with nilearn.image.reorder_img
-    # anatomical_nifti = os.path.join(SLICE_DATA_PATH, "anatomical/debby_t1.nii")
     subject_data_path = os.path.join(SLICE_DATA_PATH, folder, subject)
     anatomical_nifti_list = os.listdir(
         os.path.join(subject_data_path, "anatomical")
@@ -99,7 +97,11 @@ def resample_subject(folder, subject):
             os.path.join(
                 output_subject,
                 "functional",
-                f"{os.path.splitext(functional_image_name)[0]}_resampled_to_{os.path.splitext(anatomical_image_name)[0]}.nii",
+                (
+                    f"{os.path.splitext(functional_image_name)[0]}_resampled"
+                    f"_to_{os.path.splitext(anatomical_image_name)[0]}"
+                    ".nii"
+                ),
             ),
         )
 
@@ -111,5 +113,6 @@ if SLICE_DATA_PATH and os.path.exists(SLICE_DATA_PATH):
     )
 else:
     print(
-        f"SLICE_DATA_PATH ({SLICE_DATA_PATH}) is not defined or does not exist."
+        f"SLICE_DATA_PATH ({SLICE_DATA_PATH}) is not defined or does not"
+        " exist."
     )

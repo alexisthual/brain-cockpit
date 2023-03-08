@@ -6,7 +6,7 @@
 
 `brain-cockpit` is a web-app comprising a Typescript front-end and a Python back-end. It is meant to help explore:
 
-* large surface fMRI datasets projected
-* alignments computed between brains, such as those computed with [fugw](https://alexisthual.github.io/fugw/index.html)
+- large surface fMRI datasets projected on surface meshes
+- alignments computed between brains, such as those computed with [fugw](https://alexisthual.github.io/fugw/index.html)
 
 ![Screenshot](https://mybox.inria.fr/thumbnail/192bdcc47f8c4decbac7/1024/Screenshot%20from%202020-12-07%2012-23-45.png)

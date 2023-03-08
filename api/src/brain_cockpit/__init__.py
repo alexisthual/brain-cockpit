@@ -3,6 +3,8 @@ from flask import Flask
 from flask_cors import CORS
 from simplejson import JSONEncoder
 
+__version__ = "0.1.0"
+
 # Common variable which will be shared
 # across files of the api folder/module
 app = Flask(__name__)

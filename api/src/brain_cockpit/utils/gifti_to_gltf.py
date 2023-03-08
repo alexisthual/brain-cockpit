@@ -96,15 +96,18 @@ def mesh_to_graph(mesh):
 # %%
 def compute_gltf_from_gifti(mesh_path, output_folder, output_filename):
     """
-    Build GLTF files optimized for webGL from a given gifti file:
-    - one GLTF file representing the given mesh itself (same vertices and triangles)
-    - one GLTF file containing 2 buffers representing the edges centers and orientations
+    Builds GLTF files optimized for webGL from a given gifti file.
+    For each mesh, builds (a) one GLTF file representing the given mesh itself
+    (same vertices and triangles) and (b) one GLTF file containing 2 buffers
+    representing the edges centers and orientations.
 
-    Inputs:
-    - mesh_path: string, path to input gifti file
-    - original_mesh_name: string
-    - mesh_type: string, among ["pial", "white", etc]
-    - side: string, ["left", "right"]
+    Parameters
+    ----------
+    mesh_path: string
+        Path to input gifti file
+    original_mesh_name: string
+    mesh_type: string in ["pial", "white", etc]
+    side: string in ["left", "right"]
     """
     # Create output folder for mesh
     mesh_output_folder = os.path.join(OUTPUT_PATH, output_folder)
@@ -245,9 +248,10 @@ if __name__ == "__main__":
                     "infl" if mesh_type == "inflated" else mesh_type
                 )
 
-                # Load gifti file if available, else load freesurfer file.
+                # Load gifti file if available, otherwise load freesurfer file.
                 # This is useful since pial surfaces have been modified
-                # (new pial surfaces are average between freesurfer's pial and white)
+                # (new surfaces are average between freesurfer's
+                # pial and white surfaces)
                 fs_path = os.path.join(
                     mesh_folder, subject, f"{side}.{mesh_type}"
                 )

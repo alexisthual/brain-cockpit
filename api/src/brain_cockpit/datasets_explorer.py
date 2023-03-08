@@ -12,10 +12,10 @@ from flask import jsonify, request, send_from_directory
 from joblib import Memory
 from tqdm import tqdm
 
-import bc_utils.setup as bc_setup
+import brain_cockpit.utils.setup as bc_setup
 
-from api import app
-from bc_utils.gifty_to_gltf import compute_gltf_from_gifti
+from brain_cockpit import app
+from brain_cockpit.utils.gifti_to_gltf import compute_gltf_from_gifti
 
 
 config = bc_setup.load_config(verbose=True)
@@ -56,19 +56,22 @@ def multiindex_to_nested_dict(df):
 
 def parse_metadata(df):
     """
-    Inputs:
-    - df: DataFrame,
-          each row contains information about an available gifti image one will load here
+    Parameters
+    ----------
+    df: pandas DataFrame
+        Each row contains information about
+        an available gifti image one will load here
 
-    Outputs:
-    - meshes: list of strings,
-              list of all unique meshes encountered during loading
-    - subjects: list of strings
-                list of all unique subjects encountered during loading
-    - tasks_contrasts: list of (task, contrast)
-                       list of all unique tuples (task, contrast) encountered during loading
-    - sides: list of strings,
-             list of all unique sides encountered during loading
+    Returns
+    -------
+    meshes: list of strings
+        List of all unique meshes encountered during loading
+    subjects: list of strings
+        List of all unique subjects encountered during loading
+    tasks_contrasts: list of (task, contrast)
+        List of all unique tuples (task, contrast) encountered during loading
+    sides: list of strings
+        List of all unique sides encountered during loading
     """
     meshes = df["mesh"].unique().tolist()
     subjects = df["subject"].unique().tolist()
@@ -87,14 +90,19 @@ def parse_metadata(df):
 @memory.cache
 def load_data(dataset_path):
     """
-    Inputs:
-    - dataset_path: str,
-        path to csv file containing dataset information.
-        Each row contains information about an available gifti image one will load here
+    Parameters
+    ----------
+    dataset_path: str
+        Path to csv file containing dataset information.
+        Each row contains information about
+        an available gifti image one will load here
 
-    Outputs:
-    - data: dictionary d such that d[mesh][subject][task][contrast][side] is
-            either a numpy array or None
+    Returns
+    -------
+    data: dict
+        Dictionary d such that
+        ``d[mesh][subject][task][contrast][side]`` is
+        either a numpy array or None
     """
     df = pd.read_csv(dataset_path)
     meshes, subjects, tasks_contrasts, sides = parse_metadata(df)
@@ -169,7 +177,7 @@ def load_data(dataset_path):
 
 
 def create_endpoints_one_surface_dataset(id, dataset):
-    ## Load all available contrasts
+    # Load all available contrasts
     df = pd.read_csv(dataset["path"])
     meshes, subjects, tasks_contrasts, sides = parse_metadata(df)
 
@@ -429,8 +437,9 @@ def create_endpoints_one_surface_dataset(id, dataset):
                 np.nanmean(
                     np.vstack(
                         # Filter out subjects for whom this contrast map
-                        # does not exist. Assume that left and right hemispheres
-                        # will be missing at the same time
+                        # does not exist.
+                        # Assume that left and right hemispheres
+                        # will be missing at the same time.
                         list(
                             filter(
                                 lambda x: x is not [None, None],
