@@ -17,6 +17,8 @@ build
 
 .ipynb_checkpoints
 
+# yarn without zero-installs
+# see https://yarnpkg.com/getting-started/qa#which-files-should-be-gitignored
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -24,3 +26,12 @@ build
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Documentation
+doc/_build
+doc/auto_examples
+doc/gen_modules
+doc/generated
+doc/modules/generated
+
+*.egg-info
