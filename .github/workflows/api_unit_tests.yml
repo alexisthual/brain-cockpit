@@ -39,7 +39,7 @@ jobs:
           python -m pip install -e .[test]
       - name: Lint with pflake8
         run: |
-          pflake8 src tests examples
+          pflake8 api
       - name: Test with pytest
         run: |
           pytest
