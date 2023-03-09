@@ -1,9 +1,9 @@
 import os
-import yaml
 
 from pathlib import Path
 
 import pandas as pd
+import yaml
 
 from joblib import Memory
 from rich.console import Console
