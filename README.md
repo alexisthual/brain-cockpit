@@ -9,4 +9,6 @@
 - large surface fMRI datasets projected on surface meshes
 - alignments computed between brains, such as those computed with [fugw](https://alexisthual.github.io/fugw/index.html)
 
+You can try our [online demo](https://brain-cockpit.athual.fr/)!
+
 ![Screenshot](https://mybox.inria.fr/thumbnail/192bdcc47f8c4decbac7/1024/Screenshot%20from%202020-12-07%2012-23-45.png)
