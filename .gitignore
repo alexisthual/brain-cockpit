@@ -35,3 +35,7 @@ doc/generated
 doc/modules/generated
 
 *.egg-info
+
+# Don't export meshes computed by brain-cockpit
+*.gltf
+*.bin
