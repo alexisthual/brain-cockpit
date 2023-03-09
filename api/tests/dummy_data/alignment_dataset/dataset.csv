@@ -1,0 +1,2 @@
+name,source_subject,target_subject,source_mesh,target_mesh,alignment
+alignment1,sub-01,sub-02,meshes/pial_left.gii.gz,meshes/pial_left.gii.gz,path/to/alignment
