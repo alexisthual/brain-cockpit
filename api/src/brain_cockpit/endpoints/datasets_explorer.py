@@ -8,18 +8,11 @@ import nibabel as nib
 import numpy as np
 import pandas as pd
 
+from brain_cockpit import utils
+from brain_cockpit.scripts.gifti_to_gltf import create_dataset_glft_files
+from brain_cockpit.utils import console, load_dataset_description
 from flask import jsonify, request, send_from_directory
-from joblib import Memory
 from tqdm import tqdm
-
-import brain_cockpit.utils.setup as bc_setup
-
-from brain_cockpit import app
-from brain_cockpit.utils.gifti_to_gltf import compute_gltf_from_gifti
-
-
-config = bc_setup.load_config(verbose=True)
-memory = Memory(config["cache_folder"], verbose=0)
 
 # UTIL FUNCTIONS
 # These functions are useful for loading data
@@ -87,103 +80,95 @@ def parse_metadata(df):
     return meshes, subjects, tasks_contrasts, sides
 
 
-@memory.cache
-def load_data(dataset_path):
-    """
-    Parameters
-    ----------
-    dataset_path: str
-        Path to csv file containing dataset information.
-        Each row contains information about
-        an available gifti image one will load here
-
-    Returns
-    -------
-    data: dict
-        Dictionary d such that
-        ``d[mesh][subject][task][contrast][side]`` is
-        either a numpy array or None
-    """
-    df = pd.read_csv(dataset_path)
-    meshes, subjects, tasks_contrasts, sides = parse_metadata(df)
-
-    # Group rows before turning the dataframe into a python dict d
-    # such that d[mesh][subject][task][contrast][side]
-    # is the path to a gifti file describing this data
-    df_grouped = df.groupby(["mesh", "subject", "task", "contrast", "side"])[
-        "path"
-    ].first()
-    paths = multiindex_to_nested_dict(df_grouped.to_frame())
-
-    # Load gifti files
-    # and populate missing (mesh, subject, task, contrast, side) tuples
-    # with None
-    data = dict()
-    for mesh in tqdm(meshes, file=sys.stdout, position=0):
-        dsu = dict()
-        for subject in tqdm(subjects, file=sys.stdout, position=1):
-            dtc = dict()
-            for task, contrast in tasks_contrasts:
-                dsi = dict()
-                for side in ["lh", "rh"]:
-                    hemi = "left" if side == "lh" else "right"
-                    try:
-                        # Try relative path from where the db is located
-                        if os.path.exists(
-                            os.path.join(
-                                os.path.split(dataset_path)[0],
-                                paths[mesh][subject][task][contrast][side],
-                            )
-                        ):
-                            dsi[hemi] = (
-                                nib.load(
-                                    os.path.join(
-                                        os.path.split(dataset_path)[0],
-                                        paths[mesh][subject][task][contrast][
-                                            side
-                                        ],
-                                    )
-                                )
-                                .darrays[0]
-                                .data
-                            )
-                        # or try following absolute path read from db...
-                        elif os.path.exists(
-                            paths[mesh][subject][task][contrast][side]
-                        ):
-                            dsi[hemi] = (
-                                nib.load(
-                                    paths[mesh][subject][task][contrast][side]
-                                )
-                                .darrays[0]
-                                .data
-                            )
-                        else:
-                            dsi[hemi] = None
-                    except KeyError:
-                        dsi[hemi] = None
-                if task not in dtc:
-                    dtc[task] = dict()
-                dtc[task][contrast] = dsi
-            dsu[subject] = dtc
-        data[mesh] = dsu
-
-    return data
-
-
 # MAIN FUNCTION
 # This function is meant to be called from other files.
 # It loads fmri contrasts and exposes flask endpoints.
 
 
-def create_endpoints_one_surface_dataset(id, dataset):
-    # Load all available contrasts
-    df = pd.read_csv(dataset["path"])
-    meshes, subjects, tasks_contrasts, sides = parse_metadata(df)
+def create_endpoints_one_surface_dataset(bc, id, dataset):
+    memory = utils.get_memory(bc)
 
-    print("Loading contrast maps...")
-    data = load_data(dataset["path"])
-    print("Loaded.")
+    @memory.cache
+    def load_data(df, config_path=None, dataset_path=None):
+        """
+        Parameters
+        ----------
+        dataset_path: str
+            Path to csv file containing dataset information.
+            Each row contains information about
+            an available gifti image one will load here
+
+        Returns
+        -------
+        data: dict
+            Dictionary d such that
+            ``d[mesh][subject][task][contrast][side]`` is
+            either a numpy array or None
+        """
+        meshes, subjects, tasks_contrasts, _ = parse_metadata(df)
+
+        # Group rows before turning the dataframe into a python dict d
+        # such that d[mesh][subject][task][contrast][side]
+        # is the path to a gifti file describing this data
+        df_grouped = df.groupby(
+            ["mesh", "subject", "task", "contrast", "side"]
+        )["path"].first()
+        paths = multiindex_to_nested_dict(df_grouped.to_frame())
+
+        config_dir = Path(bc.config_path).parent
+        dataset_dir = Path(dataset_path).parent
+
+        # Load gifti files
+        # and populate missing (mesh, subject, task, contrast, side) tuples
+        # with None
+        data = dict()
+        for mesh in tqdm(meshes, file=sys.stdout, position=0):
+            dsu = dict()
+            for subject in tqdm(subjects, file=sys.stdout, position=1):
+                dtc = dict()
+                for task, contrast in tasks_contrasts:
+                    dsi = dict()
+                    for side in ["lh", "rh"]:
+                        hemi = "left" if side == "lh" else "right"
+                        try:
+                            file_path = None
+
+                            # Successively try
+                            # 1. absolute path to file
+                            # 2. relative path from dataset folder
+                            # 3. relative path from config folder
+                            p = Path(
+                                paths[mesh][subject][task][contrast][side]
+                            )
+                            if p.is_absolute():
+                                file_path = p
+                            elif dataset_dir.is_absolute():
+                                file_path = dataset_dir / p
+                            else:
+                                file_path = config_dir / dataset_dir / p
+
+                            if file_path is not None and file_path.exists():
+                                dsi[hemi] = nib.load(file_path).darrays[0].data
+                            else:
+                                dsi[hemi] = None
+                        except KeyError:
+                            dsi[hemi] = None
+                    if task not in dtc:
+                        dtc[task] = dict()
+                    dtc[task][contrast] = dsi
+                dsu[subject] = dtc
+            data[mesh] = dsu
+
+        return data
+
+    with console.status("Loading contrast maps..."):
+        df = load_dataset_description(
+            config_path=bc.config_path, dataset_path=dataset["path"]
+        )
+        data = load_data(
+            df, config_path=bc.config_path, dataset_path=dataset["path"]
+        )
+        meshes, subjects, tasks_contrasts, sides = parse_metadata(df)
 
     # ROUTES
     # Define a series of enpoints to expose contrasts, meshes, etc
@@ -198,7 +183,7 @@ def create_endpoints_one_surface_dataset(id, dataset):
     contrast_endpoint = f"/datasets/{id}/contrast"
     contrast_mean_endpoint = f"/datasets/{id}/contrast_mean"
 
-    @app.route(info_endpoint, endpoint=info_endpoint, methods=["GET"])
+    @bc.app.route(info_endpoint, endpoint=info_endpoint, methods=["GET"])
     def get_info():
         dataset_info = {
             "subjects": subjects,
@@ -210,7 +195,7 @@ def create_endpoints_one_surface_dataset(id, dataset):
         }
 
         try:
-            mesh_types = config["surfaces"]["datasets"][id]["mesh_types"]
+            mesh_types = bc.config["surfaces"]["datasets"][id]["mesh_types"]
             available_mesh_types = [
                 mesh_types["default"],
                 *mesh_types["other"],
@@ -221,17 +206,19 @@ def create_endpoints_one_surface_dataset(id, dataset):
 
         return jsonify(dataset_info)
 
-    @app.route(subjects_endpoint, endpoint=subjects_endpoint, methods=["GET"])
+    @bc.app.route(
+        subjects_endpoint, endpoint=subjects_endpoint, methods=["GET"]
+    )
     def get_subjects():
         return jsonify(subjects)
 
-    @app.route(
+    @bc.app.route(
         contrasts_endpoint, endpoint=contrasts_endpoint, methods=["GET"]
     )
     def get_contrast_labels():
         return jsonify(tasks_contrasts)
 
-    @app.route(
+    @bc.app.route(
         descriptions_endpoint, endpoint=descriptions_endpoint, methods=["GET"]
     )
     def get_descriptions():
@@ -240,7 +227,7 @@ def create_endpoints_one_surface_dataset(id, dataset):
                 descriptions = json.load(f)
                 return jsonify(descriptions)
 
-    @app.route(
+    @bc.app.route(
         surface_map_mesh_url_endpoint,
         endpoint=surface_map_mesh_url_endpoint,
         methods=["GET"],
@@ -271,19 +258,23 @@ def create_endpoints_one_surface_dataset(id, dataset):
 
         return str(df_mesh_path)
 
-    @app.route(meshes_endpoint, endpoint=meshes_endpoint, methods=["GET"])
+    @bc.app.route(meshes_endpoint, endpoint=meshes_endpoint, methods=["GET"])
     def get_mesh(path):
-        p = Path(path)
-        relative_folder = Path(dataset["path"]).parent / p.parent
-        absolute_folder = Path("/") / p.parent
-        if (relative_folder / p.name).exists():
-            return send_from_directory(relative_folder, p.name)
-        elif (absolute_folder / p.name).exists() and config[
+        mesh_path = Path(path)
+        relative_folder = (
+            Path(bc.config_path).parent
+            / Path(dataset["path"]).parent
+            / mesh_path.parent
+        )
+        absolute_folder = Path("/") / mesh_path.parent
+        if (relative_folder / mesh_path.name).exists():
+            return send_from_directory(relative_folder, mesh_path.name)
+        elif (absolute_folder / mesh_path.name).exists() and bc.config[
             "allow_very_unsafe_file_sharing"
         ]:
-            return send_from_directory(absolute_folder, p.name)
+            return send_from_directory(absolute_folder, mesh_path.name)
 
-    @app.route(
+    @bc.app.route(
         fingerprint_endpoint, endpoint=fingerprint_endpoint, methods=["GET"]
     )
     def get_voxel_fingerprint():
@@ -315,15 +306,17 @@ def create_endpoints_one_surface_dataset(id, dataset):
                 return jsonify(None)
 
         fingerprint = [
-            data[mesh][subject][task][contrast][hemi][voxel_index]
-            if data[mesh][subject][task][contrast][hemi] is not None
-            else None
+            (
+                data[mesh][subject][task][contrast][hemi][voxel_index]
+                if data[mesh][subject][task][contrast][hemi] is not None
+                else None
+            )
             for task, contrast in tasks_contrasts
         ]
 
         return jsonify(fingerprint)
 
-    @app.route(
+    @bc.app.route(
         fingerprint_mean_endpoint,
         endpoint=fingerprint_mean_endpoint,
         methods=["GET"],
@@ -332,8 +325,6 @@ def create_endpoints_one_surface_dataset(id, dataset):
         mesh = request.args.get("mesh", type=str, default="fsaverage5")
         voxel_index = request.args.get("voxel_index", type=int)
         hemi = request.args.get("hemi", type=str)
-
-        print(mesh, voxel_index, hemi)
 
         # Can't return mean of meshes which are not comparable
         if mesh == "individual":
@@ -360,12 +351,16 @@ def create_endpoints_one_surface_dataset(id, dataset):
                     [
                         np.array(
                             [
-                                data[mesh][subject][task][contrast][hemi][
-                                    voxel_index
-                                ]
-                                if data[mesh][subject][task][contrast][hemi]
-                                is not None
-                                else np.nan
+                                (
+                                    data[mesh][subject][task][contrast][hemi][
+                                        voxel_index
+                                    ]
+                                    if data[mesh][subject][task][contrast][
+                                        hemi
+                                    ]
+                                    is not None
+                                    else np.nan
+                                )
                                 for task, contrast in tasks_contrasts
                             ]
                         )
@@ -377,7 +372,9 @@ def create_endpoints_one_surface_dataset(id, dataset):
 
             return jsonify(mean)
 
-    @app.route(contrast_endpoint, endpoint=contrast_endpoint, methods=["GET"])
+    @bc.app.route(
+        contrast_endpoint, endpoint=contrast_endpoint, methods=["GET"]
+    )
     def get_contrast():
         mesh = request.args.get("mesh", default="fsaverage5", type=str)
         subject_index = request.args.get("subject_index", type=int)
@@ -399,10 +396,10 @@ def create_endpoints_one_surface_dataset(id, dataset):
                 )
             )
         else:
-            print(f"Unknown value for hemi: {hemi}")
+            console.log(f"Unknown value for hemi: {hemi}", style="yellow")
             return jsonify([])
 
-    @app.route(
+    @bc.app.route(
         contrast_mean_endpoint,
         endpoint=contrast_mean_endpoint,
         methods=["GET"],
@@ -463,72 +460,22 @@ def create_endpoints_one_surface_dataset(id, dataset):
                 )
             )
         else:
-            print(f"Unknown value for hemi: {hemi}")
+            console.log(f"Unknown value for hemi: {hemi}", style="red")
             return jsonify([])
 
 
-def create_all_endpoints():
+def create_all_endpoints(bc):
     """Create endpoints for all available surface datasets."""
 
     try:
-        for dataset_id, dataset in config["surfaces"]["datasets"].items():
-            # Check that dataset gifti meshes exist
-            dataset_folder = Path(dataset["path"]).parent
-
-            df = pd.read_csv(dataset["path"])
-
-            mesh_paths = list(map(Path, np.unique(df["mesh_path"])))
-
-            for mesh_path in tqdm(
-                mesh_paths, desc="Building GLTF mesh", leave=False
-            ):
-                mesh_stem = mesh_path.stem.split(".")[0]
-                if mesh_path.is_absolute():
-                    mesh_absolute_path = mesh_path
-                    output_folder = mesh_path.parent
-                    output_filename = mesh_stem
-                else:
-                    mesh_absolute_path = dataset_folder / mesh_path
-                    output_folder = dataset_folder / mesh_path.parent
-                    output_filename = mesh_stem
-
-                if not (output_folder / f"{output_filename}.gltf").exists():
-                    compute_gltf_from_gifti(
-                        str(mesh_absolute_path),
-                        str(output_folder),
-                        output_filename,
-                    )
-
-                if "mesh_types" in dataset:
-                    if (
-                        "default" in dataset["mesh_types"]
-                        and "other" in dataset["mesh_types"]
-                    ):
-                        mesh_absolute_path = Path(mesh_absolute_path)
-                        default_mesh_type = dataset["mesh_types"]["default"]
-                        other_mesh_types = dataset["mesh_types"]["other"]
-
-                        for other_mesh_type in other_mesh_types:
-                            other_mesh_stem = mesh_stem.replace(
-                                default_mesh_type, other_mesh_type
-                            )
-                            other_mesh_absolute_path = (
-                                mesh_absolute_path.parent
-                                / mesh_absolute_path.name.replace(
-                                    default_mesh_type, other_mesh_type
-                                )
-                            )
-
-                            if not (
-                                output_folder / f"{other_mesh_stem}.gltf"
-                            ).exists():
-                                compute_gltf_from_gifti(
-                                    str(other_mesh_absolute_path),
-                                    str(output_folder),
-                                    other_mesh_stem,
-                                )
-
-            # Create API endpoints
-            create_endpoints_one_surface_dataset(dataset_id, dataset)
+        # Iterate through each surface dataset
+        for dataset_id, dataset in bc.config["surfaces"]["datasets"].items():
+            df = load_dataset_description(
+                config_path=bc.config_path, dataset_path=dataset["path"]
+            )
+            # 1. Create GLTF files for all referenced meshes of the dataset
+            create_dataset_glft_files(bc, df, dataset)
+            # 2. Create API endpoints
+            create_endpoints_one_surface_dataset(bc, dataset_id, dataset)
     except KeyError:
-        print("No surface datasets to load")
+        console.log("No surface datasets to load", style="yellow")

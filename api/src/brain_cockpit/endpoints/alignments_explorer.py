@@ -8,18 +8,12 @@ import pandas as pd
 import pickle
 import torch
 
+from brain_cockpit.scripts.gifti_to_gltf import create_dataset_glft_files
+from brain_cockpit.utils import console, load_dataset_description
 from flask import jsonify, request, send_from_directory
-from tqdm import tqdm
-
-import brain_cockpit.utils.setup as bc_setup
-
-from brain_cockpit import app
-from brain_cockpit.utils.gifti_to_gltf import compute_gltf_from_gifti
-
-config = bc_setup.load_config()
 
 
-def create_endpoints_one_alignment_dataset(id, dataset):
+def create_endpoints_one_alignment_dataset(bc, id, dataset):
     """
     For a given alignment dataset, generate endpoints
     serving dataset meshes and alignment transforms.
@@ -37,7 +31,7 @@ def create_endpoints_one_alignment_dataset(id, dataset):
     )
     align_single_voxel_endpoint = f"/alignments/{id}/single_voxel"
 
-    @app.route(
+    @bc.app.route(
         alignment_models_endpoint,
         endpoint=alignment_models_endpoint,
         methods=["GET"],
@@ -45,7 +39,7 @@ def create_endpoints_one_alignment_dataset(id, dataset):
     def get_alignment_models():
         return jsonify(df.index.to_list())
 
-    @app.route(
+    @bc.app.route(
         alignment_model_info_endpoint,
         endpoint=alignment_model_info_endpoint,
         methods=["GET"],
@@ -64,23 +58,27 @@ def create_endpoints_one_alignment_dataset(id, dataset):
         )
         return df_row.to_json()
 
-    @app.route(
+    @bc.app.route(
         alignment_mesh_endpoint,
         endpoint=alignment_mesh_endpoint,
         methods=["GET"],
     )
     def get_alignment_mesh(model_id, path):
-        p = Path(path)
-        relative_folder = Path(dataset["path"]).parent / p.parent
-        absolute_folder = Path("/") / p.parent
-        if (relative_folder / p.name).exists():
-            return send_from_directory(relative_folder, p.name)
-        elif (absolute_folder / p.name).exists() and config[
+        mesh_path = Path(path)
+        relative_folder = (
+            Path(bc.config_path).parent
+            / Path(dataset["path"]).parent
+            / mesh_path.parent
+        )
+        absolute_folder = Path("/") / mesh_path.parent
+        if (relative_folder / mesh_path.name).exists():
+            return send_from_directory(relative_folder, mesh_path.name)
+        elif (absolute_folder / mesh_path.name).exists() and bc.config[
             "allow_very_unsafe_file_sharing"
         ]:
-            return send_from_directory(absolute_folder, p.name)
+            return send_from_directory(absolute_folder, mesh_path.name)
 
-    @app.route(
+    @bc.app.route(
         align_single_voxel_endpoint,
         endpoint=align_single_voxel_endpoint,
         methods=["GET"],
@@ -149,41 +147,18 @@ def create_endpoints_one_alignment_dataset(id, dataset):
         return jsonify(m)
 
 
-def create_all_endpoints():
+def create_all_endpoints(bc):
     """Create endpoints for all available alignments datasets."""
 
     try:
-        for dataset_id, dataset in config["alignments"]["datasets"].items():
-            # Check that dataset gifti meshes exist
-            dataset_folder = Path(dataset["path"]).parent
-
-            df = pd.read_csv(dataset["path"])
-            mesh_paths = list(
-                map(
-                    Path,
-                    np.unique(
-                        pd.concat([df["source_mesh"], df["target_mesh"]])
-                    ),
-                )
+        # Iterate through each alignment dataset
+        for dataset_id, dataset in bc.config["alignments"]["datasets"].items():
+            df = load_dataset_description(
+                config_path=bc.config_path, dataset_path=dataset["path"]
             )
-
-            for mesh_path in tqdm(
-                mesh_paths, desc="Building GLTF mesh", leave=False
-            ):
-                mesh_stem = mesh_path.stem.split(".")[0]
-                if mesh_path.is_absolute():
-                    output_folder = mesh_path.parent
-                    output_filename = mesh_stem
-                else:
-                    output_folder = dataset_folder / mesh_path.parent
-                    output_filename = mesh_stem
-
-                if not (output_folder / f"{output_filename}.gltf").exists():
-                    compute_gltf_from_gifti(
-                        str(mesh_path), str(output_folder), output_filename
-                    )
-
-            # Create API endpoints
-            create_endpoints_one_alignment_dataset(dataset_id, dataset)
+            # 1. Create GLTF files for all referenced meshes of the dataset
+            create_dataset_glft_files(bc, df, dataset)
+            # 2. Create API endpoints
+            create_endpoints_one_alignment_dataset(bc, dataset_id, dataset)
     except KeyError:
-        print("No alignment datasets to load")
+        console.log("No alignment datasets to load", style="red")

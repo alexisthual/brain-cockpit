@@ -5,6 +5,7 @@ import operator
 import os
 import struct
 
+from pathlib import Path
 from gltflib import (
     GLTF,
     GLTFModel,
@@ -22,17 +23,11 @@ from gltflib import (
     ComponentType,
     FileResource,
 )
-from nilearn import datasets, surface
+from nilearn import surface
 from scipy.sparse import coo_matrix
 from tqdm import tqdm
 
-OUTPUT_PATH = "/home/alexis/singbrain/repo/brain-cockpit/public/meshes"
 
-if not os.path.exists(OUTPUT_PATH):
-    os.mkdir(OUTPUT_PATH)
-
-
-# %%
 def read_freesurfer(freesurfer_file):
     """Read freesurfer file"""
     vertices, triangles = nib.freesurfer.read_geometry(freesurfer_file)
@@ -93,7 +88,6 @@ def mesh_to_graph(mesh):
     return connectivity
 
 
-# %%
 def compute_gltf_from_gifti(mesh_path, output_folder, output_filename):
     """
     Builds GLTF files optimized for webGL from a given gifti file.
@@ -110,7 +104,7 @@ def compute_gltf_from_gifti(mesh_path, output_folder, output_filename):
     side: string in ["left", "right"]
     """
     # Create output folder for mesh
-    mesh_output_folder = os.path.join(OUTPUT_PATH, output_folder)
+    mesh_output_folder = Path(output_folder)
     if not os.path.exists(mesh_output_folder):
         os.mkdir(mesh_output_folder)
 
@@ -207,63 +201,60 @@ def compute_gltf_from_gifti(mesh_path, output_folder, output_filename):
     gltf.export(os.path.join(mesh_output_folder, f"{output_filename}.gltf"))
 
 
-# %%
-if __name__ == "__main__":
-    # %% Export all fsaverage resolutions
-    for mesh in tqdm(["fsaverage5", "fsaverage6", "fsaverage7"]):
-        fsaverage = datasets.fetch_surf_fsaverage(mesh=mesh)
-        for mesh_type in ["infl", "pial", "white"]:
-            for side in ["left", "right"]:
-                compute_gltf_from_gifti(
-                    fsaverage[f"{mesh_type}_{side}"],
-                    mesh,
-                    f"{mesh_type}_{side}",
-                )
+def create_dataset_glft_files(bc, df, dataset):
+    dataset_folder = Path(dataset["path"]).parent
 
-    # %% Export all individual meshes from IBC
-    # Originally in the freesurfer format
-    subjects = [
-        "sub-01",
-        "sub-02",
-        "sub-04",
-        "sub-05",
-        "sub-06",
-        "sub-07",
-        "sub-08",
-        "sub-09",
-        "sub-11",
-        "sub-12",
-        "sub-13",
-        "sub-14",
-        "sub-15",
-    ]
+    mesh_paths = list(map(Path, np.unique(df["mesh_path"])))
 
-    mesh_folder = "/home/alexis/singbrain/data/ibc_meshes"
+    for mesh_path in tqdm(mesh_paths, desc="Building GLTF mesh", leave=False):
+        mesh_stem = mesh_path.stem.split(".")[0]
+        if mesh_path.is_absolute():
+            mesh_absolute_path = mesh_path
+            output_folder = mesh_path.parent
+        elif dataset_folder.is_absolute():
+            mesh_absolute_path = dataset_folder / mesh_path
+            output_folder = dataset_folder / mesh_path.parent
+        else:
+            mesh_absolute_path = (
+                Path(bc.config_path).parent / dataset_folder / mesh_path
+            )
+            output_folder = (
+                Path(bc.config_path).parent / dataset_folder / mesh_path.parent
+            )
+        output_filename = mesh_stem
 
-    for subject in tqdm(subjects):
-        for mesh_type in ["inflated", "pial", "white"]:
-            for side in ["lh", "rh"]:
-                side_corrected = "left" if side == "lh" else "right"
-                mesh_type_corrected = (
-                    "infl" if mesh_type == "inflated" else mesh_type
-                )
+        if not (output_folder / f"{output_filename}.gltf").exists():
+            compute_gltf_from_gifti(
+                str(mesh_absolute_path),
+                str(output_folder),
+                output_filename,
+            )
 
-                # Load gifti file if available, otherwise load freesurfer file.
-                # This is useful since pial surfaces have been modified
-                # (new surfaces are average between freesurfer's
-                # pial and white surfaces)
-                fs_path = os.path.join(
-                    mesh_folder, subject, f"{side}.{mesh_type}"
-                )
-                gii_path = os.path.join(
-                    mesh_folder,
-                    subject,
-                    f"{mesh_type_corrected}_{side_corrected}.gii",
-                )
-                mesh_path = gii_path if os.path.exists(gii_path) else fs_path
+        if "mesh_types" in dataset:
+            if (
+                "default" in dataset["mesh_types"]
+                and "other" in dataset["mesh_types"]
+            ):
+                mesh_absolute_path = Path(mesh_absolute_path)
+                default_mesh_type = dataset["mesh_types"]["default"]
+                other_mesh_types = dataset["mesh_types"]["other"]
 
-                compute_gltf_from_gifti(
-                    mesh_path,
-                    os.path.join(OUTPUT_PATH, "individual", subject),
-                    f"{mesh_type_corrected}_{side_corrected}",
-                )
+                for other_mesh_type in other_mesh_types:
+                    other_mesh_stem = mesh_stem.replace(
+                        default_mesh_type, other_mesh_type
+                    )
+                    other_mesh_absolute_path = (
+                        mesh_absolute_path.parent
+                        / mesh_absolute_path.name.replace(
+                            default_mesh_type, other_mesh_type
+                        )
+                    )
+
+                    if not (
+                        output_folder / f"{other_mesh_stem}.gltf"
+                    ).exists():
+                        compute_gltf_from_gifti(
+                            str(other_mesh_absolute_path),
+                            str(output_folder),
+                            other_mesh_stem,
+                        )

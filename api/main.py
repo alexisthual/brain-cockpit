@@ -1,37 +1,38 @@
-import os
+import argparse
 
+from brain_cockpit import BrainCockpit
 from waitress import serve
 
-# API logic is implemented in /api
-# We here load these files as independent pieces of logic
-from brain_cockpit import app
-from brain_cockpit import server, datasets_explorer, alignments_explorer
+PORT = 5000
+THREADS = 2
 
-# Custom utils
-import brain_cockpit.utils.setup as setup
+parser = argparse.ArgumentParser(description="Brain-cockpit backend")
 
-env = setup.load_env(verbose=True)
-N_JOBS = os.getenv("N_JOBS")
-REACT_APP_API_PORT = os.getenv("REACT_APP_API_PORT")
+parser.add_argument(
+    "--env",
+    type=str,
+    default="dev",
+    choices=["prod", "dev"],
+    required=False,
+    help="Deployment env type",
+)
 
-
-# Define util function to load all data
-def create_app():
-    server.create_all_endpoints()
-    datasets_explorer.create_all_endpoints()
-    alignments_explorer.create_all_endpoints()
-
-    return app
-
+parser.add_argument(
+    "--config",
+    type=str,
+    default=None,
+    required=False,
+    help="Path to brain-cockpit server config file",
+)
 
 if __name__ == "__main__":
-    flask_app = create_app()
+    args = parser.parse_args()
 
-    if env == "production":
+    bc = BrainCockpit(config_path=args.config)
+
+    if args.env == "prod":
         # In production, serve flask app through waitress
-        serve(
-            flask_app, host="0.0.0.0", port=REACT_APP_API_PORT, threads=N_JOBS
-        )
+        serve(bc.app, host="0.0.0.0", port=PORT, threads=THREADS)
     else:
         # Otherwise, serve app with hot reloader
-        flask_app.run(debug=True, port=REACT_APP_API_PORT, use_reloader=True)
+        bc.app.run(debug=True, port=PORT, use_reloader=True)
