@@ -33,7 +33,6 @@ dependencies = [
   "scipy",
   "simplejson",
   "torch",
-  "tqdm",
   "waitress",
 ]
 
