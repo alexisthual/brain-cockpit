@@ -6,6 +6,8 @@ import os
 import struct
 
 from pathlib import Path
+
+from brain_cockpit.utils import console, get_progress
 from gltflib import (
     GLTF,
     GLTFModel,
@@ -25,7 +27,6 @@ from gltflib import (
 )
 from nilearn import surface
 from scipy.sparse import coo_matrix
-from tqdm import tqdm
 
 
 def read_freesurfer(freesurfer_file):
@@ -204,55 +205,63 @@ def compute_gltf_from_gifti(mesh_path, output_folder, output_filename):
 def create_dataset_glft_files(bc, dataset, mesh_paths):
     dataset_folder = Path(dataset["path"]).parent
 
-    for mesh_path in tqdm(mesh_paths, desc="Building GLTF mesh", leave=False):
-        mesh_stem = mesh_path.stem.split(".")[0]
-        if mesh_path.is_absolute():
-            mesh_absolute_path = mesh_path
-            output_folder = mesh_path.parent
-        elif dataset_folder.is_absolute():
-            mesh_absolute_path = dataset_folder / mesh_path
-            output_folder = dataset_folder / mesh_path.parent
-        else:
-            mesh_absolute_path = (
-                Path(bc.config_path).parent / dataset_folder / mesh_path
-            )
-            output_folder = (
-                Path(bc.config_path).parent / dataset_folder / mesh_path.parent
-            )
-        output_filename = mesh_stem
+    with get_progress(console=console) as progress:
+        task_mesh = progress.add_task(
+            "Generate GLTF meshes", total=len(mesh_paths)
+        )
+        for mesh_path in mesh_paths:
+            mesh_stem = mesh_path.stem.split(".")[0]
+            if mesh_path.is_absolute():
+                mesh_absolute_path = mesh_path
+                output_folder = mesh_path.parent
+            elif dataset_folder.is_absolute():
+                mesh_absolute_path = dataset_folder / mesh_path
+                output_folder = dataset_folder / mesh_path.parent
+            else:
+                mesh_absolute_path = (
+                    Path(bc.config_path).parent / dataset_folder / mesh_path
+                )
+                output_folder = (
+                    Path(bc.config_path).parent
+                    / dataset_folder
+                    / mesh_path.parent
+                )
+            output_filename = mesh_stem
 
-        if not (output_folder / f"{output_filename}.gltf").exists():
-            compute_gltf_from_gifti(
-                str(mesh_absolute_path),
-                str(output_folder),
-                output_filename,
-            )
+            if not (output_folder / f"{output_filename}.gltf").exists():
+                compute_gltf_from_gifti(
+                    str(mesh_absolute_path),
+                    str(output_folder),
+                    output_filename,
+                )
 
-        if "mesh_types" in dataset:
-            if (
-                "default" in dataset["mesh_types"]
-                and "other" in dataset["mesh_types"]
-            ):
-                mesh_absolute_path = Path(mesh_absolute_path)
-                default_mesh_type = dataset["mesh_types"]["default"]
-                other_mesh_types = dataset["mesh_types"]["other"]
+            if "mesh_types" in dataset:
+                if (
+                    "default" in dataset["mesh_types"]
+                    and "other" in dataset["mesh_types"]
+                ):
+                    mesh_absolute_path = Path(mesh_absolute_path)
+                    default_mesh_type = dataset["mesh_types"]["default"]
+                    other_mesh_types = dataset["mesh_types"]["other"]
 
-                for other_mesh_type in other_mesh_types:
-                    other_mesh_stem = mesh_stem.replace(
-                        default_mesh_type, other_mesh_type
-                    )
-                    other_mesh_absolute_path = (
-                        mesh_absolute_path.parent
-                        / mesh_absolute_path.name.replace(
+                    for other_mesh_type in other_mesh_types:
+                        other_mesh_stem = mesh_stem.replace(
                             default_mesh_type, other_mesh_type
                         )
-                    )
-
-                    if not (
-                        output_folder / f"{other_mesh_stem}.gltf"
-                    ).exists():
-                        compute_gltf_from_gifti(
-                            str(other_mesh_absolute_path),
-                            str(output_folder),
-                            other_mesh_stem,
+                        other_mesh_absolute_path = (
+                            mesh_absolute_path.parent
+                            / mesh_absolute_path.name.replace(
+                                default_mesh_type, other_mesh_type
+                            )
                         )
+
+                        if not (
+                            output_folder / f"{other_mesh_stem}.gltf"
+                        ).exists():
+                            compute_gltf_from_gifti(
+                                str(other_mesh_absolute_path),
+                                str(output_folder),
+                                other_mesh_stem,
+                            )
+
+        progress.update(task_mesh, advance=1)
