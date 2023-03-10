@@ -150,15 +150,23 @@ def create_endpoints_one_alignment_dataset(bc, id, dataset):
 def create_all_endpoints(bc):
     """Create endpoints for all available alignments datasets."""
 
-    try:
+    if "alignments" in bc.config and "datasets" in bc.config["alignments"]:
         # Iterate through each alignment dataset
         for dataset_id, dataset in bc.config["alignments"]["datasets"].items():
             df = load_dataset_description(
                 config_path=bc.config_path, dataset_path=dataset["path"]
             )
             # 1. Create GLTF files for all referenced meshes of the dataset
-            create_dataset_glft_files(bc, df, dataset)
+            mesh_paths = list(
+                map(
+                    Path,
+                    np.unique(
+                        pd.concat([df["source_mesh"], df["target_mesh"]])
+                    ),
+                )
+            )
+            create_dataset_glft_files(bc, dataset, mesh_paths)
             # 2. Create API endpoints
             create_endpoints_one_alignment_dataset(bc, dataset_id, dataset)
-    except KeyError:
-        console.log("No alignment datasets to load", style="red")
+    else:
+        console.log("No alignment datasets to load", style="yellow")

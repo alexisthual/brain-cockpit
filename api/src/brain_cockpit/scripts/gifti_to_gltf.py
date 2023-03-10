@@ -201,10 +201,8 @@ def compute_gltf_from_gifti(mesh_path, output_folder, output_filename):
     gltf.export(os.path.join(mesh_output_folder, f"{output_filename}.gltf"))
 
 
-def create_dataset_glft_files(bc, df, dataset):
+def create_dataset_glft_files(bc, dataset, mesh_paths):
     dataset_folder = Path(dataset["path"]).parent
-
-    mesh_paths = list(map(Path, np.unique(df["mesh_path"])))
 
     for mesh_path in tqdm(mesh_paths, desc="Building GLTF mesh", leave=False):
         mesh_stem = mesh_path.stem.split(".")[0]

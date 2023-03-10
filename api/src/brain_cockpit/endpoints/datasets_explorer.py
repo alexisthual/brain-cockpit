@@ -474,7 +474,8 @@ def create_all_endpoints(bc):
                 config_path=bc.config_path, dataset_path=dataset["path"]
             )
             # 1. Create GLTF files for all referenced meshes of the dataset
-            create_dataset_glft_files(bc, df, dataset)
+            mesh_paths = list(map(Path, np.unique(df["mesh_path"])))
+            create_dataset_glft_files(bc, dataset, mesh_paths)
             # 2. Create API endpoints
             create_endpoints_one_surface_dataset(bc, dataset_id, dataset)
     except KeyError:
