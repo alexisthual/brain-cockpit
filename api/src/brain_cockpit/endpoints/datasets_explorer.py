@@ -1,6 +1,5 @@
 import json
 import os
-import sys
 
 from pathlib import Path
 
@@ -12,7 +11,6 @@ from brain_cockpit import utils
 from brain_cockpit.scripts.gifti_to_gltf import create_dataset_glft_files
 from brain_cockpit.utils import console, load_dataset_description
 from flask import jsonify, request, send_from_directory
-from tqdm import tqdm
 
 # UTIL FUNCTIONS
 # These functions are useful for loading data
@@ -122,53 +120,67 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
         # and populate missing (mesh, subject, task, contrast, side) tuples
         # with None
         data = dict()
-        for mesh in tqdm(meshes, file=sys.stdout, position=0):
-            dsu = dict()
-            for subject in tqdm(subjects, file=sys.stdout, position=1):
-                dtc = dict()
-                for task, contrast in tasks_contrasts:
-                    dsi = dict()
-                    for side in ["lh", "rh"]:
-                        hemi = "left" if side == "lh" else "right"
-                        try:
-                            file_path = None
+        with utils.get_progress(console=console) as progress:
+            task_mesh = progress.add_task(
+                "Load maps for mesh support", total=len(meshes)
+            )
+            for mesh in meshes:
+                dsu = dict()
+                task_subject = progress.add_task(
+                    "Load maps for subjects", total=len(subjects)
+                )
+                for subject in subjects:
+                    dtc = dict()
+                    for task, contrast in tasks_contrasts:
+                        dsi = dict()
+                        for side in ["lh", "rh"]:
+                            hemi = "left" if side == "lh" else "right"
+                            try:
+                                file_path = None
 
-                            # Successively try
-                            # 1. absolute path to file
-                            # 2. relative path from dataset folder
-                            # 3. relative path from config folder
-                            p = Path(
-                                paths[mesh][subject][task][contrast][side]
-                            )
-                            if p.is_absolute():
-                                file_path = p
-                            elif dataset_dir.is_absolute():
-                                file_path = dataset_dir / p
-                            else:
-                                file_path = config_dir / dataset_dir / p
+                                # Successively try
+                                # 1. absolute path to file
+                                # 2. relative path from dataset folder
+                                # 3. relative path from config folder
+                                p = Path(
+                                    paths[mesh][subject][task][contrast][side]
+                                )
+                                if p.is_absolute():
+                                    file_path = p
+                                elif dataset_dir.is_absolute():
+                                    file_path = dataset_dir / p
+                                else:
+                                    file_path = config_dir / dataset_dir / p
 
-                            if file_path is not None and file_path.exists():
-                                dsi[hemi] = nib.load(file_path).darrays[0].data
-                            else:
+                                if (
+                                    file_path is not None
+                                    and file_path.exists()
+                                ):
+                                    dsi[hemi] = (
+                                        nib.load(file_path).darrays[0].data
+                                    )
+                                else:
+                                    dsi[hemi] = None
+                            except KeyError:
                                 dsi[hemi] = None
-                        except KeyError:
-                            dsi[hemi] = None
-                    if task not in dtc:
-                        dtc[task] = dict()
-                    dtc[task][contrast] = dsi
-                dsu[subject] = dtc
-            data[mesh] = dsu
+                        if task not in dtc:
+                            dtc[task] = dict()
+                        dtc[task][contrast] = dsi
+                    dsu[subject] = dtc
+                data[mesh] = dsu
+                progress.update(task_subject, advance=1)
+
+            progress.update(task_mesh, advance=1)
 
         return data
 
-    with console.status("Loading contrast maps..."):
-        df = load_dataset_description(
-            config_path=bc.config_path, dataset_path=dataset["path"]
-        )
-        data = load_data(
-            df, config_path=bc.config_path, dataset_path=dataset["path"]
-        )
-        meshes, subjects, tasks_contrasts, sides = parse_metadata(df)
+    df = load_dataset_description(
+        config_path=bc.config_path, dataset_path=dataset["path"]
+    )
+    data = load_data(
+        df, config_path=bc.config_path, dataset_path=dataset["path"]
+    )
+    meshes, subjects, tasks_contrasts, sides = parse_metadata(df)
 
     # ROUTES
     # Define a series of enpoints to expose contrasts, meshes, etc
