@@ -60,12 +60,24 @@ def load_config(config_path=None, verbose=False):
 
 
 def load_dataset_description(config_path=None, dataset_path=None):
+    """
+    Load dataset CSV file.
+
+    Returns
+    -------
+    df: pandas Dataframe
+        Dataset metadata from CSV file
+    path: pathlib.Path
+        Path to dataset CSV file
+    """
     # Successively try
     # 1. absolute dataset path
     # 2. relative path from config folder
     if Path(dataset_path).is_absolute():
-        df = pd.read_csv(dataset_path)
+        path = Path(dataset_path)
     else:
-        df = pd.read_csv(Path(config_path).parent / dataset_path)
+        path = Path(config_path).parent / dataset_path
 
-    return df
+    df = pd.read_csv(path)
+
+    return df, path

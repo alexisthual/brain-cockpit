@@ -113,7 +113,7 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
         )["path"].first()
         paths = multiindex_to_nested_dict(df_grouped.to_frame())
 
-        config_dir = Path(bc.config_path).parent
+        config_dir = Path(config_path).parent
         dataset_dir = Path(dataset_path).parent
 
         # Load gifti files
@@ -174,7 +174,7 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
 
         return data
 
-    df = load_dataset_description(
+    df, _ = load_dataset_description(
         config_path=bc.config_path, dataset_path=dataset["path"]
     )
     data = load_data(
@@ -482,7 +482,7 @@ def create_all_endpoints(bc):
     try:
         # Iterate through each surface dataset
         for dataset_id, dataset in bc.config["surfaces"]["datasets"].items():
-            df = load_dataset_description(
+            df, _ = load_dataset_description(
                 config_path=bc.config_path, dataset_path=dataset["path"]
             )
             # 1. Create GLTF files for all referenced meshes of the dataset

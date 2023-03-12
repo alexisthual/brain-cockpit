@@ -15,7 +15,7 @@ def create_all_endpoints(bc):
         if "surfaces" in json_config:
             if "datasets" in json_config["surfaces"]:
                 for _, d in json_config["surfaces"]["datasets"].items():
-                    df = load_dataset_description(
+                    df, _ = load_dataset_description(
                         config_path=bc.config_path, dataset_path=d["path"]
                     )
 
@@ -38,7 +38,7 @@ def create_all_endpoints(bc):
         if "alignments" in json_config:
             if "datasets" in json_config["alignments"]:
                 for _, d in json_config["alignments"]["datasets"].items():
-                    df = load_dataset_description(
+                    df, _ = load_dataset_description(
                         config_path=bc.config_path, dataset_path=d["path"]
                     )
 

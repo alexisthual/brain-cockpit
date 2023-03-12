@@ -1,12 +1,11 @@
 import os
+import pickle
 
 from pathlib import Path
 
 import nibabel as nib
 import numpy as np
 import pandas as pd
-import pickle
-import torch
 
 from brain_cockpit.scripts.gifti_to_gltf import create_dataset_glft_files
 from brain_cockpit.utils import console, load_dataset_description
@@ -19,8 +18,9 @@ def create_endpoints_one_alignment_dataset(bc, id, dataset):
     serving dataset meshes and alignment transforms.
     """
 
-    df = pd.read_csv(dataset["path"])
-    dataset_path = Path(dataset["path"]).parent
+    df, dataset_path = load_dataset_description(
+        config_path=bc.config_path, dataset_path=dataset["path"]
+    )
 
     # ROUTES
     # Define endpoints
@@ -100,23 +100,7 @@ def create_endpoints_one_alignment_dataset(bc, id, dataset):
             input_map = np.zeros(n_voxels)
             input_map[voxel] = 1
 
-            m = (
-                (
-                    torch.sparse.mm(
-                        model.pi.transpose(0, 1),
-                        torch.from_numpy(input_map)
-                        .reshape(-1, 1)
-                        .type(torch.FloatTensor),
-                    ).to_dense()
-                    / torch.sparse.sum(model.pi, dim=0)
-                    .to_dense()
-                    .reshape(-1, 1)
-                )
-                .T.flatten()
-                .detach()
-                .cpu()
-                .numpy()
-            )
+            m = model.transform(input_map)
         elif role == "source":
             n_voxels = (
                 nib.load(dataset_path / df.iloc[model_id]["target_mesh"])
@@ -126,23 +110,7 @@ def create_endpoints_one_alignment_dataset(bc, id, dataset):
             input_map = np.zeros(n_voxels)
             input_map[voxel] = 1
 
-            m = (
-                (
-                    torch.sparse.mm(
-                        model.pi,
-                        torch.from_numpy(input_map)
-                        .reshape(-1, 1)
-                        .type(torch.FloatTensor),
-                    ).to_dense()
-                    / torch.sparse.sum(model.pi, dim=1)
-                    .to_dense()
-                    .reshape(-1, 1)
-                )
-                .T.flatten()
-                .detach()
-                .cpu()
-                .numpy()
-            )
+            m = model.inverse_transform(input_map)
 
         return jsonify(m)
 
@@ -153,7 +121,7 @@ def create_all_endpoints(bc):
     if "alignments" in bc.config and "datasets" in bc.config["alignments"]:
         # Iterate through each alignment dataset
         for dataset_id, dataset in bc.config["alignments"]["datasets"].items():
-            df = load_dataset_description(
+            df, _ = load_dataset_description(
                 config_path=bc.config_path, dataset_path=dataset["path"]
             )
             # 1. Create GLTF files for all referenced meshes of the dataset
