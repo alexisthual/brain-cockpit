@@ -1,6 +1,7 @@
 import pytest
 
 from brain_cockpit import BrainCockpit
+from pathlib import Path
 
 
 TEST_CONFIG_PATH = "./api/tests/dummy_data/config.yaml"
@@ -34,3 +35,43 @@ def test_server_config(client):
     assert ds["name"] == "Dummy surface data"
     assert ds["path"] == "surface_dataset/dataset.csv"
     assert ds["unit"] == "z-score"
+
+
+def test_alignment_models(client):
+    models = client.get("/alignments/dummy_alignment/models").get_json()
+
+    assert models == [0]
+
+
+def test_alignment_model_info(client):
+    info = client.get("/alignments/dummy_alignment/0/info").get_json()
+
+    assert info["name"] == "alignment1"
+    assert info["source_subject"] == "sub-01"
+    assert info["target_subject"] == "sub-02"
+    assert Path(info["source_mesh"]) == Path("./meshes/pial_left.gltf")
+    assert Path(info["target_mesh"]) == Path("./meshes/pial_left.gltf")
+    assert Path(info["alignment"]) == Path("./mapping.pkl")
+
+
+def test_alignment_single_point(client):
+    m = client.get(
+        "/alignments/dummy_alignment/single_voxel",
+        query_string={
+            "model_id": 0,
+            "voxel": 0,
+            "role": "source",
+        },
+    ).get_json()
+
+    assert len(m) == 642
+
+
+# def test_alignment_mesh(client):
+#     info = client.get(
+#         "/alignments/dummy_alignment/0/mesh/./meshes/pial_left.gltf"
+#     )
+#     print(info)
+#     print(dir(info))
+#     print(info.get_data())
+#     assert False

@@ -56,7 +56,8 @@ def create_endpoints_one_alignment_dataset(bc, id, dataset):
                 ".gltf"
             )
         )
-        return df_row.to_json()
+        # return jsonify(df_row.to_json())
+        return jsonify(df_row.to_dict())
 
     @bc.app.route(
         alignment_mesh_endpoint,
@@ -64,18 +65,25 @@ def create_endpoints_one_alignment_dataset(bc, id, dataset):
         methods=["GET"],
     )
     def get_alignment_mesh(model_id, path):
+        print("mesh")
         mesh_path = Path(path)
         relative_folder = (
-            Path(bc.config_path).parent
-            / Path(dataset["path"]).parent
+            # Path(bc.config_path).parent
+            # / Path(dataset["path"]).parent
+            dataset_path.parent
             / mesh_path.parent
         )
         absolute_folder = Path("/") / mesh_path.parent
+        print(relative_folder)
+        print(absolute_folder)
         if (relative_folder / mesh_path.name).exists():
+            print("here relative")
+            print(relative_folder / mesh_path.name)
             return send_from_directory(relative_folder, mesh_path.name)
         elif (absolute_folder / mesh_path.name).exists() and bc.config[
             "allow_very_unsafe_file_sharing"
         ]:
+            print("here absolute")
             return send_from_directory(absolute_folder, mesh_path.name)
 
     @bc.app.route(
@@ -88,12 +96,18 @@ def create_endpoints_one_alignment_dataset(bc, id, dataset):
         voxel = request.args.get("voxel", type=int)
         role = request.args.get("role", type=str)
 
-        with open(df.iloc[model_id]["alignment"], "rb") as f:
+        model_path = Path(df.iloc[model_id]["alignment"])
+        if not model_path.is_absolute():
+            model_path = dataset_path.parent / df.iloc[model_id]["alignment"]
+        with open(model_path, "rb") as f:
             model = pickle.load(f)
 
+        m = None
         if role == "target":
             n_voxels = (
-                nib.load(dataset_path / df.iloc[model_id]["source_mesh"])
+                nib.load(
+                    dataset_path.parent / df.iloc[model_id]["source_mesh"]
+                )
                 .darrays[0]
                 .data.shape[0]
             )
@@ -103,7 +117,9 @@ def create_endpoints_one_alignment_dataset(bc, id, dataset):
             m = model.transform(input_map)
         elif role == "source":
             n_voxels = (
-                nib.load(dataset_path / df.iloc[model_id]["target_mesh"])
+                nib.load(
+                    dataset_path.parent / df.iloc[model_id]["target_mesh"]
+                )
                 .darrays[0]
                 .data.shape[0]
             )
@@ -112,7 +128,7 @@ def create_endpoints_one_alignment_dataset(bc, id, dataset):
 
             m = model.inverse_transform(input_map)
 
-        return jsonify(m)
+        return jsonify(m.tolist() if m is not None else None)
 
 
 def create_all_endpoints(bc):
