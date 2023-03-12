@@ -479,7 +479,7 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
 def create_all_endpoints(bc):
     """Create endpoints for all available surface datasets."""
 
-    try:
+    if "surfaces" in bc.config and "datasets" in bc.config["surfaces"]:
         # Iterate through each surface dataset
         for dataset_id, dataset in bc.config["surfaces"]["datasets"].items():
             df, _ = load_dataset_description(
@@ -490,5 +490,5 @@ def create_all_endpoints(bc):
             create_dataset_glft_files(bc, dataset, mesh_paths)
             # 2. Create API endpoints
             create_endpoints_one_surface_dataset(bc, dataset_id, dataset)
-    except KeyError:
+    else:
         console.log("No surface datasets to load", style="yellow")
