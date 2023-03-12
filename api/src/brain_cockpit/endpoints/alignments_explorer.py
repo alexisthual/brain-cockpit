@@ -65,7 +65,6 @@ def create_endpoints_one_alignment_dataset(bc, id, dataset):
         methods=["GET"],
     )
     def get_alignment_mesh(model_id, path):
-        print("mesh")
         mesh_path = Path(path)
         relative_folder = (
             # Path(bc.config_path).parent
@@ -74,16 +73,11 @@ def create_endpoints_one_alignment_dataset(bc, id, dataset):
             / mesh_path.parent
         )
         absolute_folder = Path("/") / mesh_path.parent
-        print(relative_folder)
-        print(absolute_folder)
         if (relative_folder / mesh_path.name).exists():
-            print("here relative")
-            print(relative_folder / mesh_path.name)
             return send_from_directory(relative_folder, mesh_path.name)
         elif (absolute_folder / mesh_path.name).exists() and bc.config[
             "allow_very_unsafe_file_sharing"
         ]:
-            print("here absolute")
             return send_from_directory(absolute_folder, mesh_path.name)
 
     @bc.app.route(
