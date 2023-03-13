@@ -10,12 +10,14 @@
   }
 
   .surface-controls-left {
+    display: flex;
     position: absolute;
     left: 10px;
     bottom: 0;
   }
 
   .surface-controls-right {
+    display: flex;
     position: absolute;
     right: 10px;
     bottom: 0;

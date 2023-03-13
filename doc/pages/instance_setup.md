@@ -29,7 +29,7 @@ conda env update --file environment.yml
 This command generates `fsaverage` meshes from `nilearn` and stores them in `./public/assets`
 
 ```bash
-python bc_utils/gifty_to_gltf.py
+python bc_utils/gifti_to_gltf.py
 ```
 
 ### Download IBC contrasts
