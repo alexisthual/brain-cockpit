@@ -122,12 +122,12 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
         data = dict()
         with utils.get_progress(console=console) as progress:
             task_mesh = progress.add_task(
-                "Load maps for mesh support", total=len(meshes)
+                "Load maps for each mesh support", total=len(meshes)
             )
             for mesh in meshes:
                 dsu = dict()
                 task_subject = progress.add_task(
-                    "Load maps for subjects", total=len(subjects)
+                    f"Load maps for each subject ({mesh})", total=len(subjects)
                 )
                 for subject in subjects:
                     dtc = dict()

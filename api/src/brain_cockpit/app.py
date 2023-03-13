@@ -7,7 +7,7 @@ from brain_cockpit.endpoints import (
     datasets_explorer,
     server,
 )
-from brain_cockpit.utils import load_config
+from brain_cockpit.utils import console, load_config
 from flask import Flask
 from flask_cors import CORS
 from simplejson import JSONEncoder
@@ -37,6 +37,12 @@ class BrainCockpit:
 
         _ = CORS(self.app)
 
+        console.print("Brain-cockpit is loading data and setting API endpoints...")
+
         server.create_all_endpoints(self)
         datasets_explorer.create_all_endpoints(self)
         alignments_explorer.create_all_endpoints(self)
+
+        console.print(
+            "[green]Your brain-cockpit instance is up and running![/green]🚀"
+        )
