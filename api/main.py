@@ -25,6 +25,22 @@ parser.add_argument(
     help="Path to brain-cockpit server config file",
 )
 
+parser.add_argument(
+    "--port",
+    type=int,
+    default=None,
+    required=False,
+    help="Port",
+)
+
+parser.add_argument(
+    "--threads",
+    type=int,
+    default=None,
+    required=False,
+    help="Number of threads",
+)
+
 if __name__ == "__main__":
     args = parser.parse_args()
 
@@ -32,7 +48,12 @@ if __name__ == "__main__":
 
     if args.env == "prod":
         # In production, serve flask app through waitress
-        serve(bc.app, host="0.0.0.0", port=PORT, threads=THREADS)
+        serve(
+            bc.app,
+            host="0.0.0.0",
+            port=args.port or PORT,
+            threads=args.threads or THREADS,
+        )
     else:
         # Otherwise, serve app with hot reloader
-        bc.app.run(debug=True, port=PORT, use_reloader=True)
+        bc.app.run(debug=True, port=args.port or PORT, use_reloader=True)
