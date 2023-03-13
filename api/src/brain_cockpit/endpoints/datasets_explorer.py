@@ -167,10 +167,10 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
                             dtc[task] = dict()
                         dtc[task][contrast] = dsi
                     dsu[subject] = dtc
-                data[mesh] = dsu
-                progress.update(task_subject, advance=1)
+                    progress.update(task_subject, advance=1)
 
-            progress.update(task_mesh, advance=1)
+                data[mesh] = dsu
+                progress.update(task_mesh, advance=1)
 
         return data
 

@@ -264,4 +264,4 @@ def create_dataset_glft_files(bc, dataset, mesh_paths):
                                 other_mesh_stem,
                             )
 
-        progress.update(task_mesh, advance=1)
+            progress.update(task_mesh, advance=1)
