@@ -268,7 +268,7 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
                     df_mesh_path.name
                 ).replace(mesh_types["default"], mesh_type)
 
-        return str(df_mesh_path)
+        return jsonify(str(df_mesh_path))
 
     @bc.app.route(meshes_endpoint, endpoint=meshes_endpoint, methods=["GET"])
     def get_mesh(path):
@@ -317,14 +317,18 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
             else:
                 return jsonify(None)
 
-        fingerprint = [
-            (
-                data[mesh][subject][task][contrast][hemi][voxel_index]
-                if data[mesh][subject][task][contrast][hemi] is not None
-                else None
-            )
-            for task, contrast in tasks_contrasts
-        ]
+        # Convert fingerprint to np array
+        # so that it can easily be jsonified
+        fingerprint = np.array(
+            [
+                (
+                    data[mesh][subject][task][contrast][hemi][voxel_index]
+                    if data[mesh][subject][task][contrast][hemi] is not None
+                    else None
+                )
+                for task, contrast in tasks_contrasts
+            ]
+        )
 
         return jsonify(fingerprint)
 
