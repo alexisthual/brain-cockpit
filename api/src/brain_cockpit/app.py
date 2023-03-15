@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import numpy as np
+import orjson
 
 from brain_cockpit.endpoints import (
     alignments_explorer,
@@ -9,27 +10,29 @@ from brain_cockpit.endpoints import (
 )
 from brain_cockpit.utils import load_config
 from flask import Flask
+from flask.json.provider import JSONProvider
 from flask_cors import CORS
-from simplejson import JSONEncoder
 
 
-class StrictEncoder(JSONEncoder):
-    def __init__(self, *args, **kwargs):
-        # convert np.nan to null
-        super().__init__(*args, **kwargs, ignore_nan=True)
+class OrJSONProvider(JSONProvider):
+    def dumps(self, obj, *, option=None, **kwargs):
+        if option is None:
+            option = orjson.OPT_APPEND_NEWLINE | orjson.OPT_NAIVE_UTC
 
-    def default(self, obj):
         # convert numpy arrays to python lists
         if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        else:
-            return JSONEncoder.default(self, obj)
+            obj = obj.tolist()
+
+        return orjson.dumps(obj, option=option).decode()
+
+    def loads(self, s, **kwargs):
+        return orjson.loads(s)
 
 
 class BrainCockpit:
     def __init__(self, config_path=None):
         self.app = Flask(__name__)
-        self.app.json_encoder = StrictEncoder
+        self.app.json = OrJSONProvider(self.app)
 
         # Setup config
         self.config_path = Path(config_path)
