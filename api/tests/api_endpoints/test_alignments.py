@@ -18,17 +18,18 @@ def test_alignment_model_info(client):
     assert Path(info["alignment"]) == Path("./mapping.pkl")
 
 
-def test_alignment_single_point(client):
-    m = client.get(
-        "/alignments/dummy_alignment/single_voxel",
-        query_string={
-            "model_id": 0,
-            "voxel": 0,
-            "role": "source",
-        },
-    ).get_json()
+# TODO: to be added with fugw is released on PyPI
+# def test_alignment_single_point(client):
+#     m = client.get(
+#         "/alignments/dummy_alignment/single_voxel",
+#         query_string={
+#             "model_id": 0,
+#             "voxel": 0,
+#             "role": "source",
+#         },
+#     ).get_json()
 
-    assert len(m) == 642
+#     assert len(m) == 642
 
 
 # def test_alignment_mesh(client):
