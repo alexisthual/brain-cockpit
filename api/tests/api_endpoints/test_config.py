@@ -9,7 +9,7 @@ def test_server_config(client):
     assert da["path"] == "alignment_dataset/dataset.csv"
 
     ds = config["surfaces"]["datasets"]["dummy_surface"]
-    assert ds["n_files"] == 2
+    assert ds["n_files"] == 4
     assert ds["subjects"] == ["sub-01", "sub-02"]
     assert ds["sides"] == ["left"]
     assert ds["mesh_types"]["default"] == "pial"
