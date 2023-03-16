@@ -40,7 +40,9 @@ class BrainCockpit:
 
         _ = CORS(self.app)
 
-        console.print("Brain-cockpit is loading data and setting API endpoints...")
+        console.print(
+            "Brain-cockpit is loading data and setting API endpoints..."
+        )
 
         server.create_all_endpoints(self)
         datasets_explorer.create_all_endpoints(self)
