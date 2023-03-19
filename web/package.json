@@ -2,7 +2,6 @@
   "name": "brain-cockpit",
   "version": "0.1.0",
   "license": "MIT",
-  "homepage": ".",
   "dependencies": {
     "@blueprintjs/core": "^4.15.0",
     "@blueprintjs/icons": "^4.13.0",
