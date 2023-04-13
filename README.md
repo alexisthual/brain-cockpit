@@ -11,7 +11,7 @@
 
 You can try our [online demo](https://brain-cockpit.athual.fr/)!
 
-![Screenshot](https://mybox.inria.fr/thumbnail/192bdcc47f8c4decbac7/1024/Screenshot%20from%202020-12-07%2012-23-45.png)
+![Screenshot](https://mybox.inria.fr/seafhttp/files/71b1d396-c856-45a7-81c4-a432e9347b7f/main_screenshot.png)
 
 ## Acknowledgement
 
