@@ -584,6 +584,7 @@ const SurfacePane = ({
             {
               inputs: [
                 {
+                  disabled: state.meanSurfaceMap,
                   inputType: InputType.SELECT_STRING,
                   selectedItem: subjectLabels[state.subject ?? 0],
                   items: subjectLabels,

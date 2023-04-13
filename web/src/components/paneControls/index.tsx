@@ -18,6 +18,7 @@ export enum InputType {
 }
 
 interface PaneControlsInput {
+  disabled?: boolean;
   inputType: InputType;
   value?: string | boolean;
   selectedItem?: string | ContrastLabel | boolean;
@@ -58,6 +59,7 @@ const PaneControls = ({ rows }: IProps) => {
                     case InputType.BUTTON:
                       element = (
                         <Button
+                          disabled={input.disabled}
                           key={`input-${inputIndex}`}
                           active={input.value as boolean | undefined}
                           icon={
@@ -121,6 +123,7 @@ const PaneControls = ({ rows }: IProps) => {
                           }}
                         >
                           <Button
+                            disabled={input.disabled}
                             rightIcon="double-caret-vertical"
                             text={input.selectedItem as string}
                             minimal
