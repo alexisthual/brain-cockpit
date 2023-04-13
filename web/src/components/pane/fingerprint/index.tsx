@@ -46,9 +46,9 @@ const FingerprintPane = ({
 
   return (
     <div className="fingerprint-pane">
+      {loading ? <OverlayLoader /> : null}
       <div className="fingerprint-controls">
         <CloseButton closeCallback={closeCallback} />
-        {loading ? <OverlayLoader /> : null}
         <PaneControls
           rows={[
             {
