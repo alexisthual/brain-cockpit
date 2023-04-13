@@ -157,7 +157,8 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
                                     and file_path.exists()
                                 ):
                                     dsi[hemi] = (
-                                        nib.load(file_path).darrays[0].data
+                                        # nib.load(file_path).darrays[0].data
+                                        nib.load(file_path)
                                     )
                                 else:
                                     dsi[hemi] = None
@@ -322,7 +323,9 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
         fingerprint = np.array(
             [
                 (
-                    data[mesh][subject][task][contrast][hemi][voxel_index]
+                    data[mesh][subject][task][contrast][hemi]
+                    .darrays[0]
+                    .data[voxel_index]
                     if data[mesh][subject][task][contrast][hemi] is not None
                     else None
                 )
@@ -370,9 +373,9 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
                         np.array(
                             [
                                 (
-                                    data[mesh][subject][task][contrast][hemi][
-                                        voxel_index
-                                    ]
+                                    data[mesh][subject][task][contrast][hemi]
+                                    .darrays[0]
+                                    .data[voxel_index]
                                     if data[mesh][subject][task][contrast][
                                         hemi
                                     ]
@@ -405,13 +408,16 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
         task, contrast = tasks_contrasts[contrast_index]
 
         if hemi == "left" or hemi == "right":
-            return jsonify(data[mesh][subject][task][contrast][hemi])
+            c = data[mesh][subject][task][contrast][hemi]
+            return jsonify(c.darrays[0].data if c is not None else None)
         elif hemi == "both":
+            cl = data[mesh][subject][task][contrast]["left"]
+            cr = data[mesh][subject][task][contrast]["right"]
             return jsonify(
                 np.concatenate(
                     [
-                        data[mesh][subject][task][contrast]["left"],
-                        data[mesh][subject][task][contrast]["right"],
+                        cl.darrays[0].data if cl is not None else None,
+                        cr.darrays[0].data if cr is not None else None,
                     ]
                 )
             )
@@ -437,12 +443,17 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
                         # Filter out subjects for whom this contrast map
                         # does not exist
                         list(
-                            filter(
-                                lambda x: x is not None,
-                                [
-                                    data[mesh][subject][task][contrast][hemi]
-                                    for subject in subjects
-                                ],
+                            map(
+                                lambda x: x.darrays[0].data,
+                                filter(
+                                    lambda x: x is not None,
+                                    [
+                                        data[mesh][subject][task][contrast][
+                                            hemi
+                                        ]
+                                        for subject in subjects
+                                    ],
+                                ),
                             )
                         )
                     ),
@@ -460,21 +471,28 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
                         # Assume that left and right hemispheres
                         # will be missing at the same time.
                         list(
-                            filter(
-                                lambda x: x is not [None, None],
-                                [
-                                    np.concatenate(
-                                        [
-                                            data[mesh][subject][task][
-                                                contrast
-                                            ]["left"],
-                                            data[mesh][subject][task][
-                                                contrast
-                                            ]["right"],
-                                        ]
-                                    )
-                                    for subject in subjects
+                            map(
+                                lambda x: [
+                                    x[0].darrays[0].data,
+                                    x[1].darrays[0].data,
                                 ],
+                                filter(
+                                    lambda x: x[0] is not None
+                                    and x[1] is not None,
+                                    [
+                                        np.concatenate(
+                                            [
+                                                data[mesh][subject][task][
+                                                    contrast
+                                                ]["left"],
+                                                data[mesh][subject][task][
+                                                    contrast
+                                                ]["right"],
+                                            ]
+                                        )
+                                        for subject in subjects
+                                    ],
+                                ),
                             )
                         )
                     ),
