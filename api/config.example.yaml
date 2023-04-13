@@ -8,11 +8,11 @@ alignments:
     datasetid2:
       name: Name of alignment dataset 2
       path: /path/to/alignment/dataset2.csv
-surfaces:
+features:
   datasets:
     datasetid1:
       name: Name of surface dataset 1
-      path: /path/to/surface/dataset1.csv
+      path: /path/to/features/dataset1.csv
       unit: beta # Units of dataset maps
       mesh_types:
         default: pial # Default mesh to use
@@ -22,7 +22,7 @@ surfaces:
           - white
     datasetid2:
       name: Name of surface dataset 2
-      path: /path/to/surface/dataset2.csv
+      path: /path/to/features/dataset2.csv
       mesh_types:
         default: mid
         other:

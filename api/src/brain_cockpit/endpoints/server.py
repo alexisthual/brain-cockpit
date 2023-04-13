@@ -1,20 +1,17 @@
 import copy
 
-from brain_cockpit.endpoints import datasets_explorer
-from brain_cockpit.utils import get_memory, load_dataset_description
+from brain_cockpit.endpoints import features_explorer
+from brain_cockpit.utils import load_dataset_description
 
 
 def create_all_endpoints(bc):
-    memory = get_memory(bc)
-
-    @memory.cache
     def get_json_server_config(config):
         json_config = copy.deepcopy(config)
         del json_config["cache_folder"]
 
-        if "surfaces" in json_config:
-            if "datasets" in json_config["surfaces"]:
-                for _, d in json_config["surfaces"]["datasets"].items():
+        if "features" in json_config:
+            if "datasets" in json_config["features"]:
+                for _, d in json_config["features"]["datasets"].items():
                     df, _ = load_dataset_description(
                         config_path=bc.config_path, dataset_path=d["path"]
                     )
@@ -24,12 +21,12 @@ def create_all_endpoints(bc):
                         subjects,
                         _,
                         sides,
-                    ) = datasets_explorer.parse_metadata(df)
+                    ) = features_explorer.parse_metadata(df)
                     dataset_info = {
                         "subjects": subjects,
                         "meshes": meshes,
                         "sides": list(
-                            map(datasets_explorer.side_to_hemi, sides)
+                            map(features_explorer.side_to_hemi, sides)
                         ),
                         "n_files": len(df),
                     }

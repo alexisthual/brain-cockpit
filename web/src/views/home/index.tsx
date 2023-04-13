@@ -27,15 +27,15 @@ const HomeView = () => {
     );
   }
 
-  if (Object.keys(config?.surfaces?.datasets ?? {}).length > 0) {
+  if (Object.keys(config?.features?.datasets ?? {}).length > 0) {
     surfaceDatasetsDiv = (
       <div className="home-section">
         <div className="home-section-title">
           <Icon icon="database" size={24} />
-          <h2 className="bp4-heading">Available surface datasets</h2>
+          <h2 className="bp4-heading">Available features datasets</h2>
         </div>
         <div className="home-section-items">
-          {Object.entries(config?.surfaces?.datasets ?? {}).map(
+          {Object.entries(config?.features?.datasets ?? {}).map(
             ([key, d]: any) => (
               <Card
                 key={key}

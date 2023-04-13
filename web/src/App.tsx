@@ -23,7 +23,7 @@ export const server = axios.create({
 
 export interface Config {
   allow_very_unsafe_file_sharing: boolean;
-  surfaces?: {
+  features?: {
     datasets?: {
       [key: string]: {
         name: string;
@@ -85,7 +85,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route path="/" element={<HomeView />} />
-          {Object.entries(config?.surfaces?.datasets ?? {}).map(
+          {Object.entries(config?.features?.datasets ?? {}).map(
             ([datasetId, dataset]: any) => (
               <Route
                 key={`alignments-route-${datasetId}`}
@@ -122,7 +122,7 @@ const Layout = () => {
           </NavLink>
         </Tooltip2>
         <span className="bp4-navbar-divider"></span>
-        {Object.entries(config?.surfaces?.datasets ?? {}).map(
+        {Object.entries(config?.features?.datasets ?? {}).map(
           ([datasetId, dataset]: any) => (
             <Tooltip2
               key={`surface-dataset-${datasetId}`}

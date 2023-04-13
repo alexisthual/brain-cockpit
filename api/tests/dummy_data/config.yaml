@@ -4,12 +4,12 @@ alignments:
   datasets:
     dummy_alignment:
       name: Dummy alignment
-      path: alignment_dataset/dataset.csv
-surfaces:
+      path: alignments_dataset/dataset.csv
+features:
   datasets:
     dummy_surface:
       name: Dummy surface data
-      path: surface_dataset/dataset.csv
+      path: features_dataset/dataset.csv
       unit: z-score
       mesh_types:
         default: pial

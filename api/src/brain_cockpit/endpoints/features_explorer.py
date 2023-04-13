@@ -83,7 +83,7 @@ def parse_metadata(df):
 # It loads fmri contrasts and exposes flask endpoints.
 
 
-def create_endpoints_one_surface_dataset(bc, id, dataset):
+def create_endpoints_one_features_dataset(bc, id, dataset):
     memory = utils.get_memory(bc)
 
     @memory.cache
@@ -208,7 +208,7 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
         }
 
         try:
-            mesh_types = bc.config["surfaces"]["datasets"][id]["mesh_types"]
+            mesh_types = bc.config["features"]["datasets"][id]["mesh_types"]
             available_mesh_types = [
                 mesh_types["default"],
                 *mesh_types["other"],
@@ -509,9 +509,9 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
 def create_all_endpoints(bc):
     """Create endpoints for all available surface datasets."""
 
-    if "surfaces" in bc.config and "datasets" in bc.config["surfaces"]:
+    if "features" in bc.config and "datasets" in bc.config["features"]:
         # Iterate through each surface dataset
-        for dataset_id, dataset in bc.config["surfaces"]["datasets"].items():
+        for dataset_id, dataset in bc.config["features"]["datasets"].items():
             df, _ = load_dataset_description(
                 config_path=bc.config_path, dataset_path=dataset["path"]
             )
@@ -519,6 +519,6 @@ def create_all_endpoints(bc):
             mesh_paths = list(map(Path, np.unique(df["mesh_path"])))
             create_dataset_glft_files(bc, dataset, mesh_paths)
             # 2. Create API endpoints
-            create_endpoints_one_surface_dataset(bc, dataset_id, dataset)
+            create_endpoints_one_features_dataset(bc, dataset_id, dataset)
     else:
-        console.log("No surface datasets to load", style="yellow")
+        console.log("No features datasets to load", style="yellow")

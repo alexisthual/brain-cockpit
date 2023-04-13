@@ -5,7 +5,7 @@ import orjson
 
 from brain_cockpit.endpoints import (
     alignments_explorer,
-    datasets_explorer,
+    features_explorer,
     server,
 )
 from brain_cockpit.utils import console, load_config
@@ -45,7 +45,7 @@ class BrainCockpit:
         )
 
         server.create_all_endpoints(self)
-        datasets_explorer.create_all_endpoints(self)
+        features_explorer.create_all_endpoints(self)
         alignments_explorer.create_all_endpoints(self)
 
         console.print(
