@@ -327,7 +327,9 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
                     else None
                 )
                 for task, contrast in tasks_contrasts
-            ]
+            ],
+            # Force float32 to avoid json serialization error
+            dtype=np.float32,
         )
 
         return jsonify(fingerprint)
@@ -384,6 +386,8 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
                     ]
                 ),
                 axis=0,
+                # Force float32 to avoid json serialization error
+                dtype=np.float32,
             )
 
             return jsonify(mean)
@@ -443,6 +447,8 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
                         )
                     ),
                     axis=0,
+                    # Force float32 to avoid json serialization error
+                    dtype=np.float32,
                 )
             )
         elif hemi == "both":
@@ -473,6 +479,8 @@ def create_endpoints_one_surface_dataset(bc, id, dataset):
                         )
                     ),
                     axis=0,
+                    # Force float32 to avoid json serialization error
+                    dtype=np.float32,
                 )
             )
         else:
