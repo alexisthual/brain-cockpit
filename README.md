@@ -12,3 +12,9 @@
 You can try our [online demo](https://brain-cockpit.athual.fr/)!
 
 ![Screenshot](https://mybox.inria.fr/thumbnail/192bdcc47f8c4decbac7/1024/Screenshot%20from%202020-12-07%2012-23-45.png)
+
+## Acknowledgement
+
+This work has received funding from the European Union’s Horizon 2020 Framework Programme for Research and Innovation
+under the Specific Grant Agreement No. 945539 (Human Brain Project SGA3).
+It has also been supported by the the KARAIB AI chair (ANR-20-CHIA-0025-01) and the NeuroMind Inria associate team.
