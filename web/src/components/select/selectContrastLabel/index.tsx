@@ -43,7 +43,11 @@ const contrastLabelRenderer = (
 };
 
 const contrastLabelPredicate = (query: string, item: ContrastLabel) => {
-  return `${item.task}${item.contrast}`.indexOf(query) > -1;
+  return (
+    `${item.task.toLowerCase()}${item.contrast.toLowerCase()}`.indexOf(
+      query.toLowerCase()
+    ) >= 0
+  );
 };
 
 interface Props {
