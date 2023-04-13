@@ -21,6 +21,7 @@ dependencies = [
   "joblib>=1.2.0",
   "flask",
   "flask-cors",
+  "fugw",
   "gltflib",
   "nibabel",
   "nilearn",
