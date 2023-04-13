@@ -139,6 +139,7 @@ const SurfacePane = ({
   const [loadingGradient, setLoadingGradient] = useState(false);
   const [meshUrls, setMeshUrls] = useState<string[] | undefined>(undefined);
   const [wireframe] = useState(false);
+  const [mouseIn, setMouseIn] = useState<boolean>(false);
   const panelEl = useRef<HTMLDivElement>(null);
 
   // Update url used to fetch mesh
@@ -189,6 +190,16 @@ const SurfacePane = ({
     });
   }, [datasetId, state.subject, state.meshSupport, state.meshType, state.hemi]);
 
+  // Mouse events
+
+  const mouseEnter = useCallback(() => {
+    setMouseIn(true);
+  }, [setMouseIn]);
+
+  const mouseLeave = useCallback(() => {
+    setMouseIn(false);
+  }, [setMouseIn]);
+
   // Set key events
 
   // If ALT is pressed, dispatch event for all panes,
@@ -199,7 +210,7 @@ const SurfacePane = ({
     (event: any) => {
       if (event.target.matches("input")) return;
 
-      if (panelEl.current !== null && panelEl.current.matches(":hover")) {
+      if (mouseIn) {
         if (event.isComposing || (event.keyCode === 76 && event.altKey)) {
           paneCallbacks?.shiftAllPanes("contrast", 1, contrastLabels.length);
         } else if (event.isComposing || event.keyCode === 76) {
@@ -212,7 +223,7 @@ const SurfacePane = ({
         }
       }
     },
-    [state.contrast, contrastLabels, paneCallbacks, changeState]
+    [state.contrast, contrastLabels, paneCallbacks, changeState, mouseIn]
   );
 
   // J
@@ -220,7 +231,7 @@ const SurfacePane = ({
     (event: any) => {
       if (event.target.matches("input")) return;
 
-      if (panelEl.current !== null && panelEl.current.matches(":hover")) {
+      if (mouseIn) {
         if (event.isComposing || (event.keyCode === 74 && event.altKey)) {
           paneCallbacks?.shiftAllPanes("contrast", -1, contrastLabels.length);
         } else if (event.isComposing || event.keyCode === 74) {
@@ -233,7 +244,7 @@ const SurfacePane = ({
         }
       }
     },
-    [state.contrast, contrastLabels, paneCallbacks, changeState]
+    [state.contrast, contrastLabels, paneCallbacks, changeState, mouseIn]
   );
 
   // I
@@ -241,7 +252,7 @@ const SurfacePane = ({
     (event: any) => {
       if (event.target.matches("input")) return;
 
-      if (panelEl.current !== null && panelEl.current.matches(":hover")) {
+      if (mouseIn) {
         if (event.isComposing || (event.keyCode === 73 && event.altKey)) {
           paneCallbacks?.shiftAllPanes("subject", 1, subjectLabels.length);
         } else if (event.isComposing || event.keyCode === 73) {
@@ -254,7 +265,7 @@ const SurfacePane = ({
         }
       }
     },
-    [state.subject, subjectLabels, paneCallbacks, changeState]
+    [state.subject, subjectLabels, paneCallbacks, changeState, mouseIn]
   );
 
   // K
@@ -262,7 +273,7 @@ const SurfacePane = ({
     (event: any) => {
       if (event.target.matches("input")) return;
 
-      if (panelEl.current !== null && panelEl.current.matches(":hover")) {
+      if (mouseIn) {
         if (event.isComposing || (event.keyCode === 75 && event.altKey)) {
           paneCallbacks?.shiftAllPanes("subject", -1, subjectLabels.length);
         } else if (event.isComposing || event.keyCode === 75) {
@@ -283,6 +294,7 @@ const SurfacePane = ({
       subjectLabels,
       paneCallbacks,
       changeState,
+      mouseIn,
     ]
   );
 
@@ -291,15 +303,11 @@ const SurfacePane = ({
     (event: any) => {
       if (event.target.matches("input")) return;
 
-      if (
-        (event.isComposing || event.keyCode === 88) &&
-        panelEl.current !== null &&
-        panelEl.current.matches(":hover")
-      ) {
+      if ((event.isComposing || event.keyCode === 88) && mouseIn) {
         closeCallback();
       }
     },
-    [closeCallback]
+    [closeCallback, mouseIn]
   );
 
   // U
@@ -307,7 +315,7 @@ const SurfacePane = ({
     (event: any) => {
       if (event.target.matches("input")) return;
 
-      if (panelEl.current !== null && panelEl.current.matches(":hover")) {
+      if (mouseIn) {
         if (event.isComposing || (event.keyCode === 85 && event.altKey)) {
           paneCallbacks?.updateAllPanesState(
             "meanSurfaceMap",
@@ -318,7 +326,7 @@ const SurfacePane = ({
         }
       }
     },
-    [state.meanSurfaceMap, paneCallbacks, changeState]
+    [state.meanSurfaceMap, paneCallbacks, changeState, mouseIn]
   );
 
   // O
@@ -326,7 +334,7 @@ const SurfacePane = ({
     (event: any) => {
       if (event.target.matches("input")) return;
 
-      if (panelEl.current !== null && panelEl.current.matches(":hover")) {
+      if (mouseIn) {
         if (event.isComposing || (event.keyCode === 79 && event.altKey)) {
           paneCallbacks?.updateAllPanesState(
             "showDescription",
@@ -337,8 +345,17 @@ const SurfacePane = ({
         }
       }
     },
-    [state.showDescription, paneCallbacks, changeState]
+    [state.showDescription, paneCallbacks, changeState, mouseIn]
   );
+
+  useEffect(() => {
+    panelEl.current?.addEventListener("mouseenter", mouseEnter);
+    panelEl.current?.addEventListener("mouseleave", mouseLeave);
+    return () => {
+      window.removeEventListener("mouseenter", mouseEnter);
+      window.removeEventListener("mouseleave", mouseLeave);
+    };
+  }, [panelEl, mouseEnter, mouseLeave]);
 
   useEffect(() => {
     window.addEventListener("keydown", incrementContrast);

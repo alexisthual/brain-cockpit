@@ -62,6 +62,7 @@ class Scene extends Component<SceneProps, IState> {
   uniqueKey: string;
   mouseDownX?: number;
   mouseDownY?: number;
+  mouseIn?: boolean;
   gradient: any;
   edgesMesh?: THREE.Mesh;
 
@@ -83,6 +84,8 @@ class Scene extends Component<SceneProps, IState> {
     this.handleWindowResize = this.handleWindowResize.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
+    this.onMouseEnter = this.onMouseEnter.bind(this);
+    this.onMouseLeave = this.onMouseLeave.bind(this);
     this.updateHotspots = this.updateHotspots.bind(this);
     this.switchView = this.switchView.bind(this);
     this.removeAndDisposeMarkers = this.removeAndDisposeMarkers.bind(this);
@@ -112,9 +115,10 @@ class Scene extends Component<SceneProps, IState> {
 
       // Merge them in a common Mesh
       return Promise.all(promises).then((values: any) => {
-        const mergedBufferGeometries = BufferGeometryUtils.mergeBufferGeometries(
-          values.map((value: any) => value.scene.children[0].geometry)
-        );
+        const mergedBufferGeometries =
+          BufferGeometryUtils.mergeBufferGeometries(
+            values.map((value: any) => value.scene.children[0].geometry)
+          );
 
         return mergedBufferGeometries;
       });
@@ -522,6 +526,8 @@ class Scene extends Component<SceneProps, IState> {
   start() {
     this.container?.addEventListener("pointerdown", this.onMouseDown, false);
     this.container?.addEventListener("pointerup", this.onMouseUp, false);
+    this.container?.addEventListener("mouseenter", this.onMouseEnter, false);
+    this.container?.addEventListener("mouseleave", this.onMouseLeave, false);
     window.addEventListener("keydown", this.switchView, false);
 
     if (!this.frameId) {
@@ -650,35 +656,31 @@ class Scene extends Component<SceneProps, IState> {
     }
   }
 
+  onMouseEnter() {
+    this.mouseIn = true;
+  }
+
+  onMouseLeave() {
+    this.mouseIn = false;
+  }
+
   switchView(event: any) {
     if (event.target.matches("input")) return;
 
     // E
-    if (
-      (event.isComposing || event.keyCode === 69) &&
-      this.container?.matches(":hover")
-    ) {
+    if ((event.isComposing || event.keyCode === 69) && this.mouseIn) {
       this.focusOnMainObject(View.FRONTAL);
     }
     // S
-    if (
-      (event.isComposing || event.keyCode === 83) &&
-      this.container?.matches(":hover")
-    ) {
+    if ((event.isComposing || event.keyCode === 83) && this.mouseIn) {
       this.focusOnMainObject(View.LATERAL);
     }
     // D
-    if (
-      (event.isComposing || event.keyCode === 68) &&
-      this.container?.matches(":hover")
-    ) {
+    if ((event.isComposing || event.keyCode === 68) && this.mouseIn) {
       this.focusOnMainObject(View.DORSAL);
     }
     // F
-    if (
-      (event.isComposing || event.keyCode === 70) &&
-      this.container?.matches(":hover")
-    ) {
+    if ((event.isComposing || event.keyCode === 70) && this.mouseIn) {
       this.focusOnMainObject(View.MEDIAL);
     }
   }
@@ -797,6 +799,8 @@ class Scene extends Component<SceneProps, IState> {
     // Remove events
     window.removeEventListener("pointerdown", this.onMouseDown);
     window.removeEventListener("pointerup", this.onMouseUp);
+    window.removeEventListener("mouseenter", this.onMouseEnter);
+    window.removeEventListener("mouseleave", this.onMouseLeave);
     window.removeEventListener("resize", this.handleWindowResize);
     window.removeEventListener("keydown", this.switchView);
 
@@ -873,10 +877,8 @@ class Scene extends Component<SceneProps, IState> {
                 ...(this.props.hotspots
                   ? this.props.hotspots.map((hotspot: IHotspot) => {
                       if (hotspot.voxelIndex !== undefined) {
-                        const [
-                          projectedVertex,
-                          vertex,
-                        ] = this.projectCoordinatesOnMesh(hotspot.voxelIndex);
+                        const [projectedVertex, vertex] =
+                          this.projectCoordinatesOnMesh(hotspot.voxelIndex);
                         return {
                           ...hotspot,
                           xPointer: projectedVertex.x,
