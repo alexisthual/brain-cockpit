@@ -82,13 +82,13 @@ const stateFromUrl = (): SurfaceViewState => {
     };
   }
 
-  return (urlState as unknown) as SurfaceViewState;
+  return urlState as unknown as SurfaceViewState;
 };
 
 // Custom hook to load state from URL
 const useSurfaceState = (): [
   SurfaceViewState,
-  React.Dispatch<React.SetStateAction<SurfaceViewState>>
+  React.Dispatch<React.SetStateAction<SurfaceViewState>>,
 ] => {
   const urlState = stateFromUrl();
 
@@ -126,7 +126,7 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
   const [meshTypeLabels, setMeshTypeLabels] = useState<string[]>([]);
   const [hemiLabels, setHemiLabels] = useState<string[]>([]);
   const [unit, setUnit] = useState<string | undefined>(undefined);
-  const [datasetDescriptions, setDatasetDescriptions] = useState<any>({});
+  const [datasetDescriptions] = useState<any>({});
 
   // Load state from url
   const [state, setState] = useSurfaceState();
@@ -199,7 +199,7 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
       hemiLabels?.length > 0
     ) {
       if (Object.keys(state.panes).length === 0) {
-        setState(({
+        setState({
           ...state,
           panes: {
             [nanoid(4)]: defaultPaneState(
@@ -210,7 +210,7 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
               hemiLabels
             ),
           },
-        } as unknown) as SurfaceViewState);
+        } as unknown as SurfaceViewState);
       }
     }
   }, [
@@ -419,15 +419,13 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
   const paneSubjects = Object.keys(state.panes).map(
     (k) => state.panes[k].subject
   );
-  const previousPaneSubjects = usePrevious<(number | undefined)[]>(
-    paneSubjects
-  );
+  const previousPaneSubjects =
+    usePrevious<(number | undefined)[]>(paneSubjects);
   const paneMeanSurfaceMaps = Object.keys(state.panes).map(
     (k) => state.panes[k].meanSurfaceMap
   );
-  const previousPaneMeanSurfaceMaps = usePrevious<(boolean | undefined)[]>(
-    paneMeanSurfaceMaps
-  );
+  const previousPaneMeanSurfaceMaps =
+    usePrevious<(boolean | undefined)[]>(paneMeanSurfaceMaps);
 
   useEffect(() => {
     if (
