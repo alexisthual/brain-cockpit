@@ -39,3 +39,5 @@ doc/modules/generated
 # Don't export meshes computed by brain-cockpit
 *.gltf
 *.bin
+
+.pytest_cache
