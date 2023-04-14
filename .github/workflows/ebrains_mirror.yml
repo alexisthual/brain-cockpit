@@ -1,0 +1,30 @@
+name: Mirror to Ebrains
+
+# Configure the events that are going to trigger tha automated update of the mirror
+on:
+  push:
+    branches: [main]
+
+# Configure what will be updated
+jobs:
+  # set the job name
+  mirror_to_ebrains:
+    runs-on: ubuntu-latest
+    steps:
+      # this task will push the main branch of the source_repo (github) to the
+      # destination_repo (ebrains gitlab)
+      - name: sync-main
+        uses: wei/git-sync@v3
+        with:
+          source_repo: "alexisthual/brain-cockpit"
+          source_branch: "main"
+          destination_repo: "https://ghpusher:${{ secrets.EBRAINS_GITLAB_ACCESS_TOKEN }}@gitlab.ebrains.eu/alexisthual/brain-cockpit"
+          destination_branch: "main"
+      # this task will push all tags from the source_repo to the destination_repo
+      - name: sync-tags
+        uses: wei/git-sync@v3
+        with:
+          source_repo: "alexisthual/brain-cockpit"
+          source_branch: "refs/tags/*"
+          destination_repo: "https://ghpusher:${{ secrets.EBRAINS_GITLAB_ACCESS_TOKEN }}@gitlab.ebrains.eu/alexisthual/brain-cockpit"
+          destination_branch: "refs/tags/*"

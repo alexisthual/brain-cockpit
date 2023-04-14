@@ -1,0 +1,17 @@
+allow_very_unsafe_file_sharing: true
+cache_folder: /tmp
+alignments:
+  datasets:
+    dummy_alignment:
+      name: Dummy alignment
+      path: alignments_dataset/dataset.csv
+features:
+  datasets:
+    dummy_surface:
+      name: Dummy surface data
+      path: features_dataset/dataset.csv
+      unit: z-score
+      mesh_types:
+        default: pial
+        other:
+          - infl

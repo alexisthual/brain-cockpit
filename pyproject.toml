@@ -21,18 +21,20 @@ dependencies = [
   "joblib>=1.2.0",
   "flask",
   "flask-cors",
+  "fugw",
   "gltflib",
   "nibabel",
   "nilearn",
   "numpy>=1.20",
   "pandas",
   "python-dotenv",
+  "pyyaml",
+  "orjson",
   "rich>=13.3.1",
   "scikit-learn",
   "scipy",
   "simplejson",
   "torch",
-  "tqdm",
   "waitress",
 ]
 
@@ -40,6 +42,7 @@ dependencies = [
 dev = [
   "black",
   "brain-cockpit[doc]",
+  "brain-cockpit[test]",
   "pre-commit",
 ]
 doc = [
@@ -50,6 +53,11 @@ doc = [
   "sphinx==5.3.0",
   "sphinx-copybutton",
   "sphinx-gallery>=0.11.1",
+]
+test = [
+  "flake8",
+  "pyproject-flake8",
+  "pytest",
 ]
 
 [project.urls]
@@ -62,3 +70,9 @@ preview = true
 
 [tool.flake8]
 ignore = ["E203", "W503"]
+
+[tool.setuptools.dynamic]
+version = {attr = "brain_cockpit.__version__"}
+
+[tool.setuptools.packages.find]
+where = ["api/src"]

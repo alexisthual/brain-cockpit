@@ -1,0 +1,31 @@
+allow_very_unsafe_file_sharing: true
+cache_folder: /tmp
+alignments:
+  datasets:
+    datasetid1: # Each dataset should have a unique id
+      name: Name of alignment dataset 1
+      path: /path/to/alignment/dataset1.csv
+    datasetid2:
+      name: Name of alignment dataset 2
+      path: /path/to/alignment/dataset2.csv
+features:
+  datasets:
+    datasetid1:
+      name: Name of surface dataset 1
+      path: /path/to/features/dataset1.csv
+      unit: beta # Units of dataset maps
+      mesh_types:
+        default: pial # Default mesh to use
+        other: # Other available mesh names
+          - infl
+          - sphere
+          - white
+    datasetid2:
+      name: Name of surface dataset 2
+      path: /path/to/features/dataset2.csv
+      mesh_types:
+        default: mid
+        other:
+          - inflated
+          - pial
+          - white

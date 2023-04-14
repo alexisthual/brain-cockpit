@@ -1,0 +1,7 @@
+index,path,subject,task,contrast,side,mesh,mesh_path
+0,map0.gii,sub-01,localizer,sentence-checkboard,lh,fsaverage3,meshes/pial_left.gii.gz
+1,map1.gii,sub-01,localizer,sentence-checkboard,rh,fsaverage3,meshes/pial_right.gii.gz
+2,map2.gii,sub-01,localizer,dummy,lh,fsaverage3,meshes/pial_left.gii.gz
+3,map3.gii,sub-01,localizer,dummy,rh,fsaverage3,meshes/pial_right.gii.gz
+4,map4.gii,sub-02,localizer,sentence-checkboard,lh,fsaverage3,meshes/pial_left.gii.gz
+5,map5.gii,sub-02,localizer,dummy,lh,fsaverage3,meshes/pial_left.gii.gz
