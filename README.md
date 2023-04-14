@@ -11,7 +11,7 @@
 
 You can try our [online demo](https://brain-cockpit.athual.fr/)!
 
-![Screenshot features dataset view](./doc/images/main_screenshot.png)
+![Screenshot features dataset view](https://raw.githubusercontent.com/alexisthual/brain-cockpit/main/doc/images/main_screenshot.png)
 
 ## Acknowledgement
 
