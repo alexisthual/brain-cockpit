@@ -18,7 +18,7 @@ import SurfaceExplorer from "views/surface";
 import "./App.scss";
 
 export const server = axios.create({
-  baseURL: `${process.env.REACT_APP_API_HTTP_PROTOCOL}://${process.env.REACT_APP_API_URL}`,
+  baseURL: process.env.REACT_APP_API_URL,
 });
 
 export interface Config {

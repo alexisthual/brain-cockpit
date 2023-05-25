@@ -98,7 +98,7 @@ class Scene extends Component<SceneProps, IState> {
 
     return new Promise((resolve, reject) => {
       loader.load(
-        `${process.env.REACT_APP_API_HTTP_PROTOCOL}://${process.env.REACT_APP_API_URL}/${url}`,
+        `${process.env.REACT_APP_API_URL}/${url}`,
         (data) => resolve(data),
         undefined,
         reject

@@ -5,8 +5,8 @@
    :maxdepth: 1
 
    pages/introduction.md
+   pages/installation_and_setup.md
    pages/viewer_features.md
-   pages/instance_setup.md
 
 .. toctree::
    :hidden:
