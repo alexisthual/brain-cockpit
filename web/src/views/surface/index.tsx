@@ -126,7 +126,7 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
   const [meshTypeLabels, setMeshTypeLabels] = useState<string[]>([]);
   const [hemiLabels, setHemiLabels] = useState<string[]>([]);
   const [unit, setUnit] = useState<string | undefined>(undefined);
-  const [datasetDescriptions] = useState<any>({});
+  const [descriptions, setDescriptions] = useState<any>({});
 
   // Load state from url
   const [state, setState] = useSurfaceState();
@@ -134,6 +134,9 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
   // Initialise all pane state variables
   useEffect(() => {
     const datasetInfo = server.get<DatasetInfo>(`/datasets/${datasetId}/info`);
+    const datasetDescriptions = server.get<DatasetInfo>(
+      `/datasets/${datasetId}/descriptions`
+    );
 
     datasetInfo.then((value) => {
       setSubjectLabels(value.data.subjects);
@@ -154,6 +157,10 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
       }
 
       setUnit(value.data.unit);
+    });
+
+    datasetDescriptions.then((value) => {
+      setDescriptions(value.data);
     });
 
     if (state.panes === undefined) {
@@ -543,7 +550,7 @@ const SurfaceExplorer = ({ datasetId }: SurfaceViewProps) => {
                   meshTypeLabels={meshTypeLabels}
                   hemiLabels={hemiLabels}
                   unit={unit}
-                  datasetDescriptions={datasetDescriptions}
+                  datasetDescriptions={descriptions}
                   filterSurface={filterSurface}
                   thresholdLow={thresholdLow}
                   thresholdHigh={thresholdHigh}
