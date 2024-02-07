@@ -485,6 +485,9 @@ const SurfacePane = ({
 
     if (entry !== undefined) {
       if (entry.contrast) {
+        newDescriptions.push([
+          "This contrast map combines the following conditions:",
+        ]);
         for (const condition in entry.conditions) {
           newDescriptions.push([
             `(${entry.conditions[condition] >= 0 ? "+" : ""}${
@@ -514,7 +517,13 @@ const SurfacePane = ({
               {descriptions.map((description: any) => {
                 return (
                   <p key={`description-${description[0]}`}>
-                    <strong>{description[0]}:</strong> {description[1]}
+                    {description.length > 1 ? (
+                      <>
+                        <strong>{description[0]}:</strong> {description[1]}
+                      </>
+                    ) : (
+                      description[0]
+                    )}
                   </p>
                 );
               })}
