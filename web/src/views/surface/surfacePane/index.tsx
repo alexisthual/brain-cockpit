@@ -479,31 +479,25 @@ const SurfacePane = ({
       newDescriptions.push([task, datasetDescriptions[task]?.description]);
     }
 
-    // Add contrast / condition description
+    // Add contrast / conditions description
     const contrast = contrastLabels[state.contrast ?? 0]?.contrast;
-    if (contrast !== undefined) {
-      newDescriptions.push([
-        contrast,
-        datasetDescriptions[task]?.maps[contrast],
-      ]);
-    }
+    const entry = datasetDescriptions[task]?.maps[contrast];
 
-    // If map is contrast, try to add the descriptions
-    // of all conditions it results from
-    if (
-      task !== undefined &&
-      contrast !== undefined &&
-      datasetDescriptions[task] !== undefined &&
-      contrast.indexOf("-") !== -1
-    ) {
-      const conditions = contrast.split("-");
-      for (const condition of conditions) {
-        if (condition in datasetDescriptions[task]?.maps) {
+    if (entry !== undefined) {
+      if (entry.contrast) {
+        for (const condition in entry.conditions) {
           newDescriptions.push([
-            condition,
-            datasetDescriptions[task]?.maps[condition],
+            `(${entry.conditions[condition] >= 0 ? "+" : ""}${
+              entry.conditions[condition]
+            }) ${condition}`,
+            datasetDescriptions[task].maps[condition].description,
           ]);
         }
+      } else {
+        newDescriptions.push([
+          contrast,
+          datasetDescriptions[task]?.maps[contrast].description,
+        ]);
       }
     }
 
