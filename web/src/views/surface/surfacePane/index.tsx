@@ -623,6 +623,7 @@ const SurfacePane = ({
                   iconLeft: "person",
                   iconRight: "people",
                   title: "Mean across subjects",
+                  tooltip: "Toggle subjects' mean",
                 },
               ],
             },
@@ -660,6 +661,7 @@ const SurfacePane = ({
                     }
                   },
                   iconActive: "manual",
+                  tooltip: "Toggle description",
                 },
               ],
             },
