@@ -1,10 +1,11 @@
-import os
+"""Util functions used throughout brain-cockpit."""
 
+import functools
+import os
 from pathlib import Path
 
 import pandas as pd
 import yaml
-
 from joblib import Memory
 from rich.console import Console
 from rich.progress import (
@@ -24,6 +25,7 @@ console = Console()
 
 # `rich` progress bar used throughout the codebase
 def get_progress(**kwargs):
+    """Return rich progress bar."""
     return Progress(
         SpinnerColumn(),
         TaskProgressColumn(),
@@ -38,10 +40,35 @@ def get_progress(**kwargs):
 
 
 def get_memory(bc):
+    """Return joblib memory."""
     return Memory(bc.config["cache_folder"], verbose=0)
 
 
+def bc_cache(bc):
+    """Cache functions with brain-cockpit cache."""
+
+    def _inner_decorator(func):
+        @functools.wraps(func)
+        def wrapped(*args, **kwargs):
+            # Use joblib cache if and only if cache_folder is defined
+            if (
+                bc.config["cache_folder"] is not None
+                and bc.config["cache_folder"] != ""
+            ):
+                console.log(f"Using cache {bc.config['cache_folder']}")
+                mem = get_memory(bc)
+                return mem.cache(func)(*args, **kwargs)
+            else:
+                console.log("Not using cache for dataset")
+                return func(*args, **kwargs)
+
+        return wrapped
+
+    return _inner_decorator
+
+
 def load_config(config_path=None, verbose=False):
+    """Load brain-cockpit yaml config from path."""
     config = None
 
     if config_path is not None and os.path.exists(config_path):
@@ -60,8 +87,7 @@ def load_config(config_path=None, verbose=False):
 
 
 def load_dataset_description(config_path=None, dataset_path=None):
-    """
-    Load dataset CSV file.
+    """Load dataset CSV file.
 
     Returns
     -------

@@ -1,23 +1,20 @@
+"""Util functions to create Alignments Explorer endpoints."""
+
 import os
 import pickle
-
 from pathlib import Path
 
 import nibabel as nib
 import numpy as np
 import pandas as pd
+from flask import jsonify, request, send_from_directory
 
 from brain_cockpit.scripts.gifti_to_gltf import create_dataset_glft_files
 from brain_cockpit.utils import console, load_dataset_description
-from flask import jsonify, request, send_from_directory
 
 
 def create_endpoints_one_alignment_dataset(bc, id, dataset):
-    """
-    For a given alignment dataset, generate endpoints
-    serving dataset meshes and alignment transforms.
-    """
-
+    """Create all API endpoints for exploring a given Alignments dataset."""
     df, dataset_path = load_dataset_description(
         config_path=bc.config_path, dataset_path=dataset["path"]
     )
@@ -126,8 +123,7 @@ def create_endpoints_one_alignment_dataset(bc, id, dataset):
 
 
 def create_all_endpoints(bc):
-    """Create endpoints for all available alignments datasets."""
-
+    """Create endpoints for all available Alignments datasets."""
     if "alignments" in bc.config and "datasets" in bc.config["alignments"]:
         # Iterate through each alignment dataset
         for dataset_id, dataset in bc.config["alignments"]["datasets"].items():
