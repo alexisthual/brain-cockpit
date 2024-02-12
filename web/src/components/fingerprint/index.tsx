@@ -79,7 +79,7 @@ const Fingerprint = ({
     case Orientation.HORIZONTAL:
       offsetLeft = 60; // account for MultiSlider
       offsetTop = 60;
-      offsetRight = 20;
+      offsetRight = 40;
       offsetBottom = 120;
       break;
   }
@@ -138,12 +138,12 @@ const Fingerprint = ({
     xMax = width - offsetLeft - offsetRight;
     yMax = Math.max(
       filteredContrastLabels.length * 12,
-      height - offsetBottom - offsetTop
+      height - offsetBottom - offsetTop - 62
     );
   } else {
     xMax = Math.max(
       filteredContrastLabels.length * 12,
-      width - offsetLeft - offsetRight
+      width - offsetLeft - offsetRight - 100
     );
     yMax = height - offsetBottom - offsetTop;
   }
@@ -196,7 +196,7 @@ const Fingerprint = ({
                 : "auto",
             minWidth: orientation === Orientation.HORIZONTAL ? "60px" : "auto",
             top: orientation === Orientation.HORIZONTAL ? offsetTop : "10px",
-            left: orientation === Orientation.HORIZONTAL ? "10px" : offsetLeft,
+            left: orientation === Orientation.HORIZONTAL ? "5px" : offsetLeft,
             width:
               orientation === Orientation.VERTICAL
                 ? width - offsetLeft - offsetRight
