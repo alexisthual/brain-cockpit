@@ -1,22 +1,24 @@
+"""Util functions to create Features Explorer endpoints."""
+
 import json
 import os
-
 from pathlib import Path
 
 import nibabel as nib
 import numpy as np
 import pandas as pd
+from flask import jsonify, request, send_from_directory
 
 from brain_cockpit import utils
 from brain_cockpit.scripts.gifti_to_gltf import create_dataset_glft_files
 from brain_cockpit.utils import console, load_dataset_description
-from flask import jsonify, request, send_from_directory
 
 # UTIL FUNCTIONS
 # These functions are useful for loading data
 
 
 def hemi_to_side(hemi):
+    """Transform hemisphere label from nilearn to HCP."""
     if hemi == "left":
         return "lh"
     elif hemi == "right":
@@ -25,6 +27,7 @@ def hemi_to_side(hemi):
 
 
 def side_to_hemi(hemi):
+    """Transform hemisphere label from HCP to nilearn."""
     if hemi == "lh":
         return "left"
     elif hemi == "rh":
@@ -33,6 +36,7 @@ def side_to_hemi(hemi):
 
 
 def multiindex_to_nested_dict(df):
+    """Transform DataFrame with multiple indices to python dict."""
     if isinstance(df.index, pd.core.indexes.multi.MultiIndex):
         return dict(
             (k, multiindex_to_nested_dict(df.loc[k]))
@@ -46,7 +50,8 @@ def multiindex_to_nested_dict(df):
 
 
 def parse_metadata(df):
-    """
+    """Parse metadata Dataframe.
+
     Parameters
     ----------
     df: pandas DataFrame
@@ -84,11 +89,12 @@ def parse_metadata(df):
 
 
 def create_endpoints_one_features_dataset(bc, id, dataset):
-    memory = utils.get_memory(bc)
+    """Create all API endpoints for exploring a given Features dataset."""
 
-    @memory.cache
+    @utils.bc_cache(bc)
     def load_data(df, config_path=None, dataset_path=None):
-        """
+        """Load data used in endpoints.
+
         Parameters
         ----------
         dataset_path: str
@@ -507,8 +513,7 @@ def create_endpoints_one_features_dataset(bc, id, dataset):
 
 
 def create_all_endpoints(bc):
-    """Create endpoints for all available surface datasets."""
-
+    """Create endpoints for all available Features datasets."""
     if "features" in bc.config and "datasets" in bc.config["features"]:
         # Iterate through each surface dataset
         for dataset_id, dataset in bc.config["features"]["datasets"].items():

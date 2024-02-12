@@ -9,7 +9,8 @@
 - large surface fMRI datasets projected on surface meshes
 - alignments computed between brains, such as those computed with [fugw](https://alexisthual.github.io/fugw/index.html)
 
-You can try our [online demo](https://brain-cockpit.athual.fr/)!
+🚀 You can try our [online demo](https://brain-cockpit.tc.humanbrainproject.eu/) displaying the [Individual Brain Charting dataset](https://individual-brain-charting.github.io/docs/), a vast collection of fMRI protocols collected in a small number of human participants.
+This project was deployed with [EBRAINS](https://www.ebrains.eu/).
 
 ![Screenshot features dataset view](https://raw.githubusercontent.com/alexisthual/brain-cockpit/main/doc/images/main_screenshot.png)
 
