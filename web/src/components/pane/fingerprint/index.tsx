@@ -97,6 +97,7 @@ const FingerprintPane = ({
                       ]
                     );
                   },
+                  tooltip: "Contrasts / conditions",
                 },
                 {
                   inputType: InputType.BUTTON,
@@ -114,6 +115,7 @@ const FingerprintPane = ({
                     }
                   },
                   iconActive: "rotate-page",
+                  tooltip: "Rotate pane",
                 },
               ],
             },
