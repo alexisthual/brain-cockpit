@@ -1,5 +1,6 @@
 import { Button, ButtonGroup, Colors, Icon, Switch } from "@blueprintjs/core";
 import { IconName } from "@blueprintjs/icons";
+import { Tooltip2 } from "@blueprintjs/popover2";
 import { Select2 } from "@blueprintjs/select";
 import React from "react";
 
@@ -31,6 +32,7 @@ interface PaneControlsInput {
   title?: string;
   iconLeft?: IconName;
   iconRight?: IconName;
+  tooltip?: string;
 }
 
 interface PaneControlsRow {
@@ -185,6 +187,18 @@ const PaneControls = ({ rows }: IProps) => {
                         <span key={`input-${inputIndex}`}>{input.value}</span>
                       );
                       break;
+                  }
+
+                  if (input.tooltip) {
+                    element = (
+                      <Tooltip2
+                        content={input.tooltip}
+                        placement={"right"}
+                        key={`input-${inputIndex}`}
+                      >
+                        {element}
+                      </Tooltip2>
+                    );
                   }
 
                   return element;

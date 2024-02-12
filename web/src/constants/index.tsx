@@ -84,7 +84,13 @@ export interface DatasetDescriptions {
   [protocol: string]: {
     description: string;
     maps: {
-      [condition: string]: string;
+      [condition: string]: {
+        contrast: boolean;
+        description?: string;
+        conditions?: {
+          [condition: string]: number;
+        };
+      };
     };
   };
 }

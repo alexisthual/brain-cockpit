@@ -479,31 +479,28 @@ const SurfacePane = ({
       newDescriptions.push([task, datasetDescriptions[task]?.description]);
     }
 
-    // Add contrast / condition description
+    // Add contrast / conditions description
     const contrast = contrastLabels[state.contrast ?? 0]?.contrast;
-    if (contrast !== undefined) {
-      newDescriptions.push([
-        contrast,
-        datasetDescriptions[task]?.maps[contrast],
-      ]);
-    }
+    const entry = datasetDescriptions[task]?.maps[contrast];
 
-    // If map is contrast, try to add the descriptions
-    // of all conditions it results from
-    if (
-      task !== undefined &&
-      contrast !== undefined &&
-      datasetDescriptions[task] !== undefined &&
-      contrast.indexOf("-") !== -1
-    ) {
-      const conditions = contrast.split("-");
-      for (const condition of conditions) {
-        if (condition in datasetDescriptions[task]?.maps) {
+    if (entry !== undefined) {
+      if (entry.contrast) {
+        newDescriptions.push([
+          "This contrast map combines the following conditions:",
+        ]);
+        for (const condition in entry.conditions) {
           newDescriptions.push([
-            condition,
-            datasetDescriptions[task]?.maps[condition],
+            `(${entry.conditions[condition] >= 0 ? "+" : ""}${
+              entry.conditions[condition]
+            }) ${condition}`,
+            datasetDescriptions[task].maps[condition].description,
           ]);
         }
+      } else {
+        newDescriptions.push([
+          contrast,
+          datasetDescriptions[task]?.maps[contrast].description,
+        ]);
       }
     }
 
@@ -520,7 +517,13 @@ const SurfacePane = ({
               {descriptions.map((description: any) => {
                 return (
                   <p key={`description-${description[0]}`}>
-                    <strong>{description[0]}:</strong> {description[1]}
+                    {description.length > 1 ? (
+                      <>
+                        <strong>{description[0]}:</strong> {description[1]}
+                      </>
+                    ) : (
+                      description[0]
+                    )}
                   </p>
                 );
               })}
@@ -620,6 +623,7 @@ const SurfacePane = ({
                   iconLeft: "person",
                   iconRight: "people",
                   title: "Mean across subjects",
+                  tooltip: "Toggle subjects' mean",
                 },
               ],
             },
@@ -657,6 +661,7 @@ const SurfacePane = ({
                     }
                   },
                   iconActive: "manual",
+                  tooltip: "Toggle description",
                 },
               ],
             },

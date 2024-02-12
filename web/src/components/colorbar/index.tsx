@@ -114,7 +114,7 @@ const Colorbar = ({
           <foreignObject
             className="unit-container"
             x={-margin.right - 25}
-            y={offset - 5}
+            y={offset - 15}
             width="100"
             height="20"
             textAnchor="middle"

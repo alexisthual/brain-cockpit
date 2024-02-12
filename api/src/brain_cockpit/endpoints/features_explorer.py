@@ -190,7 +190,7 @@ def create_endpoints_one_features_dataset(bc, id, dataset):
     meshes, subjects, tasks_contrasts, sides = parse_metadata(df)
 
     # ROUTES
-    # Define a series of enpoints to expose contrasts, meshes, etc
+    # Define a series of endpoints to expose contrasts, meshes, etc
     info_endpoint = f"/datasets/{id}/info"
     subjects_endpoint = f"/datasets/{id}/subjects"
     contrasts_endpoint = f"/datasets/{id}/contrast_labels"
