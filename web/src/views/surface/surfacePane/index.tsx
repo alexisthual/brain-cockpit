@@ -556,6 +556,7 @@ const SurfacePane = ({
                       changeState("meshSupport")(newValue);
                     }
                   },
+                  tooltip: "Mesh support",
                 },
                 {
                   inputType: InputType.SELECT_STRING,
@@ -571,6 +572,7 @@ const SurfacePane = ({
                       changeState("meshType")(newValue);
                     }
                   },
+                  tooltip: "Mesh type",
                 },
                 {
                   inputType: InputType.SELECT_STRING,
@@ -586,6 +588,7 @@ const SurfacePane = ({
                       changeState("hemi")(newValue);
                     }
                   },
+                  tooltip: "Hemisphere",
                 },
               ],
             },
