@@ -17,8 +17,19 @@
       top: 10px;
       left: 10px;
       // In order to not overlap close button,
-      // substract left and right padding + button size + padding
-      max-width: calc(100% - 10px - 10px - 30px - 10px);
+      // subtract left and right padding + button size + padding
+      width: calc(100% - 10px - 10px - 30px - 10px);
+
+      .fingerprint-multiselect {
+        width: 100%;
+
+        .bp4-button {
+          max-width: 24px;
+          max-height: 24px;
+          margin: 0;
+          padding: 0;
+        }
+      }
     }
 
     .close-button {

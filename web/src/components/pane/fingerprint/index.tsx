@@ -50,6 +50,7 @@ const FingerprintPane = ({
       <div className="fingerprint-controls">
         <CloseButton closeCallback={closeCallback} />
         <PaneControls
+          fill={true}
           rows={[
             {
               inputs: [
@@ -71,6 +72,9 @@ const FingerprintPane = ({
                         )
                       );
                     }
+                  },
+                  onClearCallback: () => {
+                    setSelectedTasks([allTasks[0]]);
                   },
                   onRemoveCallback: (_value: string, index: number) => {
                     if (index !== -1) {

@@ -159,7 +159,7 @@ const Fingerprint = ({
   );
   const taskLabels = _.keys(_.groupBy(filteredContrastLabels, "task"));
 
-  // Compute culumated sum for tasks
+  // Compute cumulated sum for tasks
   const taskCumulatedSum: number[] = [];
   taskCounts.reduce((acc: number, count: number) => {
     taskCumulatedSum.push(acc);

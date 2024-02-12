@@ -26,6 +26,7 @@ interface PaneControlsInput {
   selectedItems?: string[];
   items?: any[];
   onChangeCallback?: any;
+  onClearCallback?: any;
   onRemoveCallback?: any;
   iconActive?: IconName;
   iconInactive?: IconName;
@@ -41,10 +42,11 @@ interface PaneControlsRow {
 }
 
 interface IProps {
+  fill?: boolean;
   rows: PaneControlsRow[];
 }
 
-const PaneControls = ({ rows }: IProps) => {
+const PaneControls = ({ fill, rows }: IProps) => {
   return (
     <div className="pane-controls">
       {rows.map((row: PaneControlsRow, rowIndex: number) => (
@@ -53,7 +55,7 @@ const PaneControls = ({ rows }: IProps) => {
           key={`pane-controls-row-${rowIndex}`}
         >
           <div className="header-item-value">
-            <ButtonGroup>
+            <ButtonGroup fill={fill}>
               {row.inputs.map(
                 (input: PaneControlsInput, inputIndex: number) => {
                   let element;
@@ -157,6 +159,11 @@ const PaneControls = ({ rows }: IProps) => {
                           key={`input-${inputIndex}`}
                           selectedItems={input.selectedItems}
                           items={input.items ?? []}
+                          onClear={() => {
+                            if (input.onClearCallback) {
+                              input.onClearCallback();
+                            }
+                          }}
                           onItemSelect={(
                             newItem: string,
                             event?: React.SyntheticEvent<HTMLElement>

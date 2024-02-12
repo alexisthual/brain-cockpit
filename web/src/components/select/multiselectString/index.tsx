@@ -11,6 +11,7 @@ const stringPredicate = (query: string, item: string) => {
 interface Props {
   selectedItems?: string[];
   items: string[];
+  onClear?: () => void;
   onItemSelect: (
     newSelectedItem: string,
     event?: React.SyntheticEvent<HTMLElement>
@@ -25,6 +26,7 @@ interface Props {
 const MultiSelectString = ({
   selectedItems,
   items,
+  onClear,
   onItemSelect,
   onRemove,
 }: Props) => {
@@ -32,8 +34,9 @@ const MultiSelectString = ({
 
   return (
     <MultiSelect2<string>
+      fill={true}
       selectedItems={selectedItems ?? []}
-      className={"bp4-outlined"}
+      className={"bp4-outlined fingerprint-multiselect"}
       items={items ?? []}
       itemPredicate={stringPredicate}
       itemRenderer={(item, { modifiers, handleClick, query }) => {
@@ -51,6 +54,7 @@ const MultiSelectString = ({
           />
         );
       }}
+      onClear={onClear}
       onItemSelect={(
         newItem: string,
         event?: React.SyntheticEvent<HTMLElement>
@@ -76,6 +80,7 @@ const MultiSelectString = ({
       onQueryChange={(newQuery: string) => {
         setQuery(newQuery);
       }}
+      resetOnQuery={false}
       tagInputProps={{
         tagProps: { minimal: true },
       }}
