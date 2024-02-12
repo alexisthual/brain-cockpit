@@ -514,6 +514,11 @@ const SurfacePane = ({
         {state.showDescription ? (
           <div className="description-callout">
             <Callout>
+              <CloseButton
+                closeCallback={() => {
+                  changeState("showDescription")(false);
+                }}
+              />
               {descriptions.map((description: any) => {
                 return (
                   <p key={`description-${description[0]}`}>

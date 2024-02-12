@@ -146,9 +146,11 @@
     position: absolute;
     bottom: 40px;
     z-index: 10;
-    padding: 10px;
+    padding: 15px;
+    width: 100%;
 
     .bp4-callout {
+      padding: 10px 50px 10px 10px;
       box-shadow: $pt-elevation-shadow-0;
       background-color: transparentize($light-gray3, 0.3);
       backdrop-filter: blur(3px);
