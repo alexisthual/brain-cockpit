@@ -493,13 +493,13 @@ const SurfacePane = ({
             `(${entry.conditions[condition] >= 0 ? "+" : ""}${
               entry.conditions[condition]
             }) ${condition}`,
-            datasetDescriptions[task].maps[condition].description,
+            datasetDescriptions[task]?.maps[condition]?.description,
           ]);
         }
       } else {
         newDescriptions.push([
           contrast,
-          datasetDescriptions[task]?.maps[contrast].description,
+          datasetDescriptions[task]?.maps[contrast]?.description,
         ]);
       }
     }
